@@ -1,0 +1,452 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		18221B8E2CCE177100DA740C /* music.wav in Resources */ = {isa = PBXBuildFile; fileRef = 18221B8D2CCE177100DA740C /* music.wav */; };
+		1826ACF22CA7C0270068C0F7 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1826ACF12CA7C0270068C0F7 /* MobileCoreServices.framework */; };
+		1826ACF42CA7C02E0068C0F7 /* CoreMIDI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1826ACF32CA7C02E0068C0F7 /* CoreMIDI.framework */; };
+		1826ACF62CA7C0330068C0F7 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1826ACF52CA7C0330068C0F7 /* Accelerate.framework */; };
+		1826ACF82CA7C03B0068C0F7 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1826ACF72CA7C03B0068C0F7 /* CoreAudio.framework */; };
+		1826ACFA2CA7C0480068C0F7 /* CoreAudioKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1826ACF92CA7C0480068C0F7 /* CoreAudioKit.framework */; };
+		1826ACFC2CA7C0540068C0F7 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1826ACFB2CA7C0540068C0F7 /* AudioToolbox.framework */; };
+		1826ACFE2CA7C05B0068C0F7 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 1826ACFD2CA7C05B0068C0F7 /* libc++.tbd */; };
+		1826ACFF2CA7C0660068C0F7 /* libjuce_lib_ios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1826ACF02CA7C0270068C0F7 /* libjuce_lib_ios.a */; };
+		1826AD032CA7C7DD0068C0F7 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1826AD022CA7C7DD0068C0F7 /* Foundation.framework */; };
+		1826AD052CA7D60C0068C0F7 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1826AD042CA7D60C0068C0F7 /* AVFoundation.framework */; };
+		18A29EBB2CBD12F000459DF0 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18A29EB82CBD12F000459DF0 /* ContentView.swift */; };
+		18A29EBC2CBD12F000459DF0 /* juce_player_testApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18A29EB92CBD12F000459DF0 /* juce_player_testApp.swift */; };
+		18A29EBD2CBD12F000459DF0 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 18A29EB42CBD12F000459DF0 /* Preview Assets.xcassets */; };
+		18A29EBE2CBD12F000459DF0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 18A29EB62CBD12F000459DF0 /* Assets.xcassets */; };
+		18A29EC12CBD130000459DF0 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18A29EC02CBD130000459DF0 /* AppDelegate.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		1826ACEF2CA7C0270068C0F7 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 18334D582CA7BFAC0061EB70 /* juce_lib_ios.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = EA7DE8E26488331D60A86F2C;
+			remoteInfo = "juce_lib_ios - Static Library";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		18221B8D2CCE177100DA740C /* music.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = music.wav; sourceTree = "<group>"; };
+		1826ACF12CA7C0270068C0F7 /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = System/Library/Frameworks/MobileCoreServices.framework; sourceTree = SDKROOT; };
+		1826ACF32CA7C02E0068C0F7 /* CoreMIDI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMIDI.framework; path = System/Library/Frameworks/CoreMIDI.framework; sourceTree = SDKROOT; };
+		1826ACF52CA7C0330068C0F7 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
+		1826ACF72CA7C03B0068C0F7 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
+		1826ACF92CA7C0480068C0F7 /* CoreAudioKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudioKit.framework; path = System/Library/Frameworks/CoreAudioKit.framework; sourceTree = SDKROOT; };
+		1826ACFB2CA7C0540068C0F7 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		1826ACFD2CA7C05B0068C0F7 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
+		1826AD022CA7C7DD0068C0F7 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		1826AD042CA7D60C0068C0F7 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		18334D582CA7BFAC0061EB70 /* juce_lib_ios.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = juce_lib_ios.xcodeproj; path = juce_lib_ios/Builds/iOS/juce_lib_ios.xcodeproj; sourceTree = "<group>"; };
+		189627BF2CA6C27000364235 /* juce_player_test.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = juce_player_test.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		18A29EB42CBD12F000459DF0 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		18A29EB62CBD12F000459DF0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		18A29EB72CBD12F000459DF0 /* bridging.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bridging.h; sourceTree = "<group>"; };
+		18A29EB82CBD12F000459DF0 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		18A29EB92CBD12F000459DF0 /* juce_player_testApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = juce_player_testApp.swift; sourceTree = "<group>"; };
+		18A29EC02CBD130000459DF0 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		189627BC2CA6C27000364235 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1826AD052CA7D60C0068C0F7 /* AVFoundation.framework in Frameworks */,
+				1826ACFF2CA7C0660068C0F7 /* libjuce_lib_ios.a in Frameworks */,
+				1826ACFE2CA7C05B0068C0F7 /* libc++.tbd in Frameworks */,
+				1826ACFC2CA7C0540068C0F7 /* AudioToolbox.framework in Frameworks */,
+				1826ACFA2CA7C0480068C0F7 /* CoreAudioKit.framework in Frameworks */,
+				1826ACF82CA7C03B0068C0F7 /* CoreAudio.framework in Frameworks */,
+				1826ACF62CA7C0330068C0F7 /* Accelerate.framework in Frameworks */,
+				1826ACF42CA7C02E0068C0F7 /* CoreMIDI.framework in Frameworks */,
+				1826AD032CA7C7DD0068C0F7 /* Foundation.framework in Frameworks */,
+				1826ACF22CA7C0270068C0F7 /* MobileCoreServices.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		1826ACED2CA7C0270068C0F7 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				1826AD042CA7D60C0068C0F7 /* AVFoundation.framework */,
+				1826AD022CA7C7DD0068C0F7 /* Foundation.framework */,
+				1826ACFD2CA7C05B0068C0F7 /* libc++.tbd */,
+				1826ACFB2CA7C0540068C0F7 /* AudioToolbox.framework */,
+				1826ACF92CA7C0480068C0F7 /* CoreAudioKit.framework */,
+				1826ACF72CA7C03B0068C0F7 /* CoreAudio.framework */,
+				1826ACF52CA7C0330068C0F7 /* Accelerate.framework */,
+				1826ACF32CA7C02E0068C0F7 /* CoreMIDI.framework */,
+				1826ACF12CA7C0270068C0F7 /* MobileCoreServices.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		18334D592CA7BFAC0061EB70 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1826ACF02CA7C0270068C0F7 /* libjuce_lib_ios.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		189627B62CA6C27000364235 = {
+			isa = PBXGroup;
+			children = (
+				18334D582CA7BFAC0061EB70 /* juce_lib_ios.xcodeproj */,
+				18A29EBA2CBD12F000459DF0 /* juce_player_test */,
+				1826ACED2CA7C0270068C0F7 /* Frameworks */,
+				189627C02CA6C27000364235 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		189627C02CA6C27000364235 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				189627BF2CA6C27000364235 /* juce_player_test.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		18A29EB52CBD12F000459DF0 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				18A29EB42CBD12F000459DF0 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		18A29EBA2CBD12F000459DF0 /* juce_player_test */ = {
+			isa = PBXGroup;
+			children = (
+				18A29EC02CBD130000459DF0 /* AppDelegate.swift */,
+				18221B8D2CCE177100DA740C /* music.wav */,
+				18A29EB52CBD12F000459DF0 /* Preview Content */,
+				18A29EB62CBD12F000459DF0 /* Assets.xcassets */,
+				18A29EB72CBD12F000459DF0 /* bridging.h */,
+				18A29EB82CBD12F000459DF0 /* ContentView.swift */,
+				18A29EB92CBD12F000459DF0 /* juce_player_testApp.swift */,
+			);
+			path = juce_player_test;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		189627BE2CA6C27000364235 /* juce_player_test */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 189627CD2CA6C27100364235 /* Build configuration list for PBXNativeTarget "juce_player_test" */;
+			buildPhases = (
+				189627BB2CA6C27000364235 /* Sources */,
+				189627BC2CA6C27000364235 /* Frameworks */,
+				189627BD2CA6C27000364235 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = juce_player_test;
+			packageProductDependencies = (
+			);
+			productName = juce_player_test;
+			productReference = 189627BF2CA6C27000364235 /* juce_player_test.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		189627B72CA6C27000364235 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					189627BE2CA6C27000364235 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+				};
+			};
+			buildConfigurationList = 189627BA2CA6C27000364235 /* Build configuration list for PBXProject "juce_player_test" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 189627B62CA6C27000364235;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 189627C02CA6C27000364235 /* Products */;
+			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 18334D592CA7BFAC0061EB70 /* Products */;
+					ProjectRef = 18334D582CA7BFAC0061EB70 /* juce_lib_ios.xcodeproj */;
+				},
+			);
+			projectRoot = "";
+			targets = (
+				189627BE2CA6C27000364235 /* juce_player_test */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		1826ACF02CA7C0270068C0F7 /* libjuce_lib_ios.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libjuce_lib_ios.a;
+			remoteRef = 1826ACEF2CA7C0270068C0F7 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
+
+/* Begin PBXResourcesBuildPhase section */
+		189627BD2CA6C27000364235 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				18A29EBD2CBD12F000459DF0 /* Preview Assets.xcassets in Resources */,
+				18A29EBE2CBD12F000459DF0 /* Assets.xcassets in Resources */,
+				18221B8E2CCE177100DA740C /* music.wav in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		189627BB2CA6C27000364235 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				18A29EC12CBD130000459DF0 /* AppDelegate.swift in Sources */,
+				18A29EBB2CBD12F000459DF0 /* ContentView.swift in Sources */,
+				18A29EBC2CBD12F000459DF0 /* juce_player_testApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		189627CB2CA6C27100364235 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = cpp_source;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				STRIP_STYLE = "non-global";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		189627CC2CA6C27100364235 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = cpp_source;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				STRIP_STYLE = "non-global";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		189627CE2CA6C27100364235 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"juce_player_test/Preview Content\"";
+				DEVELOPMENT_TEAM = C4CZBNFBQY;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.chanonly123.juce-player-test";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = juce_player_test/bridging.h;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		189627CF2CA6C27100364235 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"juce_player_test/Preview Content\"";
+				DEVELOPMENT_TEAM = C4CZBNFBQY;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.chanonly123.juce-player-test";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = juce_player_test/bridging.h;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		189627BA2CA6C27000364235 /* Build configuration list for PBXProject "juce_player_test" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				189627CB2CA6C27100364235 /* Debug */,
+				189627CC2CA6C27100364235 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		189627CD2CA6C27100364235 /* Build configuration list for PBXNativeTarget "juce_player_test" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				189627CE2CA6C27100364235 /* Debug */,
+				189627CF2CA6C27100364235 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 189627B72CA6C27000364235 /* Project object */;
+}
