@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<JUCERPROJECT id="ORjX0y" name="juce_lib" projectType="library" useAppConfig="0"
+              addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1">
+  <MAINGROUP id="fjboZk" name="juce_lib">
+    <FILE id="CwGnML" name="JuceMixItem.cpp" compile="1" resource="0" file="../cpp_source/JuceMixItem.cpp"/>
+    <FILE id="j8nHWb" name="JuceMixItem.h" compile="0" resource="0" file="../cpp_source/JuceMixItem.h"/>
+    <FILE id="TDNlat" name="JuceMixPlayer.cpp" compile="1" resource="0"
+          file="../cpp_source/JuceMixPlayer.cpp"/>
+    <FILE id="eKL7Gs" name="JuceMixPlayer.h" compile="0" resource="0" file="../cpp_source/JuceMixPlayer.h"/>
+    <FILE id="Pr3xaa" name="Logger.cpp" compile="1" resource="0" file="../cpp_source/Logger.cpp"/>
+    <FILE id="SEJi96" name="Logger.h" compile="0" resource="0" file="../cpp_source/Logger.h"/>
+    <FILE id="A9m2ML" name="NativeChannel.cpp" compile="1" resource="0"
+          file="../cpp_source/NativeChannel.cpp"/>
+    <FILE id="bDA94A" name="NativeChannel.h" compile="0" resource="0" file="../cpp_source/NativeChannel.h"/>
+    <FILE id="MCLO5v" name="TaskQueue.cpp" compile="1" resource="0" file="../cpp_source/TaskQueue.cpp"/>
+    <FILE id="NQMW2c" name="TaskQueue.h" compile="0" resource="0" file="../cpp_source/TaskQueue.h"/>
+  </MAINGROUP>
+  <MODULES>
+    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_opengl" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_video" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+  </MODULES>
+  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1"/>
+  <EXPORTFORMATS>
+    <XCODE_IPHONE targetFolder="Builds/iOS">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="juce_lib"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="juce_lib"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_opengl" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_video" path="../../../JUCE/modules"/>
+      </MODULEPATHS>
+    </XCODE_IPHONE>
+  </EXPORTFORMATS>
+</JUCERPROJECT>

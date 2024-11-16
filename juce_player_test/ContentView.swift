@@ -8,34 +8,46 @@
 import SwiftUI
 import AVKit
 
+func swiftListener(arg1: UnsafePointer<CChar>, arg2: UnsafePointer<CChar>, value: Float) {
+    let str1 = String(cString: arg1)
+    let str2 = String(cString: arg2)
+    print("Swift Listener called with: \(str1), \(str2), \(value)")
+}
+
 struct ContentView: View {
 
-    @State var player = native_init("JuceMixPlayer")
-    @State var item = native_init("JuceMixItem")
+    @State var player = JuceMixPlayer_init()
+    @State var item = JuceMixItem_init()
 
     var body: some View {
         VStack(spacing: 24) {
             Button("Open file") {
                 let path = Bundle.main.path(forResource: "music", ofType: "wav")!
-                native_call(item, "setPath", ["path": path].toJsonString)
-                native_call(player, "addItem", ["item": item].toJsonString)
+                JuceMixItem_setPath(item, path.cString(using: .utf8), 0, 0)
+                JuceMixPlayer_addItem(player, item)
+            }
+
+            Button("Set Listener") {
+//                var listener: (UnsafePointer<CChar>, UnsafePointer<CChar>, Float) -> Void = swiftListener
+//                let addr = UInt(bitPattern: UnsafeRawPointer(&listener))
+//                native_call(player, "setListener", ["listener": addr].toJsonString)
             }
 
             Button("play") {
-                native_call(player, "play", nil)
+                JuceMixPlayer_play(player)
             }
 
             Button("Pause") {
-                native_call(player, "pause", nil)
+                JuceMixPlayer_pause(player)
             }
 
             Button("Stop") {
-                native_call(player, "stop", nil)
+//                native_call(player, "stop", nil)
             }
 
             Button("Destroy") {
-                native_call(player, "destroy", nil)
-                native_call(item, "destroy", nil)
+//                native_call(player, "destroy", nil)
+//                native_call(item, "destroy", nil)
             }
         }
         .padding()
