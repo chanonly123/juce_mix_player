@@ -91,12 +91,12 @@ flutter:
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
 ffigen:
-  name: 'NativeLibrary'
+  name: 'JuceLibGen'
   description: 'Generate c header to dart bindings'
-  output: 'lib/native_library.dart'
+  output: 'lib/juce_lib/juce_lib_gen.dart'
   headers:
     entry-points:
-      - '../cpp_source/NativeChannel.h'
+      - '../cpp_source/includes/juce_lib.h'
   type-map:
     'native-types':
       'char':

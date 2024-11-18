@@ -2,7 +2,6 @@
 
 JuceMixPlayer::JuceMixPlayer() {
     PRINT("JuceMixPlayer()")
-    juce::MessageManager::getInstance();
 
     player = new juce::AudioSourcePlayer();
     deviceManager = new juce::AudioDeviceManager();

@@ -8,7 +8,8 @@ import UIKit
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
-      juceEnableLogs()
+    juceEnableLogs()
+    juceMessageManagerInit()
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 }

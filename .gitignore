@@ -1,3 +1,7 @@
+## generated coppied binaries
+flutter_app/android/app/src/main/jniLibs/**
+flutter_app/ios/Runner/juce_lib.xcframework/**
+
 ## User settings
 xcuserdata/
 
