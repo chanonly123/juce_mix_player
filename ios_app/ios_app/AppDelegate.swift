@@ -1,6 +1,6 @@
 //
 //  AppDelegate.swift
-//  juce_player_test
+//  ios_app
 //
 //  Created by Chandan on 14/10/24.
 //

@@ -1,6 +1,6 @@
 //
-//  juce_player_testApp.swift
-//  juce_player_test
+//  ios_appApp.swift
+//  ios_app
 //
 //  Created by Chandan on 27/09/24.
 //
@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct juce_player_testApp: App {
+struct ios_app_testApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
 
     var body: some Scene {

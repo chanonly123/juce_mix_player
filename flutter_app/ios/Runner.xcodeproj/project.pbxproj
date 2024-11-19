@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
+		181603A72CEC978F00F59770 /* juce_lib.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 181603A62CEC978F00F59770 /* juce_lib.xcframework */; };
 		183F25052CE7AE9D00B5C176 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 18A986212CE79B79007C2044 /* AudioToolbox.framework */; };
 		183F25062CE7AEA900B5C176 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 18A986232CE79B83007C2044 /* Foundation.framework */; };
 		183F25072CE7AEB200B5C176 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 18A986272CE79B94007C2044 /* CoreAudio.framework */; };
@@ -17,7 +18,6 @@
 		183F250B2CE7AED700B5C176 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 18A9862F2CE79BB5007C2044 /* MobileCoreServices.framework */; };
 		183F250C2CE7AEE200B5C176 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 18A986252CE79B8B007C2044 /* libc++.tbd */; };
 		183F250E2CE7AF5300B5C176 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 183F250D2CE7AF5300B5C176 /* AVFoundation.framework */; };
-		18FD5A442CE76A930001BEA3 /* juce_lib.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 18FD5A432CE76A930001BEA3 /* juce_lib.xcframework */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
@@ -52,6 +52,7 @@
 /* Begin PBXFileReference section */
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
+		181603A62CEC978F00F59770 /* juce_lib.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = juce_lib.xcframework; sourceTree = "<group>"; };
 		183F25032CE7ACED00B5C176 /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
 		183F250D2CE7AF5300B5C176 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		18A986212CE79B79007C2044 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
@@ -62,7 +63,6 @@
 		18A9862B2CE79BA4007C2044 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 		18A9862D2CE79BAB007C2044 /* CoreMIDI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMIDI.framework; path = System/Library/Frameworks/CoreMIDI.framework; sourceTree = SDKROOT; };
 		18A9862F2CE79BB5007C2044 /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = System/Library/Frameworks/MobileCoreServices.framework; sourceTree = SDKROOT; };
-		18FD5A432CE76A930001BEA3 /* juce_lib.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = juce_lib.xcframework; sourceTree = "<group>"; };
 		331C807B294A618700263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
 		331C8081294A63A400263BE5 /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
@@ -85,6 +85,7 @@
 			files = (
 				183F250E2CE7AF5300B5C176 /* AVFoundation.framework in Frameworks */,
 				183F250C2CE7AEE200B5C176 /* libc++.tbd in Frameworks */,
+				181603A72CEC978F00F59770 /* juce_lib.xcframework in Frameworks */,
 				183F250B2CE7AED700B5C176 /* MobileCoreServices.framework in Frameworks */,
 				183F250A2CE7AECF00B5C176 /* CoreMIDI.framework in Frameworks */,
 				183F25092CE7AEC600B5C176 /* Accelerate.framework in Frameworks */,
@@ -92,7 +93,6 @@
 				183F25072CE7AEB200B5C176 /* CoreAudio.framework in Frameworks */,
 				183F25062CE7AEA900B5C176 /* Foundation.framework in Frameworks */,
 				183F25052CE7AE9D00B5C176 /* AudioToolbox.framework in Frameworks */,
-				18FD5A442CE76A930001BEA3 /* juce_lib.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -158,7 +158,7 @@
 		97C146F01CF9000F007C117D /* Runner */ = {
 			isa = PBXGroup;
 			children = (
-				18FD5A432CE76A930001BEA3 /* juce_lib.xcframework */,
+				181603A62CEC978F00F59770 /* juce_lib.xcframework */,
 				97C146FA1CF9000F007C117D /* Main.storyboard */,
 				97C146FD1CF9000F007C117D /* Assets.xcassets */,
 				97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */,
@@ -301,7 +301,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" build";
+			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" build\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
