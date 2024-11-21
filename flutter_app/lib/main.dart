@@ -27,8 +27,8 @@ class ButtonScreen extends StatefulWidget {
 }
 
 class ButtonScreenState extends State<ButtonScreen> {
-  JuceMixPlayer player = JuceMixPlayer();
-  JuceMixItem item = JuceMixItem();
+  JuceMixPlayer? player;
+  JuceMixItem? item;
 
   ButtonScreenState();
 
@@ -44,23 +44,27 @@ class ButtonScreenState extends State<ButtonScreen> {
           children: <Widget>[
             ElevatedButton(
               onPressed: () {
-                item.setPath("/sdcard/Download/music.wav", 0, 0);
+
+                item ??= JuceMixItem();
+                player ??= JuceMixPlayer();
+
+                // item?.setPath("/sdcard/Download/music.wav", 0, 0);
                 // item.setPath("/Users/apple/Downloads/music.wav", 0, 0);
-                player.addItem(item);
+                // player?.addItem(item!);
               },
               child: Text('Open file'),
             ),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                player.play();
+                player?.play();
               },
               child: Text('Play'),
             ),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                player.pause();
+                player?.pause();
               },
               child: Text('Pause'),
             ),
@@ -72,8 +76,8 @@ class ButtonScreenState extends State<ButtonScreen> {
 
   @override
   void dispose() {
-    player.dispose();
-    item.dispose();
+    player?.dispose();
+    item?.dispose();
     super.dispose();
   }
 }

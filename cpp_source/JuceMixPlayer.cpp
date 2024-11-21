@@ -4,21 +4,26 @@ JuceMixPlayer::JuceMixPlayer() {
     PRINT("JuceMixPlayer()")
 
     player = new juce::AudioSourcePlayer();
-    deviceManager = new juce::AudioDeviceManager();
     juce::LinearInterpolator interpolator;
 
     player->setSource(this);
-    deviceManager->addAudioCallback(player);
 
-    getTaskQueueShared()->async([=] {
+    auto ins = juce::MessageManager::getInstance();
+
+    ins->callAsync([=] {
+        deviceManager = new juce::AudioDeviceManager();
+        deviceManager->addAudioCallback(player);
         deviceManager->initialiseWithDefaultDevices(0, 2);
     });
 }
 
 JuceMixPlayer::~JuceMixPlayer() {
     PRINT("~JuceMixPlayer");
-    delete player;
-    delete deviceManager;
+    juce::MessageManager::getInstance()->callAsync([=] {
+        deviceManager->closeAudioDevice();
+        delete player;
+        delete deviceManager;
+    });
 }
 
 void JuceMixPlayer::_play() {

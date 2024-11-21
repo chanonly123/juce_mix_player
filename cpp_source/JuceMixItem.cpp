@@ -14,6 +14,7 @@ const char* JuceMixPlayerStateStringValue(JuceMixPlayerState state)
 }
 
 JuceMixItem::JuceMixItem() {
+    PRINT("JuceMixItem()");
     formatManager.registerBasicFormats();
 }
 

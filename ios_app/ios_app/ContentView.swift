@@ -16,15 +16,25 @@ func swiftListener(arg1: UnsafePointer<CChar>, arg2: UnsafePointer<CChar>, value
 
 struct ContentView: View {
 
-    @State var player = JuceMixPlayer_init()
-    @State var item = JuceMixItem_init()
+    @State var player: UnsafeMutableRawPointer!
+    @State var item: UnsafeMutableRawPointer?!
 
     var body: some View {
         VStack(spacing: 24) {
+
+            Button("Init first") {
+                executeAsync {
+                    player = JuceMixPlayer_init()
+                    item = JuceMixItem_init()
+                }
+            }
+
             Button("Open file") {
-                let path = Bundle.main.path(forResource: "music", ofType: "wav")!
-                JuceMixItem_setPath(item, path.cString(using: .utf8), 0, 0)
-                JuceMixPlayer_addItem(player, item)
+                executeAsync {
+                    let path = Bundle.main.path(forResource: "music", ofType: "wav")!
+                    JuceMixItem_setPath(item, path.cString(using: .utf8), 0, 0)
+                    JuceMixPlayer_addItem(player, item)
+                }
             }
 
             Button("Set Listener") {
@@ -34,11 +44,15 @@ struct ContentView: View {
             }
 
             Button("play") {
-                JuceMixPlayer_play(player)
+                executeAsync {
+                    JuceMixPlayer_play(player)
+                }
             }
 
             Button("Pause") {
-                JuceMixPlayer_pause(player)
+                executeAsync {
+                    JuceMixPlayer_pause(player)
+                }
             }
 
             Button("Stop") {
@@ -62,6 +76,6 @@ struct ContentView: View {
     }
 }
 
-#Preview {
-    ContentView()
-}
+//#Preview {
+//    ContentView()
+//}

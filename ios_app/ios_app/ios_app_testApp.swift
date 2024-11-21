@@ -26,3 +26,9 @@ extension Dictionary {
         return ""
     }
 }
+
+func executeAsync(_ task: @escaping ()->Void) {
+    DispatchQueue.global(qos: .background).async {
+        task()
+    }
+}
