@@ -48,9 +48,13 @@ class ButtonScreenState extends State<ButtonScreen> {
                 item ??= JuceMixItem();
                 player ??= JuceMixPlayer();
 
+                // for android
                 // item?.setPath("/sdcard/Download/music.wav", 0, 0);
-                // item.setPath("/Users/apple/Downloads/music.wav", 0, 0);
-                // player?.addItem(item!);
+
+                // for ios simulator
+                item?.setPath("/Users/apple/Downloads/music.wav", 0, 0);
+
+                player?.addItem(item!);
               },
               child: Text('Open file'),
             ),
