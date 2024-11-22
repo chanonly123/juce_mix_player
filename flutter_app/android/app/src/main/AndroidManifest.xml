@@ -3,7 +3,6 @@
         android:label="flutter_app"
         android:name=".MyApp"
         android:icon="@mipmap/ic_launcher">
-        <receiver android:name="com.rmsl.juce.Receiver" android:exported="false"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"

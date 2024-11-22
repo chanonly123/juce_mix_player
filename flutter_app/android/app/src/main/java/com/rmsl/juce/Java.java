@@ -2,7 +2,8 @@ package com.rmsl.juce;
 
 import android.content.Context;
 
-public class Java {
+public class Java
+{
     static
     {
         System.loadLibrary ("juce_lib");
