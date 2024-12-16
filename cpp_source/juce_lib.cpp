@@ -3,6 +3,16 @@
 #include "JuceMixPlayer.h"
 #include "JuceMixItem.h"
 
+#ifdef ANDROID
+#include <jni.h>
+
+void Java_com_rmsl_juce_Java_juceMessageManagerInit(JNIEnv* env, jclass)
+{
+    juce::MessageManager::getInstance();
+}
+
+#endif
+
 void juceEnableLogs()
 {
     enableLogsValue = true;

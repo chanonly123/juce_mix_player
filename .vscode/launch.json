@@ -8,7 +8,8 @@
             "name": "flutter_app",
             "cwd": "flutter_app",
             "request": "launch",
-            "type": "dart"
+            "type": "dart",
+            "preLaunchTask": "build-juce-lib"
         }
     ]
 }

@@ -14,6 +14,7 @@ public:
     ~TaskQueue();
 
     void async(std::function<void()> task);
+    void mainAsync(std::function<void()> task);
 
     void stop();
 

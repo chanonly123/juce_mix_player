@@ -43,11 +43,15 @@ void JuceMixItem::prepare() {
     getTaskQueueShared()->async([=]{
         if (file.existsAsFile()) {
             reader = formatManager.createReaderFor(file);
-            readerBuffer = juce::AudioBuffer<float>((int)reader->numChannels, (int)reader->lengthInSamples);
-            reader->read(&readerBuffer, 0, (int)reader->lengthInSamples, 0, true, true);
-            PRINT("JuceMixItem load: " << file.getFileName() << ", samples: " << reader->lengthInSamples << ", rate: " << reader->sampleRate);
+            if (reader != nullptr) {
+                readerBuffer = juce::AudioBuffer<float>((int)reader->numChannels, (int)reader->lengthInSamples);
+                reader->read(&readerBuffer, 0, (int)reader->lengthInSamples, 0, true, true);
+                PRINT("JuceMixItem load: " << file.getFileName() << ", samples: " << reader->lengthInSamples << ", rate: " << reader->sampleRate);
+            } else {
+                PRINT("JuceMixItem load: " << file.getFileName() << ", unable to load the file");
+            }
         } else {
-            PRINT("JuceMixItem load: " << file.getFileName() << "file not exists");
+            PRINT("JuceMixItem load: " << file.getFileName() << ", file not exists");
         }
         isPreparing = false;
     });

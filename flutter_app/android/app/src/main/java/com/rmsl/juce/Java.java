@@ -10,4 +10,5 @@ public class Java
     }
 
     public native static void initialiseJUCE (Context appContext);
+    public native static void juceMessageManagerInit ();
 }

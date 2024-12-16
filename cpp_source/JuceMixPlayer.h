@@ -18,6 +18,7 @@ private:
     juce::AudioSourcePlayer* player;
     JuceMixPlayerState state = IDLE;
     ListenerFunction listener = nullptr;
+    juce::ScopedJuceInitialiser_GUI ui;
     bool isPlaying = false;
 
     float currentTime = 0;

@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		18221B8E2CCE177100DA740C /* music.wav in Resources */ = {isa = PBXBuildFile; fileRef = 18221B8D2CCE177100DA740C /* music.wav */; };
 		1826ACF22CA7C0270068C0F7 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1826ACF12CA7C0270068C0F7 /* MobileCoreServices.framework */; };
 		1826ACF42CA7C02E0068C0F7 /* CoreMIDI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1826ACF32CA7C02E0068C0F7 /* CoreMIDI.framework */; };
 		1826ACF62CA7C0330068C0F7 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1826ACF52CA7C0330068C0F7 /* Accelerate.framework */; };
@@ -22,6 +21,7 @@
 		18A29EBD2CBD12F000459DF0 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 18A29EB42CBD12F000459DF0 /* Preview Assets.xcassets */; };
 		18A29EBE2CBD12F000459DF0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 18A29EB62CBD12F000459DF0 /* Assets.xcassets */; };
 		18A29EC12CBD130000459DF0 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18A29EC02CBD130000459DF0 /* AppDelegate.swift */; };
+		18E616422D1076760018F6EE /* music.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 18E616412D1076760018F6EE /* music.mp3 */; };
 		18F9DC172CEC922E000B5BA6 /* libjuce_lib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 18F9DC142CEC91FC000B5BA6 /* libjuce_lib.a */; };
 /* End PBXBuildFile section */
 
@@ -43,7 +43,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		18221B8D2CCE177100DA740C /* music.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = music.wav; sourceTree = "<group>"; };
 		1826ACF12CA7C0270068C0F7 /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = System/Library/Frameworks/MobileCoreServices.framework; sourceTree = SDKROOT; };
 		1826ACF32CA7C02E0068C0F7 /* CoreMIDI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMIDI.framework; path = System/Library/Frameworks/CoreMIDI.framework; sourceTree = SDKROOT; };
 		1826ACF52CA7C0330068C0F7 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
@@ -61,6 +60,7 @@
 		18A29EB82CBD12F000459DF0 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		18A29EB92CBD12F000459DF0 /* ios_app_testApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ios_app_testApp.swift; sourceTree = "<group>"; };
 		18A29EC02CBD130000459DF0 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		18E616412D1076760018F6EE /* music.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = music.mp3; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -138,7 +138,7 @@
 			isa = PBXGroup;
 			children = (
 				18A29EC02CBD130000459DF0 /* AppDelegate.swift */,
-				18221B8D2CCE177100DA740C /* music.wav */,
+				18E616412D1076760018F6EE /* music.mp3 */,
 				18A29EB52CBD12F000459DF0 /* Preview Content */,
 				18A29EB62CBD12F000459DF0 /* Assets.xcassets */,
 				18A29EB72CBD12F000459DF0 /* bridging.h */,
@@ -226,9 +226,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				18E616422D1076760018F6EE /* music.mp3 in Resources */,
 				18A29EBD2CBD12F000459DF0 /* Preview Assets.xcassets in Resources */,
 				18A29EBE2CBD12F000459DF0 /* Assets.xcassets in Resources */,
-				18221B8E2CCE177100DA740C /* music.wav in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

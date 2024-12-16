@@ -18,6 +18,10 @@ void TaskQueue::async(std::function<void()> task) {
     queue_condition.notify_one();
 }
 
+void TaskQueue::mainAsync(std::function<void()> task) {
+
+}
+
 void TaskQueue::stop() {
     {
         std::lock_guard<std::mutex> lock(queue_mutex);

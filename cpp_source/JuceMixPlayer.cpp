@@ -8,13 +8,19 @@ JuceMixPlayer::JuceMixPlayer() {
 
     player->setSource(this);
 
-    auto ins = juce::MessageManager::getInstance();
-
-    ins->callAsync([=] {
+    juce::MessageManager::getInstance()->callAsync([=] {
         deviceManager = new juce::AudioDeviceManager();
         deviceManager->addAudioCallback(player);
         deviceManager->initialiseWithDefaultDevices(0, 2);
     });
+
+//    mainTaskQueue.postTask([=]() {
+//        PRINT("Task 1 is running on the main thread");
+//        juce::MessageManager::getInstance()->setCurrentThreadAsMessageThread();
+//        deviceManager = new juce::AudioDeviceManager();
+//        deviceManager->addAudioCallback(player);
+//        deviceManager->initialiseWithDefaultDevices(0, 2);
+//    });
 }
 
 JuceMixPlayer::~JuceMixPlayer() {
@@ -29,14 +35,14 @@ JuceMixPlayer::~JuceMixPlayer() {
 void JuceMixPlayer::_play() {
     if (!isPlaying) {
         isPlaying = true;
-        startTimer(100);
+//        startTimer(100);
     }
 }
 
 void JuceMixPlayer::_pause(bool stop) {
     if (isPlaying) {
         isPlaying = false;
-        stopTimer();
+//        stopTimer();
     }
     if (stop) {
         lastSampleIndex = 0;

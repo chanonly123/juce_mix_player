@@ -31,7 +31,7 @@ struct ContentView: View {
 
             Button("Open file") {
                 executeAsync {
-                    let path = Bundle.main.path(forResource: "music", ofType: "wav")!
+                    let path = Bundle.main.path(forResource: "music", ofType: "mp3")!
                     JuceMixItem_setPath(item, path.cString(using: .utf8), 0, 0)
                     JuceMixPlayer_addItem(player, item)
                 }

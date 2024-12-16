@@ -57,7 +57,7 @@ cd "$root_dir"
 
 # find build output directory
 if $debug; then
-    libDirectory=`realpath | find . -type d -path "*/$libname/*/cxx/RelWithDebInfo/*/obj"`
+    libDirectory=`realpath | find . -type d -path "*/$libname/*/cxx/Debug/*/obj"`
 else
     libDirectory=`realpath | find . -type d -path "*/$libname/*/stripped_native_libs/release_Release/*/lib"`
 fi

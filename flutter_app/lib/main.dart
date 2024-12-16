@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app/juce_lib/juce_lib.dart';
 import 'package:flutter_app/juce_mix_item.dart';
 import 'package:flutter_app/juce_mix_player.dart';
+import 'package:permission_handler/permission_handler.dart';
 
-void main() {
+void main() async {
   JuceLib().juceEnableLogs();
   runApp(MyApp());
+  await Permission.manageExternalStorage.request();
 }
 
 class MyApp extends StatelessWidget {
@@ -49,10 +51,10 @@ class ButtonScreenState extends State<ButtonScreen> {
                 player ??= JuceMixPlayer();
 
                 // for android
-                // item?.setPath("/sdcard/Download/music.wav", 0, 0);
+                item?.setPath("/sdcard/Download/music.mp3", 0, 0);
 
                 // for ios simulator
-                item?.setPath("/Users/apple/Downloads/music.wav", 0, 0);
+                // item?.setPath("/Users/apple/Downloads/music.mp3", 0, 0);
 
                 player?.addItem(item!);
               },
