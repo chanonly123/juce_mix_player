@@ -19,8 +19,5 @@
 - set some path to audio file in `flutter_app/lib/main.dart`.
 - run flutter project normally
 
-### Known issues
-- Flutter android project is not working (something wrong with main thread init)
-
 #### Contact
 - email: chan.only.123@gmail.com
