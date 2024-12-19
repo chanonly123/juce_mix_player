@@ -5,11 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "flutter_app",
+            "name": "flutter_app_android",
             "cwd": "flutter_app",
             "request": "launch",
             "type": "dart",
-            "preLaunchTask": "build-juce-lib"
+            "preLaunchTask": "build-juce-lib-android"
+        },
+        {
+            "name": "flutter_app_ios",
+            "cwd": "flutter_app",
+            "request": "launch",
+            "type": "dart",
+            "preLaunchTask": "build-juce-lib-ios"
         }
     ]
 }

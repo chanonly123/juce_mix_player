@@ -16,7 +16,13 @@ fi
 
 root_dir=`pwd`
 
+# generate dart files from native header
+cd flutter_app
+flutter pub get
+dart run ffigen
+
 # go to gradle project
+cd "$root_dir"
 cd "$libname/Builds/Android/lib" &&
 
 # clean build dir

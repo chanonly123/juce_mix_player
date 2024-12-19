@@ -5,24 +5,34 @@ target="juce_lib - Static Library"
 libname="juce_lib"
 flutter_app="flutter_app"
 
-rootDir=`pwd`
+root_dir=`pwd`
 
+# generate dart files from native header
+cd "$flutter_app"
+flutter pub get
+dart run ffigen
+
+cd "$root_dir"
 cd "$libname/Builds/iOS" &&
 
+# clear previous files
 rm -rf "build/${libname}.xcframework"
 rm -rf "build/Release-iphoneos"
 rm -rf "build/Release-iphonesimulator"
 
+# build for iphones
 xcodebuild -target "${target}" -configuration Release -sdk iphoneos only_active_arch=no build LLVM_LTO=NO &&
 
 mkdir build/Release-iphoneos &&
 cp "build/Release/lib${libname}.a" "build/Release-iphoneos/${libname}.a" &&
 
+# build for simulaotrs
 xcodebuild -target "${target}" -configuration Release -sdk iphonesimulator only_active_arch=no LLVM_LTO=NO &&
 
 mkdir build/Release-iphonesimulator &&
 cp "build/Release/lib${libname}.a" "build/Release-iphonesimulator/${libname}.a" &&
 
+# create xcframework, with native headers
 xcodebuild -create-xcframework \
     -library "build/Release-iphoneos/${libname}.a" -headers ../../../cpp_source/includes \
     -library "build/Release-iphonesimulator/${libname}.a" -headers ../../../cpp_source/includes \
@@ -30,7 +40,7 @@ xcodebuild -create-xcframework \
 
 echo "✅ Build Success ✅"
 
-cd "$rootDir"
+cd "$root_dir"
 
 # copy framework to flutter_app project
 

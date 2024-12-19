@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/asset_helper.dart';
 import 'package:flutter_app/juce_lib/juce_lib.dart';
 import 'package:flutter_app/juce_mix_item.dart';
 import 'package:flutter_app/juce_mix_player.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 void main() async {
   JuceLib().juceEnableLogs();
   runApp(MyApp());
-  await Permission.manageExternalStorage.request();
 }
 
 class MyApp extends StatelessWidget {
@@ -45,16 +44,13 @@ class ButtonScreenState extends State<ButtonScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
 
                 item ??= JuceMixItem();
                 player ??= JuceMixPlayer();
 
-                // for android
-                item?.setPath("/sdcard/Download/music.mp3", 0, 0);
-
-                // for ios simulator
-                // item?.setPath("/Users/apple/Downloads/music.mp3", 0, 0);
+                String path = await AssetHelper.extractAsset('assets/media/music.mp3');
+                item?.setPath(path, 0, 0);
 
                 player?.addItem(item!);
               },
