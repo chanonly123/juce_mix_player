@@ -1,31 +1,21 @@
 #pragma once
 
-#include <functional>
-#include <queue>
+#include <iostream>
 #include <thread>
 #include <mutex>
-#include <condition_variable>
-#include <atomic>
+#include <deque>
+#include <functional>
+
+typedef std::function<void()> TaskQueueItem;
 
 class TaskQueue {
-public:
-
-    TaskQueue();
-    ~TaskQueue();
-
-    void async(std::function<void()> task);
-    void mainAsync(std::function<void()> task);
-
-    void stop();
-
 private:
-    void processTasks();
-
-    std::queue<std::function<void()>> tasks;
-    std::thread worker_thread;
-    std::mutex queue_mutex;
-    std::condition_variable queue_condition;
-    std::atomic<bool> stop_flag;
+    std::mutex mtx;
+    bool ended = true;
+    std::deque<TaskQueueItem> taskList;
+    void executeNext();
+public:
+    static TaskQueue shared;
+    TaskQueue()=default;
+    void async(TaskQueueItem task);
 };
-
-TaskQueue* getTaskQueueShared();

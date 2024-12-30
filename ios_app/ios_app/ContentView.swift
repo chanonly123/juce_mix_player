@@ -17,7 +17,7 @@ func swiftListener(arg1: UnsafePointer<CChar>, arg2: UnsafePointer<CChar>, value
 struct ContentView: View {
 
     @State var player: UnsafeMutableRawPointer!
-    @State var item: UnsafeMutableRawPointer?!
+    @State var item: UnsafeMutableRawPointer!
 
     var body: some View {
         VStack(spacing: 24) {
@@ -35,12 +35,6 @@ struct ContentView: View {
                     JuceMixItem_setPath(item, path.cString(using: .utf8), 0, 0)
                     JuceMixPlayer_addItem(player, item)
                 }
-            }
-
-            Button("Set Listener") {
-//                var listener: (UnsafePointer<CChar>, UnsafePointer<CChar>, Float) -> Void = swiftListener
-//                let addr = UInt(bitPattern: UnsafeRawPointer(&listener))
-//                native_call(player, "setListener", ["listener": addr].toJsonString)
             }
 
             Button("play") {

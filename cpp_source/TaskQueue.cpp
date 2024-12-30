@@ -1,61 +1,27 @@
 #include "TaskQueue.h"
 
-TaskQueue* TaskQueueShared = nullptr;
+TaskQueue TaskQueue::shared;
 
-TaskQueue::TaskQueue() : stop_flag(false) {
-    worker_thread = std::thread([this]() { this->processTasks(); });
-}
-
-TaskQueue::~TaskQueue() {
-    stop();
-}
-
-void TaskQueue::async(std::function<void()> task) {
-    {
-        std::lock_guard<std::mutex> lock(queue_mutex);
-        tasks.push(task);
-    }
-    queue_condition.notify_one();
-}
-
-void TaskQueue::mainAsync(std::function<void()> task) {
-
-}
-
-void TaskQueue::stop() {
-    {
-        std::lock_guard<std::mutex> lock(queue_mutex);
-        stop_flag = true;
-    }
-    queue_condition.notify_all();
-    if (worker_thread.joinable()) {
-        worker_thread.join();
-    }
-}
-
-void TaskQueue::processTasks() {
-    while (true) {
-        std::function<void()> task;
-
-        {
-            std::unique_lock<std::mutex> lock(queue_mutex);
-            queue_condition.wait(lock, [this]() { return stop_flag || !tasks.empty(); });
-
-            if (stop_flag && tasks.empty()) {
-                return;
+void TaskQueue::executeNext() {
+    std::thread thread([&]{
+        mtx.lock();
+        ended = false;
+        while (!taskList.empty()) {
+            TaskQueueItem& task = taskList.front();
+            if (task != nullptr) {
+                task();
             }
-
-            task = std::move(tasks.front());
-            tasks.pop();
+            taskList.pop_front();
         }
-
-        task(); // Execute the task
-    }
+        ended = true;
+        mtx.unlock();
+    });
+    thread.detach();
 }
 
-TaskQueue* getTaskQueueShared() {
-    if (TaskQueueShared == nullptr) {
-        TaskQueueShared = new TaskQueue();
+void TaskQueue::async(TaskQueueItem task) {
+    taskList.push_back(task);
+    if (ended) {
+        executeNext();
     }
-    return TaskQueueShared;
 }

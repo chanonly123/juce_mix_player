@@ -25,7 +25,7 @@ JuceMixItem::~JuceMixItem() {
 
 // begin time, end time
 void JuceMixItem::setPath(juce::String path, float begin, float end) {
-    getTaskQueueShared()->async([=]{
+    TaskQueue::shared.async([&, path]{
         file = juce::File(path);
         readerBuffer = juce::AudioBuffer<float>();
         isPreparing = false;
@@ -40,7 +40,7 @@ void JuceMixItem::prepare() {
         return;
     }
     isPreparing = true;
-    getTaskQueueShared()->async([=]{
+    TaskQueue::shared.async([&]{
         if (file.existsAsFile()) {
             reader = formatManager.createReaderFor(file);
             if (reader != nullptr) {

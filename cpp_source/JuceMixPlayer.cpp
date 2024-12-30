@@ -8,24 +8,16 @@ JuceMixPlayer::JuceMixPlayer() {
 
     player->setSource(this);
 
-    juce::MessageManager::getInstance()->callAsync([=] {
+    juce::MessageManager::getInstance()->callAsync([&] {
         deviceManager = new juce::AudioDeviceManager();
         deviceManager->addAudioCallback(player);
         deviceManager->initialiseWithDefaultDevices(0, 2);
     });
-
-//    mainTaskQueue.postTask([=]() {
-//        PRINT("Task 1 is running on the main thread");
-//        juce::MessageManager::getInstance()->setCurrentThreadAsMessageThread();
-//        deviceManager = new juce::AudioDeviceManager();
-//        deviceManager->addAudioCallback(player);
-//        deviceManager->initialiseWithDefaultDevices(0, 2);
-//    });
 }
 
 JuceMixPlayer::~JuceMixPlayer() {
     PRINT("~JuceMixPlayer");
-    juce::MessageManager::getInstance()->callAsync([=] {
+    juce::MessageManager::getInstance()->callAsync([&] {
         deviceManager->closeAudioDevice();
         delete player;
         delete deviceManager;
@@ -50,25 +42,25 @@ void JuceMixPlayer::_pause(bool stop) {
 }
 
 void JuceMixPlayer::play() {
-    getTaskQueueShared()->async([=] {
+    TaskQueue::shared.async([&] {
         _play();
     });
 }
 
 void JuceMixPlayer::pause() {
-    getTaskQueueShared()->async([=] {
+    TaskQueue::shared.async([&] {
         _pause(false);
     });
 }
 
 void JuceMixPlayer::stop() {
-    getTaskQueueShared()->async([=] {
+    TaskQueue::shared.async([&] {
         _pause(true);
     });
 }
 
 void JuceMixPlayer::togglePlayPause() {
-    getTaskQueueShared()->async([=] {
+    TaskQueue::shared.async([&] {
         if (isPlaying) {
             pause();
         } else {
@@ -78,13 +70,13 @@ void JuceMixPlayer::togglePlayPause() {
 }
 
 void JuceMixPlayer::addItem(JuceMixItem* item) {
-    getTaskQueueShared()->async([=] {
+    TaskQueue::shared.async([&] {
         tracks.push_back(item);
     });
 }
 
 void JuceMixPlayer::resetItems() {
-    getTaskQueueShared()->async([=] {
+    TaskQueue::shared.async([&] {
         stop();
         tracks.clear();
     });

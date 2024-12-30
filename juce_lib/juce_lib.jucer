@@ -1,23 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="ORjX0y" name="juce_lib" projectType="library" useAppConfig="0"
-              addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1"
-              defines="JUCE_USE_MP3AUDIOFORMAT=1">
+<JUCERPROJECT id="ORjX0y" name="juce_lib" projectType="library" addUsingNamespaceToJuceHeader="0"
+              displaySplashScreen="1" jucerFormatVersion="1" defines="JUCE_USE_MP3AUDIOFORMAT=1">
   <MAINGROUP id="fjboZk" name="juce_lib">
     <GROUP id="{D92A9893-D5A4-E01E-13F4-7233A15FE324}" name="cpp_source">
-      <GROUP id="{22147841-A3F0-22BA-D93B-3147A860F560}" name="includes">
-        <FILE id="iD2I4U" name="juce_lib.h" compile="0" resource="0" file="../cpp_source/includes/juce_lib.h"/>
+      <GROUP id="{EF2D1BD7-C46E-630E-4FC0-2E818BAC168E}" name="includes">
+        <FILE id="DHbs5z" name="juce_lib.h" compile="0" resource="0" file="../cpp_source/includes/juce_lib.h"/>
       </GROUP>
-      <FILE id="CMoF65" name="juce_lib.cpp" compile="1" resource="0" file="../cpp_source/juce_lib.cpp"/>
-      <FILE id="PJI7br" name="JuceMixItem.cpp" compile="1" resource="0" file="../cpp_source/JuceMixItem.cpp"/>
-      <FILE id="m64kj6" name="JuceMixItem.h" compile="0" resource="0" file="../cpp_source/JuceMixItem.h"/>
-      <FILE id="prPLPA" name="JuceMixPlayer.cpp" compile="1" resource="0"
+      <FILE id="ZoVaCD" name="juce_lib.cpp" compile="1" resource="0" file="../cpp_source/juce_lib.cpp"/>
+      <FILE id="pcDGig" name="JuceMixItem.cpp" compile="1" resource="0" file="../cpp_source/JuceMixItem.cpp"/>
+      <FILE id="p19D79" name="JuceMixItem.h" compile="0" resource="0" file="../cpp_source/JuceMixItem.h"/>
+      <FILE id="iXlUOP" name="JuceMixPlayer.cpp" compile="1" resource="0"
             file="../cpp_source/JuceMixPlayer.cpp"/>
-      <FILE id="gidgVN" name="JuceMixPlayer.h" compile="0" resource="0" file="../cpp_source/JuceMixPlayer.h"/>
-      <FILE id="jYQADY" name="Logger.cpp" compile="1" resource="0" file="../cpp_source/Logger.cpp"/>
-      <FILE id="NSsZLV" name="Logger.h" compile="0" resource="0" file="../cpp_source/Logger.h"/>
-      <FILE id="lLKYJW" name="TaskQueue.cpp" compile="1" resource="0" file="../cpp_source/TaskQueue.cpp"/>
-      <FILE id="Vz4o7R" name="TaskQueue.h" compile="0" resource="0" file="../cpp_source/TaskQueue.h"/>
+      <FILE id="VDqWb5" name="JuceMixPlayer.h" compile="0" resource="0" file="../cpp_source/JuceMixPlayer.h"/>
+      <FILE id="Rit782" name="Logger.cpp" compile="1" resource="0" file="../cpp_source/Logger.cpp"/>
+      <FILE id="DWBb8O" name="Logger.h" compile="0" resource="0" file="../cpp_source/Logger.h"/>
+      <FILE id="pdPC5P" name="TaskQueue.cpp" compile="1" resource="0" file="../cpp_source/TaskQueue.cpp"/>
+      <FILE id="il50Yt" name="TaskQueue.h" compile="0" resource="0" file="../cpp_source/TaskQueue.h"/>
     </GROUP>
   </MAINGROUP>
   <MODULES>
