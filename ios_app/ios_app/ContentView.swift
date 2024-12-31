@@ -8,16 +8,21 @@
 import SwiftUI
 import AVKit
 
-func swiftListener(arg1: UnsafePointer<CChar>, arg2: UnsafePointer<CChar>, value: Float) {
-    let str1 = String(cString: arg1)
-    let str2 = String(cString: arg2)
-    print("Swift Listener called with: \(str1), \(str2), \(value)")
+typealias StateUpdateCallback = @convention(c) (UnsafePointer<Int8>?) -> Void
+typealias OnProgresCallback = @convention(c) (Float) -> Void
+
+func onStateUpdate(state: UnsafePointer<Int8>!) {
+    let str1 = String(cString: state)
+    print("onStateUpdate: \(str1)")
+}
+
+func onProgress(progress: Float) {
+    print("onProgress: \(progress)")
 }
 
 struct ContentView: View {
 
     @State var player: UnsafeMutableRawPointer!
-    @State var item: UnsafeMutableRawPointer!
 
     var body: some View {
         VStack(spacing: 24) {
@@ -25,11 +30,12 @@ struct ContentView: View {
             Button("Init first") {
                 executeAsync {
                     player = JuceMixPlayer_init()
-                    item = JuceMixItem_init()
+                    JuceMixPlayer_onStateUpdate(player, onStateUpdate as StateUpdateCallback)
+                    JuceMixPlayer_onProgress(player, onProgress as OnProgresCallback)
                 }
             }
 
-            Button("Open file") {
+            Button("Reset") {
                 executeAsync {
                     resetPlayer()
                 }
@@ -53,7 +59,6 @@ struct ContentView: View {
 
             Button("Destroy") {
                 JuceMixPlayer_deinit(player)
-                JuceMixItem_deinit(item)
             }
         }
         .padding()
@@ -64,16 +69,16 @@ struct ContentView: View {
             } catch let err {
                 print("\(err)")
             }
-            testParseModel()
         }
     }
 
     func resetPlayer() {
-        let path = Bundle.main.path(forResource: "music", ofType: "mp3")!
+//        let path = Bundle.main.path(forResource: "music_small", ofType: "wav")!
+        let path = Bundle.main.path(forResource: "music_big", ofType: "mp3")!
         let json = """
 {
     "output": "/Users/apple/Downloads/out.wav",
-    "outputDuration": 102.88800048828125,
+    "outputDuration": 0,
     "tracks": [
         {
             "id_": "vocal",
@@ -81,15 +86,15 @@ struct ContentView: View {
             "volume": 1.0,
             "offset": 2,
             "fromTime": 10,
-            "duration" : ,
-            "enable": true
+            "duration" : 0,
+            "enabled": true
         },
         {
             "id_": "music",
             "path": "/Users/apple/Documents/Melodyze/melodyze-juce-example-ios/sample_ios_app/JuceKitTests/music.mp3",
             "volume": 1.0,
             "offset": 0,
-            "enable": false
+            "enabled": false
         },
         {
             "id_": "meth",
@@ -103,9 +108,7 @@ struct ContentView: View {
     ]
 }
 """
-
-
-        JuceMixPlayer_reset(player, item)
+        JuceMixPlayer_set(player, json.cString(using: .utf8))
     }
 }
 

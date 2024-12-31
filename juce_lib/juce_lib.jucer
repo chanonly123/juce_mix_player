@@ -11,8 +11,6 @@
         <FILE id="TR2RQi" name="json.hpp" compile="0" resource="0" file="../cpp_source/nlohmann/json.hpp"/>
       </GROUP>
       <FILE id="nB93So" name="juce_lib.cpp" compile="1" resource="0" file="../cpp_source/juce_lib.cpp"/>
-      <FILE id="Q6AtWt" name="JuceMixItem.cpp" compile="1" resource="0" file="../cpp_source/JuceMixItem.cpp"/>
-      <FILE id="AAG8bF" name="JuceMixItem.h" compile="0" resource="0" file="../cpp_source/JuceMixItem.h"/>
       <FILE id="XUeJQI" name="JuceMixPlayer.cpp" compile="1" resource="0"
             file="../cpp_source/JuceMixPlayer.cpp"/>
       <FILE id="rZ0lK2" name="JuceMixPlayer.h" compile="0" resource="0" file="../cpp_source/JuceMixPlayer.h"/>

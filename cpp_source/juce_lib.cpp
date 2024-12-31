@@ -1,7 +1,7 @@
+#include <JuceHeader.h>
 #include "includes/juce_lib.h"
 #include "Logger.h"
 #include "JuceMixPlayer.h"
-#include "JuceMixItem.h"
 #include "Models.h"
 
 void Java_com_rmsl_juce_Java_juceMessageManagerInit()
@@ -46,30 +46,17 @@ void JuceMixPlayer_pause(void *ptr)
     });
 }
 
-void JuceMixPlayer_reset(void* ptr, const char* json)
+void JuceMixPlayer_set(void* ptr, const char* json)
 {
-    juce::MessageManager::getInstance()->callAsync([=] {
-        static_cast<JuceMixPlayerRef *>(ptr)->ptr->reset(json);
-    });
+    static_cast<JuceMixPlayerRef *>(ptr)->ptr->set(json);
 }
 
-// MARK: JuceMixItem
-
-void *JuceMixItem_init()
+void JuceMixPlayer_onStateUpdate(void* ptr, void (*onStateUpdate)(const char*))
 {
-    return new JuceMixItem();
+    static_cast<JuceMixPlayerRef *>(ptr)->ptr->onStateUpdate(onStateUpdate);
 }
 
-void JuceMixItem_deinit(void *ptr)
+void JuceMixPlayer_onProgress(void* ptr, void (*onProgress)(float))
 {
-    delete static_cast<JuceMixItem *>(ptr);
-}
-
-void JuceMixItem_setPath(void *ptr, const char *path, float begin, float end)
-{
-    static_cast<JuceMixItem *>(ptr)->setPath(juce::String(path), begin, end);
-}
-
-void testParse(const char* json) {
-    MixerModel::parse(json);
+    static_cast<JuceMixPlayerRef *>(ptr)->ptr->onProgress(onProgress);
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <JuceHeader.h>
 #include "nlohmann/json.hpp"
 
 struct MixerTrack {

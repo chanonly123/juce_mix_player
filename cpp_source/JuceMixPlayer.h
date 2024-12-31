@@ -1,28 +1,38 @@
 #pragma once
 
+#include <JuceHeader.h>
 #include <unordered_set>
 #include "Logger.h"
 #include "TaskQueue.h"
 #include "Models.h"
-#include "JuceMixItem.h"
 #include "Models.h"
-#include <JuceHeader.h>
 #include <iostream>
+
+typedef void (*JuceMixPlayerOnProgress)(float);
+typedef void (*JuceMixPlayerOnStateUpdate)(const char*);
+
+enum JuceMixPlayerState
+{
+    IDLE, PLAYING, PAUSED, STOPPED, READY, LOADING, ERROR
+};
 
 class JuceMixPlayer : public juce::AudioSource,
                       private juce::Timer
 {
 private:
     TaskQueue taskQueue;
-    std::vector<JuceMixItem*> tracks;
     int samplesPerBlockExpected = 0;
-    int deviceSampleRate = 0;
+    float deviceSampleRate = 0;
     juce::AudioFormatManager formatManager;
     juce::LinearInterpolator interpolator[5];
     juce::AudioDeviceManager* deviceManager;
     juce::AudioSourcePlayer* player;
+
     JuceMixPlayerState state = IDLE;
-    ListenerFunction listener = nullptr;
+
+    JuceMixPlayerOnProgress onProgressCallback = nullptr;
+    JuceMixPlayerOnStateUpdate onStateUpdateCallback = nullptr;
+
     bool isPlaying = false;
 
     juce::AudioBuffer<float> playBuffer;
@@ -30,11 +40,12 @@ private:
     MixerData mixerData;
 
     float currentTime = 0;
-    int lastSampleIndex = 0;
+    float lastSampleIndex = 0;
 
+    std::unordered_set<int> loadingBlocks;
     std::unordered_set<int> loadedBlocks;
-    const float blockDuration = 0.2; // second
-    const int sampleRate = 48000;
+    const float blockDuration = 10; // second
+    const float sampleRate = 48000;
 
     void _play();
 
@@ -42,7 +53,11 @@ private:
 
     void _prepare();
 
-    void _loadTrack(int block);
+    void _loadAudioBlock(int block);
+
+    void _onProgressNotify(float progress);
+
+    void _onStateUpdateNotify(std::string state);
 
 public:
     JuceMixPlayer();
@@ -57,13 +72,15 @@ public:
 
     void togglePlayPause();
 
-    void reset(const char* json);
+    void set(const char* json);
 
     void prepare();
 
-    void resetItems();
+    void onProgress(JuceMixPlayerOnProgress callback);
 
-    void setListener(ListenerFunction listener);
+    void onStateUpdate(JuceMixPlayerOnStateUpdate callback);
+
+    float getCurrentTime();
 
     /// juce::AudioSource
     void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
