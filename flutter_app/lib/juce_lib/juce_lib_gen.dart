@@ -21,6 +21,17 @@ class JuceLibGen {
           lookup)
       : _lookup = lookup;
 
+  void Java_com_rmsl_juce_Java_juceMessageManagerInit() {
+    return _Java_com_rmsl_juce_Java_juceMessageManagerInit();
+  }
+
+  late final _Java_com_rmsl_juce_Java_juceMessageManagerInitPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function()>>(
+          'Java_com_rmsl_juce_Java_juceMessageManagerInit');
+  late final _Java_com_rmsl_juce_Java_juceMessageManagerInit =
+      _Java_com_rmsl_juce_Java_juceMessageManagerInitPtr.asFunction<
+          void Function()>();
+
   void juceEnableLogs() {
     return _juceEnableLogs();
   }
@@ -28,16 +39,6 @@ class JuceLibGen {
   late final _juceEnableLogsPtr =
       _lookup<ffi.NativeFunction<ffi.Void Function()>>('juceEnableLogs');
   late final _juceEnableLogs = _juceEnableLogsPtr.asFunction<void Function()>();
-
-  void juceMessageManagerInit() {
-    return _juceMessageManagerInit();
-  }
-
-  late final _juceMessageManagerInitPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function()>>(
-          'juceMessageManagerInit');
-  late final _juceMessageManagerInit =
-      _juceMessageManagerInitPtr.asFunction<void Function()>();
 
   ffi.Pointer<ffi.Void> JuceMixPlayer_init() {
     return _JuceMixPlayer_init();
@@ -108,6 +109,23 @@ class JuceLibGen {
   late final _JuceMixPlayer_addItem = _JuceMixPlayer_addItemPtr.asFunction<
       void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
 
+  void JuceMixPlayer_reset(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<pkg_ffi.Utf8> json,
+  ) {
+    return _JuceMixPlayer_reset(
+      ptr,
+      json,
+    );
+  }
+
+  late final _JuceMixPlayer_resetPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<ffi.Void>,
+              ffi.Pointer<pkg_ffi.Utf8>)>>('JuceMixPlayer_reset');
+  late final _JuceMixPlayer_reset = _JuceMixPlayer_resetPtr.asFunction<
+      void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>();
+
   ffi.Pointer<ffi.Void> JuceMixItem_init() {
     return _JuceMixItem_init();
   }
@@ -153,4 +171,18 @@ class JuceLibGen {
   late final _JuceMixItem_setPath = _JuceMixItem_setPathPtr.asFunction<
       void Function(
           ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>, double, double)>();
+
+  void testParse(
+    ffi.Pointer<pkg_ffi.Utf8> json,
+  ) {
+    return _testParse(
+      json,
+    );
+  }
+
+  late final _testParsePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>(
+          'testParse');
+  late final _testParse =
+      _testParsePtr.asFunction<void Function(ffi.Pointer<pkg_ffi.Utf8>)>();
 }

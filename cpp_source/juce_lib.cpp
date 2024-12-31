@@ -2,52 +2,55 @@
 #include "Logger.h"
 #include "JuceMixPlayer.h"
 #include "JuceMixItem.h"
+#include "Models.h"
 
-#ifdef ANDROID
-#include <jni.h>
-
-void Java_com_rmsl_juce_Java_juceMessageManagerInit(JNIEnv* env, jclass)
+void Java_com_rmsl_juce_Java_juceMessageManagerInit()
 {
     juce::MessageManager::getInstance();
 }
-
-#endif
 
 void juceEnableLogs()
 {
     enableLogsValue = true;
 }
 
-void juceMessageManagerInit()
-{
-    juce::MessageManager::getInstance();
-}
-
 // MARK: JuceMixPlayer
 
 void *JuceMixPlayer_init()
 {
-    return new JuceMixPlayer();
+    std::promise<void*> promise;
+    juce::MessageManager::getInstance()->callAsync([&promise] {
+        promise.set_value(new JuceMixPlayerRef());
+    });
+    return promise.get_future().get();
 }
 
 void JuceMixPlayer_deinit(void *ptr)
 {
-    delete static_cast<JuceMixPlayer *>(ptr);
+    juce::MessageManager::getInstance()->callAsync([=] {
+        delete static_cast<JuceMixPlayerRef *>(ptr);
+    });
 }
 
 void JuceMixPlayer_play(void *ptr)
 {
-    static_cast<JuceMixPlayer *>(ptr)->play();
+    juce::MessageManager::getInstance()->callAsync([=] {
+        static_cast<JuceMixPlayerRef *>(ptr)->ptr->play();
+    });
 }
 
 void JuceMixPlayer_pause(void *ptr)
 {
-    static_cast<JuceMixPlayer *>(ptr)->pause();
+    juce::MessageManager::getInstance()->callAsync([=] {
+        static_cast<JuceMixPlayerRef *>(ptr)->ptr->pause();
+    });
 }
 
-void JuceMixPlayer_addItem(void *ptr, void *item)
+void JuceMixPlayer_reset(void* ptr, const char* json)
 {
-    static_cast<JuceMixPlayer *>(ptr)->addItem(static_cast<JuceMixItem *>(item));
+    juce::MessageManager::getInstance()->callAsync([=] {
+        static_cast<JuceMixPlayerRef *>(ptr)->ptr->reset(json);
+    });
 }
 
 // MARK: JuceMixItem
@@ -65,4 +68,8 @@ void JuceMixItem_deinit(void *ptr)
 void JuceMixItem_setPath(void *ptr, const char *path, float begin, float end)
 {
     static_cast<JuceMixItem *>(ptr)->setPath(juce::String(path), begin, end);
+}
+
+void testParse(const char* json) {
+    MixerModel::parse(json);
 }

@@ -31,9 +31,7 @@ struct ContentView: View {
 
             Button("Open file") {
                 executeAsync {
-                    let path = Bundle.main.path(forResource: "music", ofType: "mp3")!
-                    JuceMixItem_setPath(item, path.cString(using: .utf8), 0, 0)
-                    JuceMixPlayer_addItem(player, item)
+                    resetPlayer()
                 }
             }
 
@@ -50,12 +48,12 @@ struct ContentView: View {
             }
 
             Button("Stop") {
-//                native_call(player, "stop", nil)
+
             }
 
             Button("Destroy") {
-//                native_call(player, "destroy", nil)
-//                native_call(item, "destroy", nil)
+                JuceMixPlayer_deinit(player)
+                JuceMixItem_deinit(item)
             }
         }
         .padding()
@@ -66,7 +64,48 @@ struct ContentView: View {
             } catch let err {
                 print("\(err)")
             }
+            testParseModel()
         }
+    }
+
+    func resetPlayer() {
+        let path = Bundle.main.path(forResource: "music", ofType: "mp3")!
+        let json = """
+{
+    "output": "/Users/apple/Downloads/out.wav",
+    "outputDuration": 102.88800048828125,
+    "tracks": [
+        {
+            "id_": "vocal",
+            "path": "\(path)",
+            "volume": 1.0,
+            "offset": 2,
+            "fromTime": 10,
+            "duration" : ,
+            "enable": true
+        },
+        {
+            "id_": "music",
+            "path": "/Users/apple/Documents/Melodyze/melodyze-juce-example-ios/sample_ios_app/JuceKitTests/music.mp3",
+            "volume": 1.0,
+            "offset": 0,
+            "enable": false
+        },
+        {
+            "id_": "meth",
+            "path": "/Users/apple/Documents/Melodyze/melodyze-juce-example-ios/sample_ios_app/JuceKitTests/met_h.wav",
+            "volume": 1.0,
+            "offset": 0,
+            "repeat": true,
+            "repeatInterval": 2.0,
+            "enabled": false
+        }
+    ]
+}
+"""
+
+
+        JuceMixPlayer_reset(player, item)
     }
 }
 
