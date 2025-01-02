@@ -1,23 +1,36 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include <unordered_set>
+#include "nlohmann/json.hpp"
 #include "Logger.h"
 #include "TaskQueue.h"
 #include "Models.h"
 #include "Models.h"
 #include <iostream>
 
-typedef void (*JuceMixPlayerOnProgress)(float);
-typedef void (*JuceMixPlayerOnStateUpdate)(const char*);
+typedef void (*JuceMixPlayerCallbackFloat)(float);
+typedef void (*JuceMixPlayerCallbackString)(const char*);
 
 enum JuceMixPlayerState
 {
     IDLE, PLAYING, PAUSED, STOPPED, READY, LOADING, ERROR
 };
 
+NLOHMANN_JSON_SERIALIZE_ENUM(JuceMixPlayerState,{
+    {IDLE, "IDLE"},
+    {PLAYING, "PLAYING"},
+    {PAUSED, "PAUSED"},
+    {STOPPED, "STOPPED"},
+    {READY, "READY"},
+    {LOADING, "LOADING"},
+    {ERROR, "ERROR"},
+});
+
+std::string JuceMixPlayerState_toString(JuceMixPlayerState state);
+JuceMixPlayerState JuceMixPlayerState_make(std::string state);
+
 class JuceMixPlayer : public juce::AudioSource,
-                      private juce::Timer
+private juce::Timer
 {
 private:
     TaskQueue taskQueue;
@@ -28,10 +41,11 @@ private:
     juce::AudioDeviceManager* deviceManager;
     juce::AudioSourcePlayer* player;
 
-    JuceMixPlayerState state = IDLE;
+    JuceMixPlayerState currentState = IDLE;
 
-    JuceMixPlayerOnProgress onProgressCallback = nullptr;
-    JuceMixPlayerOnStateUpdate onStateUpdateCallback = nullptr;
+    JuceMixPlayerCallbackFloat onProgressCallback = nullptr;
+    JuceMixPlayerCallbackString onStateUpdateCallback = nullptr;
+    JuceMixPlayerCallbackString onErrorCallback = nullptr;
 
     bool isPlaying = false;
 
@@ -51,13 +65,17 @@ private:
 
     void _pause(bool stop);
 
-    void _prepare();
+    /// create reader for files
+    void _prepareInternal();
 
+    /// loads audio block for `blockDuration` and `block` number. Blocks are chunks of the audio file.
     void _loadAudioBlock(int block);
 
     void _onProgressNotify(float progress);
 
-    void _onStateUpdateNotify(std::string state);
+    void _onStateUpdateNotify(JuceMixPlayerState state);
+
+    void _onErrorNotify(std::string error);
 
 public:
     JuceMixPlayer();
@@ -76,11 +94,15 @@ public:
 
     void prepare();
 
-    void onProgress(JuceMixPlayerOnProgress callback);
+    void onProgress(JuceMixPlayerCallbackFloat callback);
 
-    void onStateUpdate(JuceMixPlayerOnStateUpdate callback);
+    void onStateUpdate(JuceMixPlayerCallbackString callback);
+
+    void onError(JuceMixPlayerCallbackString callback);
 
     float getCurrentTime();
+
+    std::string getCurrentState();
 
     /// juce::AudioSource
     void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;

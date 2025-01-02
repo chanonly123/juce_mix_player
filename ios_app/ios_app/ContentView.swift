@@ -20,6 +20,11 @@ func onProgress(progress: Float) {
     print("onProgress: \(progress)")
 }
 
+func onError(error: UnsafePointer<Int8>!) {
+    let err = String(cString: error)
+    print("onError: \(err)")
+}
+
 struct ContentView: View {
 
     @State var player: UnsafeMutableRawPointer!
@@ -35,9 +40,15 @@ struct ContentView: View {
                 }
             }
 
-            Button("Reset") {
+            Button("Load smaller") {
                 executeAsync {
-                    resetPlayer()
+                    resetPlayer(small: true)
+                }
+            }
+
+            Button("Load big") {
+                executeAsync {
+                    resetPlayer(small: false)
                 }
             }
 
@@ -72,9 +83,9 @@ struct ContentView: View {
         }
     }
 
-    func resetPlayer() {
-//        let path = Bundle.main.path(forResource: "music_small", ofType: "wav")!
-        let path = Bundle.main.path(forResource: "music_big", ofType: "mp3")!
+    func resetPlayer(small: Bool) {
+        let path1 = Bundle.main.path(forResource: "music_small", ofType: "wav")!
+        let path2 = Bundle.main.path(forResource: "music_big", ofType: "mp3")!
         let json = """
 {
     "output": "/Users/apple/Downloads/out.wav",
@@ -82,7 +93,7 @@ struct ContentView: View {
     "tracks": [
         {
             "id_": "vocal",
-            "path": "\(path)",
+            "path": "\(small ? path1 : path2)",
             "volume": 1.0,
             "offset": 2,
             "fromTime": 10,
