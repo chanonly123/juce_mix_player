@@ -10,10 +10,6 @@ JuceMixPlayerState JuceMixPlayerState_make(std::string state) {
     return j.template get<JuceMixPlayerState>();
 }
 
-JuceMixPlayerRef::JuceMixPlayerRef() {
-    ptr.reset(new JuceMixPlayer());
-}
-
 JuceMixPlayer::JuceMixPlayer() {
     PRINT("JuceMixPlayer()");
 
@@ -41,16 +37,16 @@ JuceMixPlayer::~JuceMixPlayer() {
 }
 
 void JuceMixPlayer::_play() {
-    if (!isPlaying) {
-        isPlaying = true;
+    if (!_isPlaying) {
+        _isPlaying = true;
         _onStateUpdateNotify(PLAYING);
         startTimer(1000);
     }
 }
 
 void JuceMixPlayer::_pause(bool stop) {
-    if (isPlaying) {
-        isPlaying = false;
+    if (_isPlaying) {
+        _isPlaying = false;
         stopTimer();
     }
     if (stop) {
@@ -73,42 +69,58 @@ void JuceMixPlayer::stop() {
     _pause(true);
 }
 
+void JuceMixPlayer::seek(float value) {
+    taskQueue.async([&, value]{
+        bool wasPlaying = _isPlaying;
+        _isPlaying = false;
+        _loadAudioBlock(getDuration() * value / blockDuration);
+        lastSampleIndex = playBuffer.getNumSamples() * value;
+        if (wasPlaying) {
+            _isPlaying = true;
+        }
+    });
+}
+
 void JuceMixPlayer::_onProgressNotify(float progress) {
     if (onProgressCallback != nullptr)
-        onProgressCallback(progress);
+        onProgressCallback(this, progress);
 }
 
 void JuceMixPlayer::_onStateUpdateNotify(JuceMixPlayerState state) {
     if (onStateUpdateCallback != nullptr) {
         if (currentState != state) {
             currentState = state;
-            onStateUpdateCallback(returnCopyCharDelete(JuceMixPlayerState_toString(state).c_str()));
+            onStateUpdateCallback(this, returnCopyCharDelete(JuceMixPlayerState_toString(state).c_str()));
         }
     }
 }
 
 void JuceMixPlayer::_onErrorNotify(std::string error) {
     if (onErrorCallback != nullptr)
-        onErrorCallback(returnCopyCharDelete(error.c_str()));
+        onErrorCallback(this, returnCopyCharDelete(error.c_str()));
 }
 
 void JuceMixPlayer::togglePlayPause() {
-    if (isPlaying) {
+    if (_isPlaying) {
         pause();
     } else {
         play();
     }
 }
 
-void JuceMixPlayer::set(const char* json) {
-    taskQueue.async([&, json]{
+void JuceMixPlayer::setJson(const char* json) {
+    std::string json_(json);
+    taskQueue.async([&, json_]{
         try {
-            MixerData data = MixerModel::parse(json);
+            MixerData data = MixerModel::parse(json_.c_str());
             if (!(mixerData == data)) {
                 mixerData = data;
                 prepare();
             }
         } catch (const std::exception& e) {
+            mixerData = MixerData();
+            prepare();
+            PRINT(e.what());
             _onErrorNotify(std::string(e.what()));
         }
     });
@@ -220,8 +232,14 @@ void JuceMixPlayer::prepareToPlay(int samplesPerBlockExpected, double sampleRate
 
 // override
 void JuceMixPlayer::getNextAudioBlock(const juce::AudioSourceChannelInfo &bufferToFill) {
-    if (!isPlaying) {
+    if (!_isPlaying) {
         bufferToFill.clearActiveBufferRegion();
+        return;
+    }
+
+    if (lastSampleIndex >= playBuffer.getNumSamples()) {
+        _onProgressNotify(1);
+        _pause(false);
         return;
     }
 
@@ -237,9 +255,6 @@ void JuceMixPlayer::getNextAudioBlock(const juce::AudioSourceChannelInfo &buffer
     }
 
     lastSampleIndex += readCount;
-    if (lastSampleIndex > playBuffer.getNumSamples()) {
-        _pause(false);
-    }
 
     // load next block in advance
     taskQueue.async([&]{
@@ -254,13 +269,21 @@ void JuceMixPlayer::releaseResources() {
 
 // override
 void JuceMixPlayer::timerCallback() {
-    _onProgressNotify(getCurrentTime());
+    _onProgressNotify(lastSampleIndex / (float)playBuffer.getNumSamples());
 }
 
 float JuceMixPlayer::getCurrentTime() {
     return lastSampleIndex / sampleRate;
 }
 
+float JuceMixPlayer::getDuration() {
+    return playBuffer.getNumSamples() / sampleRate;
+}
+
 std::string JuceMixPlayer::getCurrentState() {
     return JuceMixPlayerState_toString(currentState);
+}
+
+int JuceMixPlayer::isPlaying() {
+    return _isPlaying ? 1 : 0;
 }

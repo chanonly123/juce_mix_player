@@ -18,47 +18,62 @@ void juceEnableLogs()
 
 void *JuceMixPlayer_init()
 {
-    return new JuceMixPlayerRef();
+    return new JuceMixPlayer();
 }
 
 void JuceMixPlayer_deinit(void *ptr)
 {
     juce::MessageManager::getInstanceWithoutCreating()->callAsync([=] {
-        delete static_cast<JuceMixPlayerRef *>(ptr);
+        delete static_cast<JuceMixPlayer *>(ptr);
     });
 }
 
 void JuceMixPlayer_play(void *ptr)
 {
-    static_cast<JuceMixPlayerRef *>(ptr)->ptr->play();
+    static_cast<JuceMixPlayer *>(ptr)->play();
 }
 
 void JuceMixPlayer_pause(void *ptr)
 {
-    static_cast<JuceMixPlayerRef *>(ptr)->ptr->pause();
+    static_cast<JuceMixPlayer *>(ptr)->pause();
 }
 
 void JuceMixPlayer_stop(void *ptr)
 {
-    static_cast<JuceMixPlayerRef *>(ptr)->ptr->stop();
+    static_cast<JuceMixPlayer *>(ptr)->stop();
 }
 
 void JuceMixPlayer_set(void* ptr, const char* json)
 {
-    static_cast<JuceMixPlayerRef *>(ptr)->ptr->set(json);
+    static_cast<JuceMixPlayer *>(ptr)->setJson(json);
 }
 
-void JuceMixPlayer_onStateUpdate(void* ptr, void (*onStateUpdate)(const char*))
+void JuceMixPlayer_onStateUpdate(void* ptr, void (*onStateUpdate)(void* ptr, const char*))
 {
-    static_cast<JuceMixPlayerRef *>(ptr)->ptr->onStateUpdate(onStateUpdate);
+    static_cast<JuceMixPlayer *>(ptr)->onStateUpdate(onStateUpdate);
 }
 
-void JuceMixPlayer_onProgress(void* ptr, void (*onProgress)(float))
+void JuceMixPlayer_onProgress(void* ptr, void (*onProgress)(void* ptr, float))
 {
-    static_cast<JuceMixPlayerRef *>(ptr)->ptr->onProgress(onProgress);
+    static_cast<JuceMixPlayer *>(ptr)->onProgress(onProgress);
 }
 
-void JuceMixPlayer_onError(void* ptr, void (*onError)(const char*))
+void JuceMixPlayer_onError(void* ptr, void (*onError)(void* ptr, const char*))
 {
-    static_cast<JuceMixPlayerRef *>(ptr)->ptr->onError(onError);
+    static_cast<JuceMixPlayer *>(ptr)->onError(onError);
+}
+
+float JuceMixPlayer_getDuration(void *ptr)
+{
+    return static_cast<JuceMixPlayer *>(ptr)->getDuration();
+}
+
+int JuceMixPlayer_isPlaying(void *ptr)
+{
+    return static_cast<JuceMixPlayer *>(ptr)->isPlaying();
+}
+
+void JuceMixPlayer_seek(void* ptr, float value)
+{
+    static_cast<JuceMixPlayer *>(ptr)->seek(value);
 }

@@ -23,6 +23,7 @@
 		18A29EBD2CBD12F000459DF0 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 18A29EB42CBD12F000459DF0 /* Preview Assets.xcassets */; };
 		18A29EBE2CBD12F000459DF0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 18A29EB62CBD12F000459DF0 /* Assets.xcassets */; };
 		18A29EC12CBD130000459DF0 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18A29EC02CBD130000459DF0 /* AppDelegate.swift */; };
+		18CCA13B2D2D6479008A6C14 /* JuceMixPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18CCA13A2D2D646E008A6C14 /* JuceMixPlayer.swift */; };
 		18F9DC172CEC922E000B5BA6 /* libjuce_lib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 18F9DC142CEC91FC000B5BA6 /* libjuce_lib.a */; };
 /* End PBXBuildFile section */
 
@@ -63,6 +64,7 @@
 		18A29EB82CBD12F000459DF0 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		18A29EB92CBD12F000459DF0 /* ios_app_testApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ios_app_testApp.swift; sourceTree = "<group>"; };
 		18A29EC02CBD130000459DF0 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		18CCA13A2D2D646E008A6C14 /* JuceMixPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JuceMixPlayer.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -139,6 +141,7 @@
 		18A29EBA2CBD12F000459DF0 /* ios_app */ = {
 			isa = PBXGroup;
 			children = (
+				18CCA13A2D2D646E008A6C14 /* JuceMixPlayer.swift */,
 				18A29EC02CBD130000459DF0 /* AppDelegate.swift */,
 				1881FF6C2D24A3D2009CEEDA /* music_small.wav */,
 				1881FF6E2D24A514009CEEDA /* music_big.mp3 */,
@@ -243,6 +246,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				18CCA13B2D2D6479008A6C14 /* JuceMixPlayer.swift in Sources */,
 				18A29EC12CBD130000459DF0 /* AppDelegate.swift in Sources */,
 				18A29EBB2CBD12F000459DF0 /* ContentView.swift in Sources */,
 				18A29EBC2CBD12F000459DF0 /* ios_app_testApp.swift in Sources */,

@@ -8,8 +8,8 @@
 #include "Models.h"
 #include <iostream>
 
-typedef void (*JuceMixPlayerCallbackFloat)(float);
-typedef void (*JuceMixPlayerCallbackString)(const char*);
+typedef void (*JuceMixPlayerCallbackFloat)(void*, float);
+typedef void (*JuceMixPlayerCallbackString)(void*, const char*);
 
 enum JuceMixPlayerState
 {
@@ -47,7 +47,7 @@ private:
     JuceMixPlayerCallbackString onStateUpdateCallback = nullptr;
     JuceMixPlayerCallbackString onErrorCallback = nullptr;
 
-    bool isPlaying = false;
+    bool _isPlaying = false;
 
     juce::AudioBuffer<float> playBuffer;
 
@@ -90,9 +90,12 @@ public:
 
     void togglePlayPause();
 
-    void set(const char* json);
+    void setJson(const char* json);
 
     void prepare();
+
+    /// value range 0 to 1
+    void seek(float value);
 
     void onProgress(JuceMixPlayerCallbackFloat callback);
 
@@ -100,7 +103,13 @@ public:
 
     void onError(JuceMixPlayerCallbackString callback);
 
+    // get curent time in seconds
     float getCurrentTime();
+
+    // get total duration in seconds
+    float getDuration();
+
+    int isPlaying();
 
     std::string getCurrentState();
 
@@ -113,11 +122,4 @@ public:
 
     /// juce::Timer
     void timerCallback() override;
-};
-
-class JuceMixPlayerRef {
-public:
-    std::shared_ptr<JuceMixPlayer> ptr;
-
-    JuceMixPlayerRef();
 };
