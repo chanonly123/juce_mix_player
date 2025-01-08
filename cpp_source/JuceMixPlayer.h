@@ -13,16 +13,15 @@ typedef void (*JuceMixPlayerCallbackString)(void*, const char*);
 
 enum JuceMixPlayerState
 {
-    IDLE, PLAYING, PAUSED, STOPPED, READY, LOADING, ERROR
+    IDLE, READY, PLAYING, PAUSED, STOPPED, ERROR
 };
 
 NLOHMANN_JSON_SERIALIZE_ENUM(JuceMixPlayerState,{
     {IDLE, "IDLE"},
+    {READY, "READY"},
     {PLAYING, "PLAYING"},
     {PAUSED, "PAUSED"},
     {STOPPED, "STOPPED"},
-    {READY, "READY"},
-    {LOADING, "LOADING"},
     {ERROR, "ERROR"},
 });
 
@@ -81,6 +80,8 @@ public:
     JuceMixPlayer();
 
     ~JuceMixPlayer();
+
+    void dispose();
 
     void play();
 

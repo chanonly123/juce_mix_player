@@ -3,20 +3,37 @@ import AVKit
 
 struct ContentView: View {
 
+    var body: some View {
+        NavigationLink {
+            PlayerPage()
+        } label: {
+            Text("ShowPlayer")
+        }
+    }
+}
+
+struct PlayerPage: View {
+
     @State private var player = JuceMixPlayer()
     @State private var progress: Float = 0
     @State private var sliderEditing: Bool = false
+    @State private var playerState: JuceMixPlayerState = .IDLE
 
     var body: some View {
         VStack {
+            Text("\(playerState.rawValue)")
+
+            Text("\(progress * player.getDuration()) / \(player.getDuration())")
+
             Slider(value: $progress) { editing in
                 sliderEditing = editing
                 if !editing {
                     player.seek(value: progress)
                 }
             }
+
             HStack {
-                Button(player.isPlaying() ? "pause" : "play") {
+                Button(playerState == .PLAYING ? "pause" : "play") {
                     player.togglePlayPause()
                 }
                 Button("Set file") {
@@ -28,6 +45,7 @@ struct ContentView: View {
         }
         .padding()
         .buttonStyle(.bordered)
+        .monospaced()
         .onAppear {
             player.setProgressHandler { progress in
                 if !sliderEditing {
@@ -35,6 +53,12 @@ struct ContentView: View {
                         self.progress = progress
                     }
                 }
+            }
+            player.setStateUpdateHandler { state in
+                playerState = state
+            }
+            player.setErrorHandler { error in
+                print("error: \(error)")
             }
         }
     }

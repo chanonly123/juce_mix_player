@@ -5,18 +5,15 @@ typealias FloatCallback = @convention(c) (UnsafeMutableRawPointer?, Float) -> Vo
 
 func onStateUpdate(player: UnsafeMutableRawPointer!, state: UnsafePointer<Int8>!) {
     let str = String(cString: state)
-    print("onStateUpdate: \(str)")
-    closuresStateUpdate[player]?(str)
+    closuresStateUpdate[player]?(JuceMixPlayerState(rawValue: str)!)
 }
 
 func onProgress(player: UnsafeMutableRawPointer!, progress: Float) {
-    print("onProgress: \(progress)")
     closuresProgress[player]?(progress)
 }
 
 func onError(player: UnsafeMutableRawPointer!, error: UnsafePointer<Int8>!) {
     let err = String(cString: error)
-    print("onError: \(err)")
     closuresError[player]?(err)
 }
 
@@ -27,12 +24,20 @@ extension Encodable {
     }
 }
 
+enum JuceMixPlayerState: String {
+    case IDLE, READY, PLAYING, PAUSED, STOPPED, ERROR
+}
+
 private var closuresProgress: [UnsafeMutableRawPointer: (Float)->Void] = [:]
-private var closuresStateUpdate: [UnsafeMutableRawPointer: (String)->Void] = [:]
+private var closuresStateUpdate: [UnsafeMutableRawPointer: (JuceMixPlayerState)->Void] = [:]
 private var closuresError: [UnsafeMutableRawPointer: (String)->Void] = [:]
 
 class JuceMixPlayer {
     private lazy var player: UnsafeMutableRawPointer = JuceMixPlayer_init()
+
+    init() {
+        print("swift JuceMixPlayer")
+    }
 
     func setFile(_ file: String) {
         let data = MixerData(
@@ -68,19 +73,23 @@ class JuceMixPlayer {
         JuceMixPlayer_isPlaying(player) == 1
     }
 
+    func getDuration() -> Float {
+        return JuceMixPlayer_getDuration(player)
+    }
+
     func setProgressHandler(_ handler: @escaping (Float)->Void) {
         closuresProgress[player] = handler
         JuceMixPlayer_onProgress(player, onProgress as FloatCallback)
     }
 
-    func setStateUpdateHandler(_ handler: @escaping (String)->Void) {
+    func setStateUpdateHandler(_ handler: @escaping (JuceMixPlayerState)->Void) {
         closuresStateUpdate[player] = handler
         JuceMixPlayer_onStateUpdate(player, onStateUpdate as StringUpdateCallback)
     }
 
     func setErrorHandler(handler: @escaping (String)->Void) {
         closuresError[player] = handler
-        JuceMixPlayer_onStateUpdate(player, onError as StringUpdateCallback)
+        JuceMixPlayer_onError(player, onError as StringUpdateCallback)
     }
 
     func seek(value: Float) {
@@ -88,9 +97,11 @@ class JuceMixPlayer {
     }
 
     deinit {
+        print("swift ~JuceMixPlayer")
         closuresError[player] = nil
         closuresStateUpdate[player] = nil
         closuresProgress[player] = nil
+        JuceMixPlayer_deinit(player)
     }
 }
 

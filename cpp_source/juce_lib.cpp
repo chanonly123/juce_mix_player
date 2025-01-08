@@ -23,9 +23,7 @@ void *JuceMixPlayer_init()
 
 void JuceMixPlayer_deinit(void *ptr)
 {
-    juce::MessageManager::getInstanceWithoutCreating()->callAsync([=] {
-        delete static_cast<JuceMixPlayer *>(ptr);
-    });
+    static_cast<JuceMixPlayer *>(ptr)->dispose();
 }
 
 void JuceMixPlayer_play(void *ptr)
