@@ -49,9 +49,7 @@ struct PlayerPage: View {
         .onAppear {
             player.setProgressHandler { progress in
                 if !sliderEditing {
-                    withAnimation {
-                        self.progress = progress
-                    }
+                    self.progress = progress
                 }
             }
             player.setStateUpdateHandler { state in

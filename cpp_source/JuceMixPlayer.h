@@ -35,6 +35,7 @@ private:
     TaskQueue taskQueue;
     int samplesPerBlockExpected = 0;
     float deviceSampleRate = 0;
+    float progressUpdateInterval = 0.05;
     juce::AudioFormatManager formatManager;
     juce::LinearInterpolator interpolator[5];
     juce::AudioDeviceManager* deviceManager;
@@ -106,6 +107,9 @@ public:
 
     // get curent time in seconds
     float getCurrentTime();
+
+    // set timer fire interval, in seconds
+    void setProgressUpdateInterval(float time);
 
     // get total duration in seconds
     float getDuration();

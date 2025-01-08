@@ -51,7 +51,7 @@ void JuceMixPlayer::_play() {
     if (!_isPlaying) {
         _isPlaying = true;
         _onStateUpdateNotify(PLAYING);
-        startTimer(1000);
+        startTimer(progressUpdateInterval * 1000);
     }
 }
 
@@ -280,7 +280,9 @@ void JuceMixPlayer::releaseResources() {
 
 // override
 void JuceMixPlayer::timerCallback() {
-    _onProgressNotify(lastSampleIndex / (float)playBuffer.getNumSamples());
+    if (_isPlaying) {
+        _onProgressNotify(lastSampleIndex / (float)playBuffer.getNumSamples());
+    }
 }
 
 float JuceMixPlayer::getCurrentTime() {
@@ -297,4 +299,8 @@ std::string JuceMixPlayer::getCurrentState() {
 
 int JuceMixPlayer::isPlaying() {
     return _isPlaying ? 1 : 0;
+}
+
+void JuceMixPlayer::setProgressUpdateInterval(float time) {
+    progressUpdateInterval = time;
 }
