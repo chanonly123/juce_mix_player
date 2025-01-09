@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/asset_helper.dart';
 import 'package:flutter_app/juce_lib/juce_lib.dart';
-// import 'package:flutter_app/juce_mix_item.dart';
-// import 'package:flutter_app/juce_mix_player.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   JuceLib().juceEnableLogs();
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -15,62 +14,70 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: ButtonScreen(),
+      home: PlayerPage(),
     );
   }
 }
 
-class ButtonScreen extends StatefulWidget {
-  const ButtonScreen({super.key});
+class PlayerPage extends StatefulWidget {
+  const PlayerPage({super.key});
 
   @override
-  ButtonScreenState createState() => ButtonScreenState();
+  PlayerPageState createState() => PlayerPageState();
 }
 
-class ButtonScreenState extends State<ButtonScreen> {
-  // JuceMixPlayer? player;
-  // JuceMixItem? item;
-
-  final JuceMixPlayer player = JuceMixPlayer();
-
-  ButtonScreenState();
+class PlayerPageState extends State<PlayerPage> {
+  final player = JuceMixPlayer();
+  double progress = 0.0;
+  bool isSliderEditing = false;
+  bool isPlaying = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Flutter Stateful Buttons'),
-      ),
-      body: Center(
+      appBar: AppBar(title: const Text('Audio Player')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            ElevatedButton(
-              onPressed: () async {
-                // item ??= JuceMixItem();
-                // player ??= JuceMixPlayer();
-
-                String path =
-                    await AssetHelper.extractAsset('assets/media/music.mp3');
-                // item?.setPath(path, 0, 0);
-
-                // player?.addItem(item!);
+          children: [
+            Text('Progress: ${(progress * player.getDuration()).toStringAsFixed(2)} / ${player.getDuration().toStringAsFixed(2)}'),
+            Slider(
+              value: progress,
+              onChanged: (value) {
+                setState(() => progress = value);
               },
-              child: Text('Open file'),
+              onChangeStart: (_) {
+                isSliderEditing = true;
+              },
+              onChangeEnd: (value) {
+                isSliderEditing = false;
+                player.seek(value.toDouble());
+              },
             ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                // player?.play();
-              },
-              child: Text('Play'),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                // player?.pause();
-              },
-              child: Text('Pause'),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    if (isPlaying) {
+                      player.pause();
+                    } else {
+                      player.play();
+                    }
+                    setState(() => isPlaying = !isPlaying);
+                  },
+                  child: Text(isPlaying ? 'Pause' : 'Play'),
+                ),
+                const SizedBox(width: 16),
+                ElevatedButton(
+                  onPressed: () async {
+                    final path = await AssetHelper.extractAsset('assets/media/music.mp3');
+                    player.setFile(path);
+                  },
+                  child: const Text('Set File'),
+                ),
+              ],
             ),
           ],
         ),
@@ -80,8 +87,7 @@ class ButtonScreenState extends State<ButtonScreen> {
 
   @override
   void dispose() {
-    // player?.dispose();
-    // item?.dispose();
+    player.dispose();
     super.dispose();
   }
 }
