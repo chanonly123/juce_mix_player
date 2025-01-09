@@ -9,7 +9,7 @@ import UIKit
   ) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
     juceEnableLogs()
-    juceMessageManagerInit()
+    Java_com_rmsl_juce_Java_juceMessageManagerInit()
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 }

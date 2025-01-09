@@ -9,3 +9,17 @@ class JuceLib extends JuceLibGen {
             ? DynamicLibrary.process()
             : DynamicLibrary.open("libjuce_lib.so"));
 }
+
+class JuceMixPlayer {
+  final JuceLib _juceLib = JuceLib();
+
+  late Pointer<Void> _ptr;
+
+  JuceMixPlayer() {
+    _ptr = _juceLib.JuceMixPlayer_init();
+  }
+
+  void play() {
+    _juceLib.JuceMixPlayer_play(_ptr);
+  }
+}
