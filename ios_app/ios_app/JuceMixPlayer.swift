@@ -25,7 +25,7 @@ extension Encodable {
 }
 
 enum JuceMixPlayerState: String {
-    case IDLE, READY, PLAYING, PAUSED, STOPPED, ERROR
+    case IDLE, READY, PLAYING, PAUSED, STOPPED, ERROR, COMPLETED
 }
 
 private var closuresProgress: [UnsafeMutableRawPointer: (Float)->Void] = [:]

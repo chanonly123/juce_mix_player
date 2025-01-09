@@ -54,6 +54,7 @@ struct PlayerPage: View {
             }
             player.setStateUpdateHandler { state in
                 playerState = state
+                print("state: \(state)")
             }
             player.setErrorHandler { error in
                 print("error: \(error)")
