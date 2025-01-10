@@ -1,10 +1,12 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_app/asset_helper.dart';
 import 'package:flutter_app/juce_lib/juce_lib.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  JuceLib().juceEnableLogs();
+  // JuceLib().juceEnableLogs();
   runApp(const MyApp());
 }
 
@@ -32,6 +34,33 @@ class PlayerPageState extends State<PlayerPage> {
   bool isSliderEditing = false;
   bool isPlaying = false;
 
+  JuceMixPlayerState state = JuceMixPlayerState.IDLE;
+
+  @override
+  void initState() {
+    super.initState();
+
+    player.setStateUpdateHandler((state) {
+      setState(() => this.state = state);
+    });
+
+    player.setProgressHandler((progress) {
+      if (!isSliderEditing) {
+        setState(() => this.progress = progress);
+      }
+    });
+
+    player.setErrorHandler((error) {
+      log('Error: $error');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(error),
+          backgroundColor: Colors.red,
+        ));
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -55,16 +84,18 @@ class PlayerPageState extends State<PlayerPage> {
                 player.seek(value.toDouble());
               },
             ),
+            // display the current state
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text('State: $state'),
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ElevatedButton(
                   onPressed: () {
-                    if (isPlaying) {
-                      player.pause();
-                    } else {
-                      player.play();
-                    }
+                    player.togglePlayPause();
+
                     setState(() => isPlaying = !isPlaying);
                   },
                   child: Text(isPlaying ? 'Pause' : 'Play'),
