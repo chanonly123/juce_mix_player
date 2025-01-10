@@ -13,7 +13,7 @@ typedef void (*JuceMixPlayerCallbackString)(void*, const char*);
 
 enum JuceMixPlayerState
 {
-    IDLE, READY, PLAYING, PAUSED, STOPPED, ERROR
+    IDLE, READY, PLAYING, PAUSED, STOPPED, ERROR, COMPLETED
 };
 
 NLOHMANN_JSON_SERIALIZE_ENUM(JuceMixPlayerState,{
@@ -23,6 +23,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(JuceMixPlayerState,{
     {PAUSED, "PAUSED"},
     {STOPPED, "STOPPED"},
     {ERROR, "ERROR"},
+    {COMPLETED, "COMPLETED"},
 });
 
 std::string JuceMixPlayerState_toString(JuceMixPlayerState state);

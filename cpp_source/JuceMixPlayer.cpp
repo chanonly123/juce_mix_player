@@ -127,6 +127,8 @@ void JuceMixPlayer::setJson(const char* json) {
             if (!(mixerData == data)) {
                 mixerData = data;
                 prepare();
+            } else {
+                PRINT("Same mix data! ignoring");
             }
         } catch (const std::exception& e) {
             mixerData = MixerData();
@@ -144,6 +146,7 @@ void JuceMixPlayer::prepare() {
         lastSampleIndex = 0;
         _prepareInternal();
         _loadAudioBlock(0);
+        _onStateUpdateNotify(READY);
     });
 }
 
@@ -249,7 +252,12 @@ void JuceMixPlayer::getNextAudioBlock(const juce::AudioSourceChannelInfo &buffer
     }
 
     if (lastSampleIndex >= playBuffer.getNumSamples()) {
-        _onProgressNotify(1);
+        if (playBuffer.getNumSamples() == 0) {
+            _onStateUpdateNotify(IDLE);
+        } else {
+            _onProgressNotify(1);
+            _onStateUpdateNotify(COMPLETED);
+        }
         _pause(false);
         return;
     }
