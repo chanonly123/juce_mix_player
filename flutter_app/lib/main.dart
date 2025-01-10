@@ -75,6 +75,7 @@ class PlayerPageState extends State<PlayerPage> {
               value: progress,
               onChanged: (value) {
                 setState(() => progress = value);
+                player.seek(progress);
               },
               onChangeStart: (_) {
                 isSliderEditing = true;
