@@ -37,7 +37,8 @@ struct PlayerPage: View {
                     player.togglePlayPause()
                 }
                 Button("Set file") {
-                    let path = Bundle.main.path(forResource: "music_big", ofType: "mp3")!
+                    let path = Bundle.main.path(forResource: "music", ofType: "mp3")!
+//                    let path = Bundle.main.path(forResource: "music_big", ofType: "mp3")!
 //                    let path = Bundle.main.path(forResource: "music_small", ofType: "wav")!
                     player.setFile(path)
                 }

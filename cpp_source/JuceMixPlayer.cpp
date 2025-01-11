@@ -16,7 +16,7 @@ JuceMixPlayer::JuceMixPlayer() {
     formatManager.registerBasicFormats();
 
     player = new juce::AudioSourcePlayer();
-    juce::LinearInterpolator interpolator;
+    juce::WindowedSincInterpolator interpolator;
 
     player->setSource(this);
 
@@ -69,23 +69,30 @@ void JuceMixPlayer::_pause(bool stop) {
 }
 
 void JuceMixPlayer::play() {
-    _play();
+    taskQueue.async([&]{
+        _play();
+    });
 }
 
 void JuceMixPlayer::pause() {
-    _pause(false);
+    taskQueue.async([&]{
+        _pause(false);
+    });
 }
 
 void JuceMixPlayer::stop() {
-    _pause(true);
+    taskQueue.async([&]{
+        _pause(true);
+    });
 }
 
 void JuceMixPlayer::seek(float value) {
-    taskQueue.async([&, value]{
+    float _value = std::min(1.0f, std::max(value, 0.0f));
+    taskQueue.async([&, _value]{
         bool wasPlaying = _isPlaying;
         _isPlaying = false;
-        _loadAudioBlock(getDuration() * value / blockDuration);
-        lastSampleIndex = playBuffer.getNumSamples() * value;
+        _loadAudioBlock(getDuration() * _value / blockDuration);
+        lastSampleIndex = playBuffer.getNumSamples() * _value;
         if (wasPlaying) {
             _isPlaying = true;
         }
@@ -94,7 +101,7 @@ void JuceMixPlayer::seek(float value) {
 
 void JuceMixPlayer::_onProgressNotify(float progress) {
     if (onProgressCallback != nullptr)
-        onProgressCallback(this, progress);
+        onProgressCallback(this, std::min(progress, 1.0F));
 }
 
 void JuceMixPlayer::_onStateUpdateNotify(JuceMixPlayerState state) {
@@ -251,7 +258,10 @@ void JuceMixPlayer::getNextAudioBlock(const juce::AudioSourceChannelInfo &buffer
         return;
     }
 
-    if (lastSampleIndex >= playBuffer.getNumSamples()) {
+    float speedRatio = sampleRate/deviceSampleRate;
+    float readCount = (float)bufferToFill.numSamples * speedRatio;
+
+    if (lastSampleIndex + readCount > playBuffer.getNumSamples()) {
         if (playBuffer.getNumSamples() == 0) {
             _onStateUpdateNotify(IDLE);
         } else {
@@ -261,9 +271,6 @@ void JuceMixPlayer::getNextAudioBlock(const juce::AudioSourceChannelInfo &buffer
         _pause(false);
         return;
     }
-
-    float speedRatio = sampleRate/deviceSampleRate;
-    float readCount = (float)bufferToFill.numSamples * speedRatio;
 
     for (int i=0; i<playBuffer.getNumChannels(); i++) {
         float* buffer = bufferToFill.buffer->getWritePointer(i, bufferToFill.startSample);
@@ -288,7 +295,7 @@ void JuceMixPlayer::releaseResources() {
 
 // override
 void JuceMixPlayer::timerCallback() {
-    if (_isPlaying) {
+    if (_isPlaying && playBuffer.getNumSamples() > 0) {
         _onProgressNotify(lastSampleIndex / (float)playBuffer.getNumSamples());
     }
 }

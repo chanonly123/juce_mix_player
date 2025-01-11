@@ -42,6 +42,22 @@ class PlayerPageState extends State<PlayerPage> {
 
     player.setStateUpdateHandler((state) {
       setState(() => this.state = state);
+      switch (state) {
+        case JuceMixPlayerState.PAUSED:
+          setState(() => isPlaying = false);
+        case JuceMixPlayerState.PLAYING:
+          setState(() => isPlaying = true);
+        case JuceMixPlayerState.IDLE:
+        // TODO: Handle this case.
+        case JuceMixPlayerState.READY:
+        // TODO: Handle this case.
+        case JuceMixPlayerState.STOPPED:
+        // TODO: Handle this case.
+        case JuceMixPlayerState.COMPLETED:
+        // TODO: Handle this case.
+        case JuceMixPlayerState.ERROR:
+        // TODO: Handle this case.
+      }
     });
 
     player.setProgressHandler((progress) {
