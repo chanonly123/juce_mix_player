@@ -1,6 +1,9 @@
 #include "Models.h"
 
 MixerData MixerModel::parse(const char *json) {
+    if (std::string(json) == "") {
+        throw std::runtime_error("json empty!");
+    }
     nlohmann::json jsonPerson = nlohmann::json::parse(json);
     MixerData data = jsonPerson.get<MixerData>();
     isValid(data);
@@ -10,20 +13,23 @@ MixerData MixerModel::parse(const char *json) {
 void MixerModel::isValid(MixerData& mixerData) {
     std::unordered_set<std::string> set;
     for(MixerTrack& track: mixerData.tracks) {
+        if (track.id_ == "") {
+            throw std::runtime_error("id_ cannot be empty");
+        }
         if (set.find(track.id_) != set.end()) {
-            throw std::runtime_error("Duplicate id found");
+            throw std::runtime_error("Duplicate id_ found: " + track.id_);
         }
         if (track.duration < 0) {
-            throw "`duration` < 0";
+            throw std::runtime_error("`duration` < 0");
         }
         if (track.fromTime < 0) {
-            throw "`fromTime` < 0";
+            throw std::runtime_error("`fromTime` < 0");
         }
         if (track.offset < 0) {
-            throw "`offset` < 0";
+            throw std::runtime_error("`offset` < 0");
         }
         if (track.repeatInterval < 0) {
-            throw "`repeatInterval` < 0";
+            throw std::runtime_error("`repeatInterval` < 0");
         }
         set.insert(track.id_);
     }

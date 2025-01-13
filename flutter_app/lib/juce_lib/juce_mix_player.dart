@@ -6,6 +6,7 @@ import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_app/juce_lib/juce_lib_gen.dart';
+import 'package:flutter_app/juce_lib/juce_mix_models.dart';
 
 // Native function typedefs
 typedef StringUpdateCallback = Void Function(Pointer<Void>, Pointer<Utf8>);
@@ -23,7 +24,10 @@ final _errorCallbacks = <Pointer<Void>, ErrorCallbackDart>{};
 enum JuceMixPlayerState { IDLE, READY, PLAYING, PAUSED, STOPPED, COMPLETED, ERROR }
 
 class JuceLib extends JuceLibGen {
-  JuceLib() : super(defaultTargetPlatform == TargetPlatform.iOS ? DynamicLibrary.process() : DynamicLibrary.open("libjuce_lib.so"));
+  JuceLib()
+      : super(defaultTargetPlatform == TargetPlatform.iOS
+            ? DynamicLibrary.process()
+            : DynamicLibrary.open("libjuce_lib.so"));
 }
 
 class JuceMixPlayer {
@@ -73,12 +77,16 @@ class JuceMixPlayer {
   }
 
   void setFile(String path) {
-    final data = {
-      'tracks': [
-        {'path': path, 'enabled': true}
-      ]
-    };
-    _juceLib.JuceMixPlayer_set(_ptr, jsonEncode(data).toNativeUtf8().cast());
+    MixerData data = MixerData(tracks: [
+      MixerTrack(id: "id_0", path: path),
+    ]);
+    final jsonStr = json.encode(data.toJson());
+    _juceLib.JuceMixPlayer_set(_ptr, jsonStr.toNativeUtf8());
+  }
+
+  void setMixData(MixerData data) {
+    final jsonStr = json.encode(data.toJson());
+    _juceLib.JuceMixPlayer_set(_ptr, jsonStr.toNativeUtf8());
   }
 
   void play() {

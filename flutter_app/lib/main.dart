@@ -2,7 +2,8 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_app/asset_helper.dart';
-import 'package:flutter_app/juce_lib/juce_lib.dart';
+import 'package:flutter_app/juce_lib/juce_mix_models.dart';
+import 'package:flutter_app/juce_lib/juce_mix_player.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -124,6 +125,17 @@ class PlayerPageState extends State<PlayerPage> {
                     player.setFile(path);
                   },
                   child: const Text('Set File'),
+                ),
+                const SizedBox(width: 16),
+                ElevatedButton(
+                  onPressed: () async {
+                    final path = await AssetHelper.extractAsset('assets/media/music.mp3');
+                    player.setMixData(MixerData(tracks: [
+                      MixerTrack(id: "0", path: path),
+                      MixerTrack(id: "1", path: path, offset: 0.5),
+                    ]));
+                  },
+                  child: const Text('Set mixed'),
                 ),
               ],
             ),
