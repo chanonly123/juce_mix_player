@@ -30,12 +30,20 @@ class JuceMixPlayer {
   final JuceLib _juceLib = JuceLib();
   late Pointer<Void> _ptr;
 
+  late final NativeCallable<FloatCallback> _progressCallbackNativeCallable;
+  late final NativeCallable<StringUpdateCallback> _stateUpdateNativeCallable;
+  late final NativeCallable<StringUpdateCallback> _errorUpdateNativeCallable;
+
   JuceMixPlayer() {
     _ptr = _juceLib.JuceMixPlayer_init();
 
-    _juceLib.JuceMixPlayer_onProgress(_ptr, NativeCallable<FloatCallback>.listener(_onProgressCallback).nativeFunction);
-    _juceLib.JuceMixPlayer_onStateUpdate(_ptr, NativeCallable<StringUpdateCallback>.listener(_onStateUpdateCallback).nativeFunction);
-    _juceLib.JuceMixPlayer_onError(_ptr, NativeCallable<StringUpdateCallback>.listener(_onErrorCallback).nativeFunction);
+    _progressCallbackNativeCallable = NativeCallable<FloatCallback>.listener(_onProgressCallback);
+    _stateUpdateNativeCallable = NativeCallable<StringUpdateCallback>.listener(_onStateUpdateCallback);
+    _errorUpdateNativeCallable = NativeCallable<StringUpdateCallback>.listener(_onErrorCallback);
+
+    _juceLib.JuceMixPlayer_onProgress(_ptr, _progressCallbackNativeCallable.nativeFunction);
+    _juceLib.JuceMixPlayer_onStateUpdate(_ptr, _stateUpdateNativeCallable.nativeFunction);
+    _juceLib.JuceMixPlayer_onError(_ptr, _errorUpdateNativeCallable.nativeFunction);
   }
 
   void _onStateUpdateCallback(Pointer<Void> player, Pointer<Utf8> state) {
@@ -110,6 +118,10 @@ class JuceMixPlayer {
     _progressCallbacks.remove(_ptr);
     _stateCallbacks.remove(_ptr);
     _errorCallbacks.remove(_ptr);
+
+    _progressCallbackNativeCallable.close();
+    _stateUpdateNativeCallable.close();
+    _errorUpdateNativeCallable.close();
 
     _juceLib.JuceMixPlayer_deinit(_ptr);
   }
