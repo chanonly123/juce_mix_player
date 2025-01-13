@@ -129,6 +129,7 @@ void JuceMixPlayer::togglePlayPause() {
 void JuceMixPlayer::setJson(const char* json) {
     std::string json_(json);
     taskQueue.async([&, json_]{
+
         try {
             MixerData data = MixerModel::parse(json_.c_str());
             if (!(mixerData == data)) {
@@ -147,6 +148,8 @@ void JuceMixPlayer::setJson(const char* json) {
 
 void JuceMixPlayer::prepare() {
     taskQueue.async([&]{
+        bool wasPlaying = _isPlaying;
+        _pause(false);
         loadingBlocks.clear();
         loadedBlocks.clear();
         lastSampleIndex = 0;
@@ -154,6 +157,9 @@ void JuceMixPlayer::prepare() {
         if (playBuffer.getNumSamples() > 0) {
             _loadAudioBlock(0);
             _onStateUpdateNotify(READY);
+            if (wasPlaying) {
+                _play();
+            }
         } else {
             _onStateUpdateNotify(ERROR);
         }

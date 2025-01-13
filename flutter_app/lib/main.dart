@@ -130,10 +130,13 @@ class PlayerPageState extends State<PlayerPage> {
                 ElevatedButton(
                   onPressed: () async {
                     final path = await AssetHelper.extractAsset('assets/media/music.mp3');
-                    player.setMixData(MixerData(tracks: [
-                      MixerTrack(id: "0", path: path),
-                      MixerTrack(id: "1", path: path, offset: 0.5),
-                    ]));
+                    player.setMixData(MixerData(
+                      outputDuration: 150,
+                      tracks: [
+                        MixerTrack(id: "0", path: path),
+                        MixerTrack(id: "1", path: path, offset: 0.5),
+                      ],
+                    ));
                   },
                   child: const Text('Set mixed'),
                 ),
