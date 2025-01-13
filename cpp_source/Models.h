@@ -86,4 +86,10 @@ struct MixerData {
 class MixerModel {
 public:
     static MixerData parse(const char* json);
+
+    /// Throws std::string
+    static void isValid(MixerData& mixerData);
+
+    /// Returns total duration in seconds. Requires reader for each track.
+    static float getTotalDuration(MixerData& mixerData);
 };

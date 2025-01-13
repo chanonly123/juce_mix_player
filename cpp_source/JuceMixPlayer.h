@@ -7,6 +7,7 @@
 #include "Models.h"
 #include "Models.h"
 #include <iostream>
+#include <tuple>
 
 typedef void (*JuceMixPlayerCallbackFloat)(void*, float);
 typedef void (*JuceMixPlayerCallbackString)(void*, const char*);
@@ -77,6 +78,8 @@ private:
     void _onStateUpdateNotify(JuceMixPlayerState state);
 
     void _onErrorNotify(std::string error);
+
+    std::optional<std::tuple<float, float, float>> _calculateBlockToRead(float block, MixerTrack& track);
 
 public:
     JuceMixPlayer();

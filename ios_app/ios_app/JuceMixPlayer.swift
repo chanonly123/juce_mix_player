@@ -42,9 +42,14 @@ class JuceMixPlayer {
     func setFile(_ file: String) {
         let data = MixerData(
             tracks: [
-                MixerTrack(path: file)
+                MixerTrack(id: "0", path: file)
             ]
         )
+        let str = (try? data.jsonString()) ?? ""
+        JuceMixPlayer_set(player, str.cString(using: .utf8))
+    }
+
+    func setData(_ data: MixerData) {
         let str = (try? data.jsonString()) ?? ""
         JuceMixPlayer_set(player, str.cString(using: .utf8))
     }
@@ -109,12 +114,12 @@ struct MixerData: Codable {
 
     let tracks: [MixerTrack]?
     let output: String?
-    let outputDuration: Int?
+    let outputDuration: Double?
 
-    init(tracks: [MixerTrack]?) {
+    init(tracks: [MixerTrack]?, output: String? = nil, outputDuration: Double? = nil) {
         self.tracks = tracks
-        self.output = nil
-        self.outputDuration = nil
+        self.output = output
+        self.outputDuration = outputDuration
     }
 
     enum CodingKeys: String, CodingKey {
@@ -126,22 +131,22 @@ struct MixerData: Codable {
 
 struct MixerTrack: Codable {
 
-    let duration: Int?
+    let duration: Double?
     let volume: Double?
-    let fromTime: Int?
+    let fromTime: Double?
     let enabled: Bool?
     let path: String?
-    let offset: Int?
+    let offset: Double?
     let id: String?
 
-    init(path: String) {
+    init(id: String, path: String, offset: Double? = nil, fromTime: Double? = nil, duration: Double? = nil, volume: Double? = nil, enabled: Bool? = nil) {
         self.path = path
-        self.enabled = true
-        self.offset = nil
-        self.id = nil
-        self.fromTime = nil
-        self.volume = nil
-        self.duration = nil
+        self.enabled = enabled
+        self.offset = offset
+        self.id = id
+        self.fromTime = fromTime
+        self.volume = volume
+        self.duration = duration
     }
 
     enum CodingKeys: String, CodingKey {

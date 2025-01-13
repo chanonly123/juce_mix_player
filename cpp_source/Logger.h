@@ -4,6 +4,8 @@
 
 extern bool enableLogsValue;
 
+const char* returnCopyCharDelete(std::string str);
+
 const char* returnCopyCharDelete(const char* string);
 
 bool setContains(std::unordered_set<int>& set, int val);

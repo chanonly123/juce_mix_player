@@ -2,6 +2,10 @@
 
 bool enableLogsValue = false;
 
+const char* returnCopyCharDelete(std::string str) {
+    return returnCopyCharDelete(str.c_str());
+}
+
 const char* returnCopyCharDelete(const char* string) {
     char* copy = (char*)malloc(strlen(string) + 1);
     strcpy(copy, string);

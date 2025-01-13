@@ -42,6 +42,22 @@ struct PlayerPage: View {
 //                    let path = Bundle.main.path(forResource: "music_small", ofType: "wav")!
                     player.setFile(path)
                 }
+
+                Button("Set multiple") {
+                    let path0 = Bundle.main.path(forResource: "music", ofType: "mp3")!
+                    let path1 = Bundle.main.path(forResource: "music_big", ofType: "mp3")!
+                    let path2 = Bundle.main.path(forResource: "music_small", ofType: "wav")!
+                    player.setData(
+                        MixerData(
+                            tracks: [
+                                MixerTrack(id: "0", path: path0, offset: 5, duration: 5, volume: 0.2, enabled: true),
+                                MixerTrack(id: "1", path: path1, offset: 0, volume: 1, enabled: false),
+                                MixerTrack(id: "2", path: path2, offset: 0, fromTime: 0, duration: 0, volume: 1, enabled: true)
+                            ],
+                            outputDuration: 150
+                        )
+                    )
+                }
             }
         }
         .padding()
