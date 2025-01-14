@@ -107,7 +107,7 @@ class PlayerPageState extends State<PlayerPage> {
               padding: const EdgeInsets.all(8.0),
               child: Text('State: $state'),
             ),
-            Row(
+            Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ElevatedButton(
@@ -121,7 +121,7 @@ class PlayerPageState extends State<PlayerPage> {
                 const SizedBox(width: 16),
                 ElevatedButton(
                   onPressed: () async {
-                    final path = await AssetHelper.extractAsset('assets/media/music.mp3');
+                    final path = await AssetHelper.extractAsset('assets/media/music_big.mp3');
                     player.setFile(path);
                   },
                   child: const Text('Set File'),
@@ -129,7 +129,7 @@ class PlayerPageState extends State<PlayerPage> {
                 const SizedBox(width: 16),
                 ElevatedButton(
                   onPressed: () async {
-                    final path = await AssetHelper.extractAsset('assets/media/music.mp3');
+                    final path = await AssetHelper.extractAsset('assets/media/music_big.mp3');
                     player.setMixData(MixerData(
                       outputDuration: 150,
                       tracks: [
@@ -140,11 +140,34 @@ class PlayerPageState extends State<PlayerPage> {
                   },
                   child: const Text('Set mixed'),
                 ),
+                const SizedBox(width: 16),
+                ElevatedButton(
+                  onPressed: () async {
+                    player.setMixData(await createMetronomeTracks());
+                  },
+                  child: const Text('Set mixed with metronome'),
+                ),
               ],
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Future<MixerData> createMetronomeTracks() async {
+    final path = await AssetHelper.extractAsset('assets/media/music_big.mp3');
+    final pathH = await AssetHelper.extractAsset('assets/media/met_h.wav');
+    final pathL = await AssetHelper.extractAsset('assets/media/met_l.wav');
+    double metVol = 0.1;
+    return MixerData(
+      tracks: [
+        MixerTrack(id: "music", path: path),
+        MixerTrack(id: "met_1", path: pathH, offset: 0, repeat: true, repeatInterval: 2, volume: metVol),
+        MixerTrack(id: "met_2", path: pathL, offset: 0.5, repeat: true, repeatInterval: 2, volume: metVol),
+        MixerTrack(id: "met_3", path: pathL, offset: 1, repeat: true, repeatInterval: 2, volume: metVol),
+        MixerTrack(id: "met_4", path: pathL, offset: 1.5, repeat: true, repeatInterval: 2, volume: metVol)
+      ],
     );
   }
 

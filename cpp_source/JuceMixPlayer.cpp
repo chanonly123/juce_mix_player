@@ -153,8 +153,10 @@ void JuceMixPlayer::prepare() {
         loadingBlocks.clear();
         loadedBlocks.clear();
         lastSampleIndex = 0;
-        _prepareInternal();
+        playBuffer.clear();
+        _createFileReadersAndTotalDuration();
         if (playBuffer.getNumSamples() > 0) {
+            _loadRepeatedTracks();
             _loadAudioBlock(0);
             _onStateUpdateNotify(READY);
             if (wasPlaying) {
@@ -166,7 +168,7 @@ void JuceMixPlayer::prepare() {
     });
 }
 
-void JuceMixPlayer::_prepareInternal() {
+void JuceMixPlayer::_createFileReadersAndTotalDuration() {
     for (MixerTrack& track: mixerData.tracks) {
         if (track.enabled) {
             juce::File file(track.path);
@@ -183,6 +185,49 @@ void JuceMixPlayer::_prepareInternal() {
     bool clearExtraSpace = true;
     bool avoidReallocating = false;
     playBuffer.setSize(2, outputDuration * sampleRate, keepExistingContent, clearExtraSpace, avoidReallocating);
+}
+
+void JuceMixPlayer::_loadRepeatedTracks() {
+    std::unordered_map<std::string, std::shared_ptr<juce::AudioBuffer<float>>> buffers;
+    for (MixerTrack& track: mixerData.tracks) {
+        if (!track.repeat || !track.reader || !track.enabled) {
+            continue;
+        }
+        int sampleCount = (int)track.reader->lengthInSamples;
+        if (sampleCount == 0) {
+            continue;
+        }
+        std::shared_ptr<juce::AudioBuffer<float>> buff;
+        if (buffers.find(track.path) == buffers.end()) {
+            buff.reset(new juce::AudioBuffer<float>(2, sampleCount));
+            track.reader->read(buff.get(), 0, sampleCount, 0, true, true);
+            buffers[track.path] = buff;
+        } else {
+            buff = buffers.at(track.path);
+        }
+
+        int destStartSample = track.offset * sampleRate;
+
+        while (true) {
+            const int sourceStartSample = track.fromTime * sampleRate;
+            int numSamples = track.duration == 0 ? buff->getNumSamples() : track.duration * sampleRate;
+            const int totalSampleCount = destStartSample + numSamples;
+            if (totalSampleCount > playBuffer.getNumSamples()) {
+                break;
+            }
+            for (int i = 0; i < buff->getNumChannels(); i++) {
+                if (sourceStartSample + numSamples > buff->getNumSamples()) {
+                    numSamples = buff->getNumSamples() - sourceStartSample;
+                }
+                playBuffer.addFrom(i, destStartSample, *buff.get(), i, sourceStartSample, numSamples, track.volume);
+            }
+            destStartSample += track.repeatInterval * sampleRate;
+        }
+    }
+}
+
+void JuceMixPlayer::loadCompleteBuffer(juce::AudioBuffer<float>& buffer, bool takeRepeteTracks, bool takeNonRepeteTracks) {
+
 }
 
 std::optional<std::tuple<float, float, float>> JuceMixPlayer::_calculateBlockToRead(float block, MixerTrack& track) {
@@ -239,7 +284,7 @@ void JuceMixPlayer::_loadAudioBlock(int block) {
     tempBuffer.setSize(2, blockDuration * sampleRate);
 
     for (MixerTrack& track: mixerData.tracks) {
-        if (!track.enabled) {
+        if (!track.enabled || track.repeat) {
             continue;
         }
         if (!track.reader) {

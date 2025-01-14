@@ -32,7 +32,7 @@ struct PlayerPage: View {
                 }
             }
 
-            HStack {
+            VStack {
                 Button(playerState == .PLAYING ? "pause" : "play") {
                     player.togglePlayPause()
                 }
@@ -53,6 +53,24 @@ struct PlayerPage: View {
                                 MixerTrack(id: "0", path: path0, offset: 5, duration: 5, volume: 0.2, enabled: true),
                                 MixerTrack(id: "1", path: path1, offset: 0, volume: 1, enabled: false),
                                 MixerTrack(id: "2", path: path2, offset: 0, fromTime: 0, duration: 0, volume: 1, enabled: true)
+                            ],
+                            outputDuration: 150
+                        )
+                    )
+                }
+
+                Button("Set multiple metronome") {
+                    let path1 = Bundle.main.path(forResource: "music_big", ofType: "mp3")!
+                    let pathH = Bundle.main.path(forResource: "met_h", ofType: "wav")!
+                    let pathL = Bundle.main.path(forResource: "met_l", ofType: "wav")!
+                    player.setData(
+                        MixerData(
+                            tracks: [
+                                MixerTrack(id: "music", path: path1),
+                                MixerTrack(id: "met_1", path: pathH, offset: 0, repeat: true, repeatInterval: 2),
+                                MixerTrack(id: "met_2", path: pathL, offset: 0.5, repeat: true, repeatInterval: 2),
+                                MixerTrack(id: "met_3", path: pathL, offset: 1, repeat: true, repeatInterval: 2),
+                                MixerTrack(id: "met_4", path: pathL, offset: 1.5, repeat: true, repeatInterval: 2)
                             ],
                             outputDuration: 150
                         )

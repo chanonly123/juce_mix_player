@@ -25,6 +25,8 @@
 		18A29EBE2CBD12F000459DF0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 18A29EB62CBD12F000459DF0 /* Assets.xcassets */; };
 		18A29EC12CBD130000459DF0 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18A29EC02CBD130000459DF0 /* AppDelegate.swift */; };
 		18CCA13B2D2D6479008A6C14 /* JuceMixPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18CCA13A2D2D646E008A6C14 /* JuceMixPlayer.swift */; };
+		18ED0B6F2D364489004FED56 /* met_l.wav in Resources */ = {isa = PBXBuildFile; fileRef = 18ED0B6E2D364489004FED56 /* met_l.wav */; };
+		18ED0B702D364489004FED56 /* met_h.wav in Resources */ = {isa = PBXBuildFile; fileRef = 18ED0B6D2D364489004FED56 /* met_h.wav */; };
 		18F9DC172CEC922E000B5BA6 /* libjuce_lib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 18F9DC142CEC91FC000B5BA6 /* libjuce_lib.a */; };
 /* End PBXBuildFile section */
 
@@ -67,6 +69,8 @@
 		18A29EB92CBD12F000459DF0 /* ios_app_testApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ios_app_testApp.swift; sourceTree = "<group>"; };
 		18A29EC02CBD130000459DF0 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		18CCA13A2D2D646E008A6C14 /* JuceMixPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JuceMixPlayer.swift; sourceTree = "<group>"; };
+		18ED0B6D2D364489004FED56 /* met_h.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = met_h.wav; sourceTree = "<group>"; };
+		18ED0B6E2D364489004FED56 /* met_l.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = met_l.wav; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -143,18 +147,28 @@
 		18A29EBA2CBD12F000459DF0 /* ios_app */ = {
 			isa = PBXGroup;
 			children = (
+				18ED0B712D36448E004FED56 /* MusicFiles */,
 				18CCA13A2D2D646E008A6C14 /* JuceMixPlayer.swift */,
+				18A29EB82CBD12F000459DF0 /* ContentView.swift */,
 				18A29EC02CBD130000459DF0 /* AppDelegate.swift */,
-				1881FF6C2D24A3D2009CEEDA /* music_small.wav */,
-				1881FF6E2D24A514009CEEDA /* music_big.mp3 */,
-				1875145C2D3255E90086C3CF /* music.mp3 */,
+				18A29EB92CBD12F000459DF0 /* ios_app_testApp.swift */,
 				18A29EB52CBD12F000459DF0 /* Preview Content */,
 				18A29EB62CBD12F000459DF0 /* Assets.xcassets */,
 				18A29EB72CBD12F000459DF0 /* bridging.h */,
-				18A29EB82CBD12F000459DF0 /* ContentView.swift */,
-				18A29EB92CBD12F000459DF0 /* ios_app_testApp.swift */,
 			);
 			path = ios_app;
+			sourceTree = "<group>";
+		};
+		18ED0B712D36448E004FED56 /* MusicFiles */ = {
+			isa = PBXGroup;
+			children = (
+				1881FF6C2D24A3D2009CEEDA /* music_small.wav */,
+				1881FF6E2D24A514009CEEDA /* music_big.mp3 */,
+				18ED0B6D2D364489004FED56 /* met_h.wav */,
+				18ED0B6E2D364489004FED56 /* met_l.wav */,
+				1875145C2D3255E90086C3CF /* music.mp3 */,
+			);
+			path = MusicFiles;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -235,6 +249,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				18ED0B6F2D364489004FED56 /* met_l.wav in Resources */,
+				18ED0B702D364489004FED56 /* met_h.wav in Resources */,
 				1875145D2D3255E90086C3CF /* music.mp3 in Resources */,
 				18A29EBD2CBD12F000459DF0 /* Preview Assets.xcassets in Resources */,
 				1881FF6F2D24A514009CEEDA /* music_big.mp3 in Resources */,

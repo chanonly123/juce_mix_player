@@ -68,10 +68,12 @@ private:
     void _pause(bool stop);
 
     /// create reader for files
-    void _prepareInternal();
+    void _createFileReadersAndTotalDuration();
 
     /// loads audio block for `blockDuration` and `block` number. Blocks are chunks of the audio file.
     void _loadAudioBlock(int block);
+
+    void _loadRepeatedTracks();
 
     void _onProgressNotify(float progress);
 
@@ -80,6 +82,8 @@ private:
     void _onErrorNotify(std::string error);
 
     std::optional<std::tuple<float, float, float>> _calculateBlockToRead(float block, MixerTrack& track);
+
+    void loadCompleteBuffer(juce::AudioBuffer<float>& buffer, bool takeRepeteTracks, bool takeNonRepeteTracks);
 
 public:
     JuceMixPlayer();

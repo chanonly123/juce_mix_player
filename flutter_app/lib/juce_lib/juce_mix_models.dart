@@ -32,6 +32,8 @@ class MixerTrack {
   String? path;
   double? offset;
   String id;
+  bool? repeat;
+  double? repeatInterval;
 
   MixerTrack({
     required this.id,
@@ -41,6 +43,8 @@ class MixerTrack {
     this.duration,
     this.volume,
     this.enabled,
+    this.repeat,
+    this.repeatInterval,
   });
 
   factory MixerTrack.fromJson(Map<String, dynamic> json) => MixerTrack(
@@ -51,6 +55,8 @@ class MixerTrack {
         duration: json['duration']?.toDouble(),
         volume: json['volume']?.toDouble(),
         enabled: json['enabled'],
+        repeat: json['repeat'],
+        repeatInterval: json['repeatInterval']?.toDouble(),
       );
 
   Map<String, dynamic> toJson() {
@@ -62,6 +68,8 @@ class MixerTrack {
     if (duration != null) json['duration'] = duration;
     if (volume != null) json['volume'] = volume;
     if (enabled != null) json['enabled'] = enabled;
+    if (repeat != null) json['repeat'] = repeat;
+    if (repeatInterval != null) json['repeatInterval'] = repeatInterval;
     return json;
   }
 }

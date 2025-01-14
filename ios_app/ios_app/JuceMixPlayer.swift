@@ -138,8 +138,20 @@ struct MixerTrack: Codable {
     let path: String?
     let offset: Double?
     let id: String?
+    let repeat_: Bool?
+    let repeatInterval: Double?
 
-    init(id: String, path: String, offset: Double? = nil, fromTime: Double? = nil, duration: Double? = nil, volume: Double? = nil, enabled: Bool? = nil) {
+    init(
+        id: String,
+        path: String,
+        offset: Double? = nil,
+        fromTime: Double? = nil,
+        duration: Double? = nil,
+        `repeat`: Bool? = nil,
+        repeatInterval: Double? = nil,
+        volume: Double? = nil,
+        enabled: Bool? = nil
+    ) {
         self.path = path
         self.enabled = enabled
         self.offset = offset
@@ -147,6 +159,8 @@ struct MixerTrack: Codable {
         self.fromTime = fromTime
         self.volume = volume
         self.duration = duration
+        self.repeat_ = `repeat`
+        self.repeatInterval = repeatInterval
     }
 
     enum CodingKeys: String, CodingKey {
@@ -157,5 +171,7 @@ struct MixerTrack: Codable {
         case path = "path"
         case offset = "offset"
         case id = "id_"
+        case repeat_ = "repeat"
+        case repeatInterval = "repeatInterval"
     }
 }
