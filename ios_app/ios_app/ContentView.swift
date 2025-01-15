@@ -1,70 +1,98 @@
-//
-//  ContentView.swift
-//  ios_app
-//
-//  Created by Chandan on 27/09/24.
-//
-
 import SwiftUI
 import AVKit
 
-func swiftListener(arg1: UnsafePointer<CChar>, arg2: UnsafePointer<CChar>, value: Float) {
-    let str1 = String(cString: arg1)
-    let str2 = String(cString: arg2)
-    print("Swift Listener called with: \(str1), \(str2), \(value)")
-}
-
 struct ContentView: View {
 
-    @State var player: UnsafeMutableRawPointer!
-    @State var item: UnsafeMutableRawPointer!
+    var body: some View {
+        NavigationLink {
+            PlayerPage()
+        } label: {
+            Text("ShowPlayer")
+        }
+    }
+}
+
+struct PlayerPage: View {
+
+    @State private var player = JuceMixPlayer()
+    @State private var progress: Float = 0
+    @State private var sliderEditing: Bool = false
+    @State private var playerState: JuceMixPlayerState = .IDLE
 
     var body: some View {
-        VStack(spacing: 24) {
+        VStack {
+            Text("\(playerState.rawValue)")
 
-            Button("Init first") {
-                executeAsync {
-                    player = JuceMixPlayer_init()
-                    item = JuceMixItem_init()
+            Text("\(progress * player.getDuration()) / \(player.getDuration())")
+
+            Slider(value: $progress) { editing in
+                sliderEditing = editing
+                if !editing {
+                    player.seek(value: progress)
                 }
             }
 
-            Button("Open file") {
-                executeAsync {
+            VStack {
+                Button(playerState == .PLAYING ? "pause" : "play") {
+                    player.togglePlayPause()
+                }
+                Button("Set file") {
                     let path = Bundle.main.path(forResource: "music", ofType: "mp3")!
-                    JuceMixItem_setPath(item, path.cString(using: .utf8), 0, 0)
-                    JuceMixPlayer_addItem(player, item)
+//                    let path = Bundle.main.path(forResource: "music_big", ofType: "mp3")!
+//                    let path = Bundle.main.path(forResource: "music_small", ofType: "wav")!
+                    player.setFile(path)
                 }
-            }
 
-            Button("play") {
-                executeAsync {
-                    JuceMixPlayer_play(player)
+                Button("Set multiple") {
+                    let path0 = Bundle.main.path(forResource: "music", ofType: "mp3")!
+                    let path1 = Bundle.main.path(forResource: "music_big", ofType: "mp3")!
+                    let path2 = Bundle.main.path(forResource: "music_small", ofType: "wav")!
+                    player.setData(
+                        MixerData(
+                            tracks: [
+                                MixerTrack(id: "0", path: path0, offset: 5, duration: 5, volume: 0.2, enabled: true),
+                                MixerTrack(id: "1", path: path1, offset: 0, volume: 1, enabled: false),
+                                MixerTrack(id: "2", path: path2, offset: 0, fromTime: 0, duration: 0, volume: 1, enabled: true)
+                            ],
+                            outputDuration: 150
+                        )
+                    )
                 }
-            }
 
-            Button("Pause") {
-                executeAsync {
-                    JuceMixPlayer_pause(player)
+                Button("Set multiple metronome") {
+                    let path1 = Bundle.main.path(forResource: "music_big", ofType: "mp3")!
+                    let pathH = Bundle.main.path(forResource: "met_h", ofType: "wav")!
+                    let pathL = Bundle.main.path(forResource: "met_l", ofType: "wav")!
+                    player.setData(
+                        MixerData(
+                            tracks: [
+                                MixerTrack(id: "music", path: path1),
+                                MixerTrack(id: "met_1", path: pathH, offset: 0, repeat: true, repeatInterval: 2),
+                                MixerTrack(id: "met_2", path: pathL, offset: 0.5, repeat: true, repeatInterval: 2),
+                                MixerTrack(id: "met_3", path: pathL, offset: 1, repeat: true, repeatInterval: 2),
+                                MixerTrack(id: "met_4", path: pathL, offset: 1.5, repeat: true, repeatInterval: 2)
+                            ],
+                            outputDuration: 150
+                        )
+                    )
                 }
-            }
-
-            Button("Stop") {
-//                native_call(player, "stop", nil)
-            }
-
-            Button("Destroy") {
-//                native_call(player, "destroy", nil)
-//                native_call(item, "destroy", nil)
             }
         }
         .padding()
+        .buttonStyle(.bordered)
+        .monospaced()
         .onAppear {
-            do {
-                try AVAudioSession.sharedInstance().setCategory(.playback)
-                try AVAudioSession.sharedInstance().setActive(true)
-            } catch let err {
-                print("\(err)")
+            player.setProgressHandler { progress in
+                if !sliderEditing {
+                    self.progress = progress
+                }
+            }
+            player.setStateUpdateHandler { state in
+                playerState = state
+                print("state: \(state)")
+            }
+            player.setErrorHandler { error in
+                print("error: \(error)")
             }
         }
     }

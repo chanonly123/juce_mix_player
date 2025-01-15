@@ -1,26 +1,17 @@
+#include <JuceHeader.h>
 #include "includes/juce_lib.h"
 #include "Logger.h"
 #include "JuceMixPlayer.h"
-#include "JuceMixItem.h"
+#include "Models.h"
 
-#ifdef ANDROID
-#include <jni.h>
-
-void Java_com_rmsl_juce_Java_juceMessageManagerInit(JNIEnv* env, jclass)
+void Java_com_rmsl_juce_Java_juceMessageManagerInit()
 {
     juce::MessageManager::getInstance();
 }
-
-#endif
 
 void juceEnableLogs()
 {
     enableLogsValue = true;
-}
-
-void juceMessageManagerInit()
-{
-    juce::MessageManager::getInstance();
 }
 
 // MARK: JuceMixPlayer
@@ -32,7 +23,7 @@ void *JuceMixPlayer_init()
 
 void JuceMixPlayer_deinit(void *ptr)
 {
-    delete static_cast<JuceMixPlayer *>(ptr);
+    static_cast<JuceMixPlayer *>(ptr)->dispose();
 }
 
 void JuceMixPlayer_play(void *ptr)
@@ -45,24 +36,42 @@ void JuceMixPlayer_pause(void *ptr)
     static_cast<JuceMixPlayer *>(ptr)->pause();
 }
 
-void JuceMixPlayer_addItem(void *ptr, void *item)
+void JuceMixPlayer_stop(void *ptr)
 {
-    static_cast<JuceMixPlayer *>(ptr)->addItem(static_cast<JuceMixItem *>(item));
+    static_cast<JuceMixPlayer *>(ptr)->stop();
 }
 
-// MARK: JuceMixItem
-
-void *JuceMixItem_init()
+void JuceMixPlayer_set(void* ptr, const char* json)
 {
-    return new JuceMixItem();
+    static_cast<JuceMixPlayer *>(ptr)->setJson(json);
 }
 
-void JuceMixItem_deinit(void *ptr)
+void JuceMixPlayer_onStateUpdate(void* ptr, void (*onStateUpdate)(void* ptr, const char*))
 {
-    delete static_cast<JuceMixItem *>(ptr);
+    static_cast<JuceMixPlayer *>(ptr)->onStateUpdate(onStateUpdate);
 }
 
-void JuceMixItem_setPath(void *ptr, const char *path, float begin, float end)
+void JuceMixPlayer_onProgress(void* ptr, void (*onProgress)(void* ptr, float))
 {
-    static_cast<JuceMixItem *>(ptr)->setPath(juce::String(path), begin, end);
+    static_cast<JuceMixPlayer *>(ptr)->onProgress(onProgress);
+}
+
+void JuceMixPlayer_onError(void* ptr, void (*onError)(void* ptr, const char*))
+{
+    static_cast<JuceMixPlayer *>(ptr)->onError(onError);
+}
+
+float JuceMixPlayer_getDuration(void *ptr)
+{
+    return static_cast<JuceMixPlayer *>(ptr)->getDuration();
+}
+
+int JuceMixPlayer_isPlaying(void *ptr)
+{
+    return static_cast<JuceMixPlayer *>(ptr)->isPlaying();
+}
+
+void JuceMixPlayer_seek(void* ptr, float value)
+{
+    static_cast<JuceMixPlayer *>(ptr)->seek(value);
 }

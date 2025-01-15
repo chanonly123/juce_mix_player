@@ -4,23 +4,30 @@
 #define EXPORT_C_FUNC extern
 #endif
 
-// iOS
+EXPORT_C_FUNC void Java_com_rmsl_juce_Java_juceMessageManagerInit();
 EXPORT_C_FUNC void juceEnableLogs();
-EXPORT_C_FUNC void juceMessageManagerInit();
 
 EXPORT_C_FUNC void* JuceMixPlayer_init();
 EXPORT_C_FUNC void JuceMixPlayer_deinit(void* ptr);
+
 EXPORT_C_FUNC void JuceMixPlayer_play(void* ptr);
 EXPORT_C_FUNC void JuceMixPlayer_pause(void* ptr);
-EXPORT_C_FUNC void JuceMixPlayer_addItem(void* ptr, void *item);
+EXPORT_C_FUNC void JuceMixPlayer_stop(void *ptr);
 
-EXPORT_C_FUNC void* JuceMixItem_init();
-EXPORT_C_FUNC void JuceMixItem_deinit(void* ptr);
-EXPORT_C_FUNC void JuceMixItem_setPath(void* ptr, const char* path, float begin, float end);
+EXPORT_C_FUNC void JuceMixPlayer_set(void* ptr, const char* json);
 
-// android
-#ifdef ANDROID
-#include <jni.h>
+EXPORT_C_FUNC void JuceMixPlayer_onStateUpdate(void* ptr, void (*JuceMixPlayerCallbackString)(void*, const char*));
 
-EXPORT_C_FUNC void Java_com_rmsl_juce_Java_juceMessageManagerInit(JNIEnv* env, jclass);
-#endif
+/// callback with progress value range 0 to 1
+EXPORT_C_FUNC void JuceMixPlayer_onProgress(void* ptr, void (*onProgress)(void*, float));
+
+EXPORT_C_FUNC void JuceMixPlayer_onError(void* ptr, void (*onError)(void*, const char*));
+
+/// value returns time in seconds
+EXPORT_C_FUNC float JuceMixPlayer_getDuration(void *ptr);
+
+/// returns 1 if playing else 0
+EXPORT_C_FUNC int JuceMixPlayer_isPlaying(void *ptr);
+
+/// value range 0 to 1
+EXPORT_C_FUNC void JuceMixPlayer_seek(void* ptr, float value);

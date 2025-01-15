@@ -1,37 +1,96 @@
 #pragma once
 
+#include <JuceHeader.h>
+#include "nlohmann/json.hpp"
 #include "Logger.h"
 #include "TaskQueue.h"
-#include "JuceMixItem.h"
-#include <JuceHeader.h>
+#include "Models.h"
+#include "Models.h"
 #include <iostream>
+#include <tuple>
+
+typedef void (*JuceMixPlayerCallbackFloat)(void*, float);
+typedef void (*JuceMixPlayerCallbackString)(void*, const char*);
+
+enum JuceMixPlayerState
+{
+    IDLE, READY, PLAYING, PAUSED, STOPPED, ERROR, COMPLETED
+};
+
+NLOHMANN_JSON_SERIALIZE_ENUM(JuceMixPlayerState,{
+    {IDLE, "IDLE"},
+    {READY, "READY"},
+    {PLAYING, "PLAYING"},
+    {PAUSED, "PAUSED"},
+    {STOPPED, "STOPPED"},
+    {ERROR, "ERROR"},
+    {COMPLETED, "COMPLETED"},
+});
+
+std::string JuceMixPlayerState_toString(JuceMixPlayerState state);
+JuceMixPlayerState JuceMixPlayerState_make(std::string state);
 
 class JuceMixPlayer : public juce::AudioSource,
-                      private juce::Timer
+private juce::Timer
 {
 private:
-    std::vector<JuceMixItem*> tracks;
+    TaskQueue taskQueue;
     int samplesPerBlockExpected = 0;
-    int deviceSampleRate = 0;
+    float deviceSampleRate = 0;
+    float progressUpdateInterval = 0.05;
+    juce::AudioFormatManager formatManager;
     juce::LinearInterpolator interpolator[5];
     juce::AudioDeviceManager* deviceManager;
     juce::AudioSourcePlayer* player;
-    JuceMixPlayerState state = IDLE;
-    ListenerFunction listener = nullptr;
-    juce::ScopedJuceInitialiser_GUI ui;
-    bool isPlaying = false;
+
+    JuceMixPlayerState currentState = IDLE;
+
+    JuceMixPlayerCallbackFloat onProgressCallback = nullptr;
+    JuceMixPlayerCallbackString onStateUpdateCallback = nullptr;
+    JuceMixPlayerCallbackString onErrorCallback = nullptr;
+
+    bool _isPlaying = false;
+
+    juce::AudioBuffer<float> playBuffer;
+
+    MixerData mixerData;
 
     float currentTime = 0;
-    int lastSampleIndex = 0;
+    float lastSampleIndex = 0;
+
+    std::unordered_set<int> loadingBlocks;
+    std::unordered_set<int> loadedBlocks;
+    const float blockDuration = 10; // second
+    const float sampleRate = 48000;
 
     void _play();
 
     void _pause(bool stop);
 
+    /// create reader for files
+    void _createFileReadersAndTotalDuration();
+
+    /// loads audio block for `blockDuration` and `block` number. Blocks are chunks of the audio file.
+    void _loadAudioBlock(int block);
+
+    void _loadRepeatedTracks();
+
+    void _onProgressNotify(float progress);
+
+    void _onStateUpdateNotify(JuceMixPlayerState state);
+
+    void _onErrorNotify(std::string error);
+
+    std::optional<std::tuple<float, float, float>> _calculateBlockToRead(float block, MixerTrack& track);
+
+    void loadCompleteBuffer(juce::AudioBuffer<float>& buffer, bool takeRepeteTracks, bool takeNonRepeteTracks);
+
 public:
     JuceMixPlayer();
 
     ~JuceMixPlayer();
+
+    void dispose();
 
     void play();
 
@@ -41,11 +100,31 @@ public:
 
     void togglePlayPause();
 
-    void addItem(JuceMixItem* item);
+    void setJson(const char* json);
 
-    void resetItems();
+    void prepare();
 
-    void setListener(ListenerFunction listener);
+    /// value range 0 to 1
+    void seek(float value);
+
+    void onProgress(JuceMixPlayerCallbackFloat callback);
+
+    void onStateUpdate(JuceMixPlayerCallbackString callback);
+
+    void onError(JuceMixPlayerCallbackString callback);
+
+    // get curent time in seconds
+    float getCurrentTime();
+
+    // set timer fire interval, in seconds
+    void setProgressUpdateInterval(float time);
+
+    // get total duration in seconds
+    float getDuration();
+
+    int isPlaying();
+
+    std::string getCurrentState();
 
     /// juce::AudioSource
     void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;

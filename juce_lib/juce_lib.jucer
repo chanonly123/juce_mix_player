@@ -5,18 +5,21 @@
   <MAINGROUP id="fjboZk" name="juce_lib">
     <GROUP id="{D92A9893-D5A4-E01E-13F4-7233A15FE324}" name="cpp_source">
       <GROUP id="{EF2D1BD7-C46E-630E-4FC0-2E818BAC168E}" name="includes">
-        <FILE id="DHbs5z" name="juce_lib.h" compile="0" resource="0" file="../cpp_source/includes/juce_lib.h"/>
+        <FILE id="fWpf8t" name="juce_lib.h" compile="0" resource="0" file="../cpp_source/includes/juce_lib.h"/>
       </GROUP>
-      <FILE id="ZoVaCD" name="juce_lib.cpp" compile="1" resource="0" file="../cpp_source/juce_lib.cpp"/>
-      <FILE id="pcDGig" name="JuceMixItem.cpp" compile="1" resource="0" file="../cpp_source/JuceMixItem.cpp"/>
-      <FILE id="p19D79" name="JuceMixItem.h" compile="0" resource="0" file="../cpp_source/JuceMixItem.h"/>
-      <FILE id="iXlUOP" name="JuceMixPlayer.cpp" compile="1" resource="0"
+      <GROUP id="{723063FD-24B6-4D1C-4C8B-778BC829FD97}" name="nlohmann">
+        <FILE id="TR2RQi" name="json.hpp" compile="0" resource="0" file="../cpp_source/nlohmann/json.hpp"/>
+      </GROUP>
+      <FILE id="nB93So" name="juce_lib.cpp" compile="1" resource="0" file="../cpp_source/juce_lib.cpp"/>
+      <FILE id="XUeJQI" name="JuceMixPlayer.cpp" compile="1" resource="0"
             file="../cpp_source/JuceMixPlayer.cpp"/>
-      <FILE id="VDqWb5" name="JuceMixPlayer.h" compile="0" resource="0" file="../cpp_source/JuceMixPlayer.h"/>
-      <FILE id="Rit782" name="Logger.cpp" compile="1" resource="0" file="../cpp_source/Logger.cpp"/>
-      <FILE id="DWBb8O" name="Logger.h" compile="0" resource="0" file="../cpp_source/Logger.h"/>
-      <FILE id="pdPC5P" name="TaskQueue.cpp" compile="1" resource="0" file="../cpp_source/TaskQueue.cpp"/>
-      <FILE id="il50Yt" name="TaskQueue.h" compile="0" resource="0" file="../cpp_source/TaskQueue.h"/>
+      <FILE id="rZ0lK2" name="JuceMixPlayer.h" compile="0" resource="0" file="../cpp_source/JuceMixPlayer.h"/>
+      <FILE id="vZtkgQ" name="Logger.cpp" compile="1" resource="0" file="../cpp_source/Logger.cpp"/>
+      <FILE id="o53sit" name="Logger.h" compile="0" resource="0" file="../cpp_source/Logger.h"/>
+      <FILE id="MfStWQ" name="Models.cpp" compile="1" resource="0" file="../cpp_source/Models.cpp"/>
+      <FILE id="kZed5T" name="Models.h" compile="0" resource="0" file="../cpp_source/Models.h"/>
+      <FILE id="uJVH4j" name="TaskQueue.cpp" compile="1" resource="0" file="../cpp_source/TaskQueue.cpp"/>
+      <FILE id="DqhIey" name="TaskQueue.h" compile="0" resource="0" file="../cpp_source/TaskQueue.h"/>
     </GROUP>
   </MAINGROUP>
   <MODULES>

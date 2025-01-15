@@ -5,6 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "flutter_app",
+            "cwd": "flutter_app",
+            "request": "launch",
+            "type": "dart",
+        },
+        {
             "name": "flutter_app_android",
             "cwd": "flutter_app",
             "request": "launch",
