@@ -1,6 +1,7 @@
 ## Demo Flutter project juce audio player for Android/iOS
 
-![alt tag](https://github.com/chanonly123/juce_audio_player/raw/main/demo_rec/demo_rec_1.mov)
+### Demo
+[![](https://markdown-videos-api.jorgenkh.no/youtube/3ZiBKfGdLjs)](https://youtu.be/3ZiBKfGdLjs)
 
 ### Requirements
 - Macos
