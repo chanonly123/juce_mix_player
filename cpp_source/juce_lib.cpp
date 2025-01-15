@@ -9,9 +9,10 @@ void Java_com_rmsl_juce_Java_juceMessageManagerInit()
     juce::MessageManager::getInstance();
 }
 
-void juceEnableLogs()
+// public method to enable/disable logging
+void juce_enableLogs(int enable)
 {
-    enableLogsValue = true;
+    enableLogsValue = enable == 1;
 }
 
 // MARK: JuceMixPlayer

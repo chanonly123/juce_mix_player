@@ -2,11 +2,9 @@
 
 import 'dart:convert';
 import 'dart:ffi';
-
 import 'package:ffi/ffi.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter_app/juce_lib/juce_lib_gen.dart';
 import 'package:flutter_app/juce_lib/juce_mix_models.dart';
+import 'juce_lib.dart';
 
 // Native function typedefs
 typedef StringUpdateCallback = Void Function(Pointer<Void>, Pointer<Utf8>);
@@ -22,13 +20,6 @@ final _stateCallbacks = <Pointer<Void>, StateUpdateCallbackDart>{};
 final _errorCallbacks = <Pointer<Void>, ErrorCallbackDart>{};
 
 enum JuceMixPlayerState { IDLE, READY, PLAYING, PAUSED, STOPPED, COMPLETED, ERROR }
-
-class JuceLib extends JuceLibGen {
-  JuceLib()
-      : super(defaultTargetPlatform == TargetPlatform.iOS
-            ? DynamicLibrary.process()
-            : DynamicLibrary.open("libjuce_lib.so"));
-}
 
 class JuceMixPlayer {
   final JuceLib _juceLib = JuceLib();

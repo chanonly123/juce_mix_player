@@ -5,9 +5,11 @@ import 'package:flutter_app/asset_helper.dart';
 import 'package:flutter_app/juce_lib/juce_mix_models.dart';
 import 'package:flutter_app/juce_lib/juce_mix_player.dart';
 
+import 'juce_lib/juce_lib.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // JuceLib().juceEnableLogs();
+  JuceLib().juce_enableLogs(1);
   runApp(const MyApp());
 }
 

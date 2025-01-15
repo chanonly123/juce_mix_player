@@ -10,7 +10,7 @@ import UIKit
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         Java_com_rmsl_juce_Java_juceMessageManagerInit()
-        juceEnableLogs()
+        juce_enableLogs(1)
         return true
     }
 }

@@ -5,7 +5,7 @@
 #endif
 
 EXPORT_C_FUNC void Java_com_rmsl_juce_Java_juceMessageManagerInit();
-EXPORT_C_FUNC void juceEnableLogs();
+EXPORT_C_FUNC void juce_enableLogs(int enable);
 
 EXPORT_C_FUNC void* JuceMixPlayer_init();
 EXPORT_C_FUNC void JuceMixPlayer_deinit(void* ptr);

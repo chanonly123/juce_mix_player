@@ -8,6 +8,7 @@ xcuserdata/
 # JUCE
 **/Builds
 **/JuceLibraryCode
+juce_lib_gen.dart
 
 # General
 .DS_Store
