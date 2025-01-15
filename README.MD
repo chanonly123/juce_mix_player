@@ -70,5 +70,8 @@ or
 ```
 - Check `/flutter_app` or `/ios_app` for details
 
-#### Contact
+### License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+### Contact
 - email: chan.only.123@gmail.com
