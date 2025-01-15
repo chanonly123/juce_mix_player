@@ -63,21 +63,16 @@ struct MixerData {
     // multiple track objects creates the result media
     std::vector<MixerTrack> tracks = {};
 
-    // output file path
-    std::string output = "";
-
     // strict output duration in seconds, else default value `0` means dynamic.
     float outputDuration = 0;
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(MixerData,
                                                 tracks,
-                                                output,
                                                 outputDuration)
 
     bool operator==(const MixerData& other) const {
         return
-        output == other.output
-        && outputDuration == other.outputDuration
+        outputDuration == other.outputDuration
         && tracks == other.tracks;
     }
 
