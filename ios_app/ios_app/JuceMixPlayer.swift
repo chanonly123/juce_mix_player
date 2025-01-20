@@ -33,10 +33,14 @@ private var closuresStateUpdate: [UnsafeMutableRawPointer: (JuceMixPlayerState)-
 private var closuresError: [UnsafeMutableRawPointer: (String)->Void] = [:]
 
 class JuceMixPlayer {
-    private lazy var player: UnsafeMutableRawPointer = JuceMixPlayer_init()
+    private lazy var ptr: UnsafeMutableRawPointer = JuceMixPlayer_init(_record ? 1 : 0, _play ? 1 : 0)
 
-    init() {
+    private let _record, _play: Bool
+
+    init(record: Bool, play: Bool) {
         print("swift JuceMixPlayer")
+        self._record = record
+        self._play = play
     }
 
     func setFile(_ file: String) {
@@ -46,24 +50,24 @@ class JuceMixPlayer {
             ]
         )
         let str = (try? data.jsonString()) ?? ""
-        JuceMixPlayer_set(player, str.cString(using: .utf8))
+        JuceMixPlayer_set(ptr, str.cString(using: .utf8))
     }
 
     func setData(_ data: MixerData) {
         let str = (try? data.jsonString()) ?? ""
-        JuceMixPlayer_set(player, str.cString(using: .utf8))
+        JuceMixPlayer_set(ptr, str.cString(using: .utf8))
     }
 
     func play() {
-        JuceMixPlayer_play(player)
+        JuceMixPlayer_play(ptr)
     }
 
     func pause() {
-        JuceMixPlayer_pause(player)
+        JuceMixPlayer_pause(ptr)
     }
 
     func togglePlayPause() {
-        if JuceMixPlayer_isPlaying(player) == 0 {
+        if JuceMixPlayer_isPlaying(ptr) == 0 {
             play()
         } else {
             pause()
@@ -71,60 +75,65 @@ class JuceMixPlayer {
     }
 
     func stop() {
-        JuceMixPlayer_stop(player)
+        JuceMixPlayer_stop(ptr)
     }
 
     func isPlaying() -> Bool {
-        JuceMixPlayer_isPlaying(player) == 1
+        JuceMixPlayer_isPlaying(ptr) == 1
     }
 
     func getDuration() -> Float {
-        return JuceMixPlayer_getDuration(player)
+        return JuceMixPlayer_getDuration(ptr)
     }
 
     func setProgressHandler(_ handler: @escaping (Float)->Void) {
-        closuresProgress[player] = handler
-        JuceMixPlayer_onProgress(player, onProgress as FloatCallback)
+        closuresProgress[ptr] = handler
+        JuceMixPlayer_onProgress(ptr, onProgress as FloatCallback)
     }
 
     func setStateUpdateHandler(_ handler: @escaping (JuceMixPlayerState)->Void) {
-        closuresStateUpdate[player] = handler
-        JuceMixPlayer_onStateUpdate(player, onStateUpdate as StringUpdateCallback)
+        closuresStateUpdate[ptr] = handler
+        JuceMixPlayer_onStateUpdate(ptr, onStateUpdate as StringUpdateCallback)
     }
 
     func setErrorHandler(handler: @escaping (String)->Void) {
-        closuresError[player] = handler
-        JuceMixPlayer_onError(player, onError as StringUpdateCallback)
+        closuresError[ptr] = handler
+        JuceMixPlayer_onError(ptr, onError as StringUpdateCallback)
     }
 
     func seek(value: Float) {
-        JuceMixPlayer_seek(player, value)
+        JuceMixPlayer_seek(ptr, value)
+    }
+
+    func startRecorder(file: String) {
+        JuceMixPlayer_startRecorder(ptr, file.cString(using: .utf8))
+    }
+
+    func stopRecorder() {
+        JuceMixPlayer_stopRecorder(ptr)
     }
 
     deinit {
         print("swift ~JuceMixPlayer")
-        closuresError[player] = nil
-        closuresStateUpdate[player] = nil
-        closuresProgress[player] = nil
-        JuceMixPlayer_deinit(player)
+        closuresError[ptr] = nil
+        closuresStateUpdate[ptr] = nil
+        closuresProgress[ptr] = nil
+        JuceMixPlayer_deinit(ptr)
     }
 }
 
 struct MixerData: Codable {
 
     let tracks: [MixerTrack]?
-    let output: String?
     let outputDuration: Double?
 
-    init(tracks: [MixerTrack]?, output: String? = nil, outputDuration: Double? = nil) {
+    init(tracks: [MixerTrack]?, outputDuration: Double? = nil) {
         self.tracks = tracks
-        self.output = output
         self.outputDuration = outputDuration
     }
 
     enum CodingKeys: String, CodingKey {
         case tracks = "tracks"
-        case output = "output"
         case outputDuration = "outputDuration"
     }
 }

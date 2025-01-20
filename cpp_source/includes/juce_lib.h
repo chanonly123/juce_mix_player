@@ -7,7 +7,7 @@
 EXPORT_C_FUNC void Java_com_rmsl_juce_Java_juceMessageManagerInit();
 EXPORT_C_FUNC void juce_enableLogs(int enable);
 
-EXPORT_C_FUNC void* JuceMixPlayer_init();
+EXPORT_C_FUNC void* JuceMixPlayer_init(int record, int play);
 EXPORT_C_FUNC void JuceMixPlayer_deinit(void* ptr);
 
 EXPORT_C_FUNC void JuceMixPlayer_play(void* ptr);
@@ -31,3 +31,7 @@ EXPORT_C_FUNC int JuceMixPlayer_isPlaying(void *ptr);
 
 /// value range 0 to 1
 EXPORT_C_FUNC void JuceMixPlayer_seek(void* ptr, float value);
+
+EXPORT_C_FUNC void JuceMixPlayer_startRecorder(void* ptr, const char* file);
+
+EXPORT_C_FUNC void JuceMixPlayer_stopRecorder(void* ptr);

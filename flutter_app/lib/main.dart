@@ -2,14 +2,12 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_app/asset_helper.dart';
-import 'package:flutter_app/juce_lib/juce_mix_models.dart';
-import 'package:flutter_app/juce_lib/juce_mix_player.dart';
-
-import 'juce_lib/juce_lib.dart';
+import 'package:juce_mix_player/juce_mix_player.dart';
 
 void main() async {
+  JuceMixPlayer.libname = "libjuce_lib.so";
   WidgetsFlutterBinding.ensureInitialized();
-  JuceLib().juce_enableLogs(1);
+  JuceMixPlayer.enableLogs(true);
   runApp(const MyApp());
 }
 

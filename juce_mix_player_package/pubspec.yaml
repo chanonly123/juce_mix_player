@@ -1,0 +1,26 @@
+name: 'juce_mix_player'
+
+environment:
+  sdk: ^3.5.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  ffi: ^2.1.3
+
+dev_dependencies:
+  ffigen: ^16.0.0
+
+ffigen:
+  name: 'JuceLibGen'
+  description: 'Generate c header to dart bindings'
+  output: 'lib/juce_lib_gen.dart'
+  headers:
+    entry-points:
+      - '../cpp_source/includes/juce_lib.h'
+  type-map:
+    'native-types':
+      'char':
+        'lib': 'pkg_ffi'
+        'c-type': 'Utf8'
+        'dart-type': 'Utf8'

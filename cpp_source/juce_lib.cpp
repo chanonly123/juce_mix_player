@@ -17,9 +17,9 @@ void juce_enableLogs(int enable)
 
 // MARK: JuceMixPlayer
 
-void *JuceMixPlayer_init()
+void *JuceMixPlayer_init(int record, int play)
 {
-    return new JuceMixPlayer();
+    return new JuceMixPlayer(record, play);
 }
 
 void JuceMixPlayer_deinit(void *ptr)
@@ -75,4 +75,15 @@ int JuceMixPlayer_isPlaying(void *ptr)
 void JuceMixPlayer_seek(void* ptr, float value)
 {
     static_cast<JuceMixPlayer *>(ptr)->seek(value);
+}
+
+void JuceMixPlayer_startRecorder(void* ptr, const char* file)
+{
+    static_cast<JuceMixPlayer *>(ptr)->startRecorder(file);
+
+}
+
+void JuceMixPlayer_stopRecorder(void* ptr)
+{
+    static_cast<JuceMixPlayer *>(ptr)->stopRecorder();
 }

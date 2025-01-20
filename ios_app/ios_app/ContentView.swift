@@ -14,10 +14,12 @@ struct ContentView: View {
 
 struct PlayerPage: View {
 
-    @State private var player = JuceMixPlayer()
+    @State private var player = JuceMixPlayer(record: true, play: true)
     @State private var progress: Float = 0
     @State private var sliderEditing: Bool = false
     @State private var playerState: JuceMixPlayerState = .IDLE
+
+    @State private var isRecording = false
 
     var body: some View {
         let _ = Self._printChanges()
@@ -34,8 +36,18 @@ struct PlayerPage: View {
             }
 
             VStack {
-                Button(playerState == .PLAYING ? "pause" : "play") {
-                    player.togglePlayPause()
+                HStack {
+                    Button(playerState == .PLAYING ? "pause" : "play") {
+                        player.togglePlayPause()
+                    }
+                    Button(isRecording ? "Stop Rec" : "Start Rec") {
+                        if isRecording {
+                            player.stopRecorder()
+                        } else {
+                            player.startRecorder(file: "/Users/apple/Downloads/rec.wav");
+                        }
+                        isRecording.toggle()
+                    }
                 }
                 Button("Set file") {
 //                    let path = Bundle.main.path(forResource: "music_big", ofType: "mp3")!

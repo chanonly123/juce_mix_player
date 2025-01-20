@@ -30,18 +30,18 @@ NLOHMANN_JSON_SERIALIZE_ENUM(JuceMixPlayerState,{
 std::string JuceMixPlayerState_toString(JuceMixPlayerState state);
 JuceMixPlayerState JuceMixPlayerState_make(std::string state);
 
-class JuceMixPlayer : public juce::AudioSource,
-private juce::Timer
+class JuceMixPlayer : private juce::Timer, public juce::AudioIODeviceCallback
 {
 private:
+    juce::CriticalSection lock;
     TaskQueue taskQueue;
+    TaskQueue recWriteTaskQueue;
     int samplesPerBlockExpected = 0;
     float deviceSampleRate = 0;
     float progressUpdateInterval = 0.05;
     juce::AudioFormatManager formatManager;
-    juce::LinearInterpolator interpolator[5];
+    juce::LinearInterpolator interpolator[2];
     juce::AudioDeviceManager* deviceManager;
-    juce::AudioSourcePlayer* player;
 
     JuceMixPlayerState currentState = IDLE;
 
@@ -50,18 +50,27 @@ private:
     JuceMixPlayerCallbackString onErrorCallback = nullptr;
 
     bool _isPlaying = false;
+    bool _isRecording = false;
 
     juce::AudioBuffer<float> playBuffer;
 
+    juce::AudioBuffer<float> recordBuffer;
+    std::shared_ptr<juce::AudioFormat> recAudioFormat;
+    std::shared_ptr<juce::AudioFormatWriter> recWriter;
+    std::string recordPath;
+
     MixerData mixerData;
 
-    float currentTime = 0;
-    float lastSampleIndex = 0;
+    int playHeadIndex = 0;
+    int recordHeadIndex = 0;
+    int recordHeadWriteIndex = 0;
 
     std::unordered_set<int> loadingBlocks;
     std::unordered_set<int> loadedBlocks;
     const float blockDuration = 10; // second
     const float sampleRate = 48000;
+
+    void prepare();
 
     void _play();
 
@@ -85,8 +94,18 @@ private:
 
     void loadCompleteBuffer(juce::AudioBuffer<float>& buffer, bool takeRepeteTracks, bool takeNonRepeteTracks);
 
+    void createWriterForRecorder();
+
+    void writeRecChunk();
+
+    bool writeBufferToFile(juce::AudioBuffer<float>& buffer,
+                           const juce::String& outputFilePath,
+                           double targetSampleRate,
+                           int numChannels,
+                           int sampleCount,
+                           std::string format);
 public:
-    JuceMixPlayer();
+    JuceMixPlayer(int record, int play);
 
     ~JuceMixPlayer();
 
@@ -102,10 +121,12 @@ public:
 
     void setJson(const char* json);
 
-    void prepare();
-
     /// value range 0 to 1
     void seek(float value);
+
+    void startRecorder(const char* file);
+
+    void stopRecorder();
 
     void onProgress(JuceMixPlayerCallbackFloat callback);
 
@@ -126,13 +147,15 @@ public:
 
     std::string getCurrentState();
 
-    /// juce::AudioSource
-    void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
+    // juce::AudioIODeviceCallback
+    void audioDeviceAboutToStart(juce::AudioIODevice *device) override;
 
-    void getNextAudioBlock(const juce::AudioSourceChannelInfo &bufferToFill) override;
+    void audioDeviceIOCallbackWithContext(const float *const *inputChannelData, int numInputChannels, float *const *outputChannelData, int numOutputChannels, int numSamples, const juce::AudioIODeviceCallbackContext &context) override;
 
-    void releaseResources() override;
+    void audioDeviceStopped() override;
 
-    /// juce::Timer
+    void audioDeviceError(const juce::String &errorMessage) override;
+
+    // juce::Timer
     void timerCallback() override;
 };
