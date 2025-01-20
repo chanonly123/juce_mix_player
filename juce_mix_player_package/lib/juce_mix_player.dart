@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
-import 'package:juce_mix_player/juce_lib_gen.dart';
+import 'juce_lib_gen.dart';
 
 // Native function typedefs
 typedef StringUpdateCallback = Void Function(Pointer<Void>, Pointer<Utf8>);
@@ -32,14 +32,16 @@ class JuceMixPlayer {
   static var libname = '';
 
   static void enableLogs(bool enable) {
-    JuceMixPlayer()._juceLib.juce_enableLogs(enable ? 1 : 0);
+    var _juceLib = JuceLibGen(
+        defaultTargetPlatform == TargetPlatform.iOS ? DynamicLibrary.process() : DynamicLibrary.open(libname));
+    _juceLib.juce_enableLogs(enable ? 1 : 0);
   }
 
-  JuceMixPlayer() {
+  JuceMixPlayer({required bool record, required bool play}) {
     _juceLib = JuceLibGen(
         defaultTargetPlatform == TargetPlatform.iOS ? DynamicLibrary.process() : DynamicLibrary.open(libname));
 
-    _ptr = _juceLib.JuceMixPlayer_init(0, 0);
+    _ptr = _juceLib.JuceMixPlayer_init(record ? 1 : 0, play ? 1 : 0);
 
     _progressCallbackNativeCallable = NativeCallable<FloatCallback>.listener(_onProgressCallback);
     _stateUpdateNativeCallable = NativeCallable<StringUpdateCallback>.listener(_onStateUpdateCallback);

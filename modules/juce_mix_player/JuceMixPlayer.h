@@ -1,6 +1,5 @@
 #pragma once
 
-#include <JuceHeader.h>
 #include "nlohmann/json.hpp"
 #include "Logger.h"
 #include "TaskQueue.h"

@@ -1,3 +1,5 @@
+#pragma once
+
 #ifdef __cplusplus
 #define EXPORT_C_FUNC extern "C" __attribute__((visibility("default"))) __attribute__((used))
 #else

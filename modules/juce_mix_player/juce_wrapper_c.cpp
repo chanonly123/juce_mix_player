@@ -1,5 +1,4 @@
-#include <JuceHeader.h>
-#include "includes/juce_lib.h"
+#include "juce_wrapper_c.h"
 #include "Logger.h"
 #include "JuceMixPlayer.h"
 #include "Models.h"
@@ -80,7 +79,6 @@ void JuceMixPlayer_seek(void* ptr, float value)
 void JuceMixPlayer_startRecorder(void* ptr, const char* file)
 {
     static_cast<JuceMixPlayer *>(ptr)->startRecorder(file);
-
 }
 
 void JuceMixPlayer_stopRecorder(void* ptr)

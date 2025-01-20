@@ -3,23 +3,8 @@
 <JUCERPROJECT id="ORjX0y" name="juce_lib" projectType="library" addUsingNamespaceToJuceHeader="0"
               displaySplashScreen="1" jucerFormatVersion="1" defines="JUCE_USE_MP3AUDIOFORMAT=1">
   <MAINGROUP id="fjboZk" name="juce_lib">
-    <GROUP id="{D92A9893-D5A4-E01E-13F4-7233A15FE324}" name="cpp_source">
-      <GROUP id="{EF2D1BD7-C46E-630E-4FC0-2E818BAC168E}" name="includes">
-        <FILE id="fWpf8t" name="juce_lib.h" compile="0" resource="0" file="../cpp_source/includes/juce_lib.h"/>
-      </GROUP>
-      <GROUP id="{723063FD-24B6-4D1C-4C8B-778BC829FD97}" name="nlohmann">
-        <FILE id="TR2RQi" name="json.hpp" compile="0" resource="0" file="../cpp_source/nlohmann/json.hpp"/>
-      </GROUP>
-      <FILE id="nB93So" name="juce_lib.cpp" compile="1" resource="0" file="../cpp_source/juce_lib.cpp"/>
-      <FILE id="XUeJQI" name="JuceMixPlayer.cpp" compile="1" resource="0"
-            file="../cpp_source/JuceMixPlayer.cpp"/>
-      <FILE id="rZ0lK2" name="JuceMixPlayer.h" compile="0" resource="0" file="../cpp_source/JuceMixPlayer.h"/>
-      <FILE id="vZtkgQ" name="Logger.cpp" compile="1" resource="0" file="../cpp_source/Logger.cpp"/>
-      <FILE id="o53sit" name="Logger.h" compile="0" resource="0" file="../cpp_source/Logger.h"/>
-      <FILE id="MfStWQ" name="Models.cpp" compile="1" resource="0" file="../cpp_source/Models.cpp"/>
-      <FILE id="kZed5T" name="Models.h" compile="0" resource="0" file="../cpp_source/Models.h"/>
-      <FILE id="uJVH4j" name="TaskQueue.cpp" compile="1" resource="0" file="../cpp_source/TaskQueue.cpp"/>
-      <FILE id="DqhIey" name="TaskQueue.h" compile="0" resource="0" file="../cpp_source/TaskQueue.h"/>
+    <GROUP id="{1C9A39F7-F1DF-DAE6-7A86-0D474460ADD4}" name="includes">
+      <FILE id="P7rO4t" name="juce_lib.h" compile="0" resource="0" file="includes/juce_lib.h"/>
     </GROUP>
   </MAINGROUP>
   <MODULES>
@@ -34,6 +19,7 @@
     <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_mix_player" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
     <MODULE id="juce_opengl" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_video" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
   </MODULES>
@@ -58,6 +44,7 @@
         <MODULEPATH id="juce_graphics" path="../../../JUCE/modules"/>
         <MODULEPATH id="juce_opengl" path="../../../JUCE/modules"/>
         <MODULEPATH id="juce_video" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_mix_player" path="../modules"/>
       </MODULEPATHS>
     </XCODE_IPHONE>
     <ANDROIDSTUDIO targetFolder="Builds/Android">
@@ -79,6 +66,7 @@
         <MODULEPATH id="juce_gui_extra" path="~/JUCE/modules"/>
         <MODULEPATH id="juce_opengl" path="~/JUCE/modules"/>
         <MODULEPATH id="juce_video" path="~/JUCE/modules"/>
+        <MODULEPATH id="juce_mix_player" path="../modules"/>
       </MODULEPATHS>
     </ANDROIDSTUDIO>
   </EXPORTFORMATS>

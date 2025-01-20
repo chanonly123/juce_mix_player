@@ -3,6 +3,7 @@ set -e
 
 libname="juce_lib"
 flutter_app="flutter_app"
+flutter_wrapper_package="juce_mix_player_package"
 
 # check for options
 if [ "$1" = "-debug" ]; then
@@ -17,7 +18,7 @@ fi
 root_dir=`pwd`
 
 # generate dart files from native header
-cd flutter_app
+cd "$flutter_wrapper_package"
 flutter pub get
 dart run ffigen
 

@@ -30,7 +30,7 @@ class PlayerPage extends StatefulWidget {
 }
 
 class PlayerPageState extends State<PlayerPage> {
-  final player = JuceMixPlayer();
+  final player = JuceMixPlayer(record: false, play: true);
   double progress = 0.0;
   bool isSliderEditing = false;
   bool isPlaying = false;

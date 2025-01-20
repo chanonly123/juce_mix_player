@@ -3,12 +3,13 @@ set -e
 
 target="juce_lib - Static Library"
 libname="juce_lib"
+flutter_wrapper_package="juce_mix_player_package"
 flutter_app="flutter_app"
 
 root_dir=`pwd`
 
 # generate dart files from native header
-cd "$flutter_app"
+cd "$flutter_wrapper_package"
 flutter pub get
 dart run ffigen
 
@@ -34,8 +35,8 @@ cp "build/Release/lib${libname}.a" "build/Release-iphonesimulator/${libname}.a" 
 
 # create xcframework, with native headers
 xcodebuild -create-xcframework \
-    -library "build/Release-iphoneos/${libname}.a" -headers ../../../cpp_source/includes \
-    -library "build/Release-iphonesimulator/${libname}.a" -headers ../../../cpp_source/includes \
+    -library "build/Release-iphoneos/${libname}.a" -headers ../../../$libname/includes \
+    -library "build/Release-iphonesimulator/${libname}.a" -headers ../../../$libname/includes \
     -output "build/${libname}.xcframework" &&
 
 echo "✅ Build Success ✅"

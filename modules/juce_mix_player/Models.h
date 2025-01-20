@@ -1,6 +1,5 @@
 #pragma once
 
-#include <JuceHeader.h>
 #include "nlohmann/json.hpp"
 
 struct MixerTrack {
@@ -63,16 +62,20 @@ struct MixerData {
     // multiple track objects creates the result media
     std::vector<MixerTrack> tracks = {};
 
+    std::string output = "";
+
     // strict output duration in seconds, else default value `0` means dynamic.
     float outputDuration = 0;
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(MixerData,
                                                 tracks,
+                                                output,
                                                 outputDuration)
 
     bool operator==(const MixerData& other) const {
         return
         outputDuration == other.outputDuration
+        && output == other.output
         && tracks == other.tracks;
     }
 

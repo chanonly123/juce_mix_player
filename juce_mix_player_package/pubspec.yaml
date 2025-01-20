@@ -17,7 +17,7 @@ ffigen:
   output: 'lib/juce_lib_gen.dart'
   headers:
     entry-points:
-      - '../cpp_source/includes/juce_lib.h'
+      - '../juce_lib/includes/juce_lib.h'
   type-map:
     'native-types':
       'char':
