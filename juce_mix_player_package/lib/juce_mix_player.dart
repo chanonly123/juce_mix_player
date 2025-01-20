@@ -1,4 +1,4 @@
-// ignore_for_file: constant_identifier_names
+// ignore_for_file: constant_identifier_names, always_use_package_imports
 
 import 'dart:convert';
 import 'dart:ffi';
