@@ -15,6 +15,7 @@ private:
     std::deque<TaskQueueItem> taskList;
     void executeNext();
 public:
+    std::string name;
     static TaskQueue shared;
     TaskQueue()=default;
     void async(TaskQueueItem task);

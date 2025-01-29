@@ -10,6 +10,25 @@ MixerData MixerModel::parse(const char *json) {
     return data;
 }
 
+MixerSettings MixerModel::parseSettings(const char* json) {
+    if (std::string(json) == "") {
+        throw std::runtime_error("json empty!");
+    }
+    nlohmann::json jsonPerson = nlohmann::json::parse(json);
+    MixerSettings data = jsonPerson.get<MixerSettings>();
+    isValid(data);
+    return data;
+}
+
+void MixerModel::isValid(MixerSettings& settings) {
+    if (settings.progressUpdateInterval <= 0) {
+        throw std::runtime_error("progressUpdateInterval < 0");
+    }
+    if (settings.sampleRate <= 0) {
+        throw std::runtime_error("sampleRate < 0");
+    }
+}
+
 void MixerModel::isValid(MixerData& mixerData) {
     std::unordered_set<std::string> set;
     for(MixerTrack& track: mixerData.tracks) {

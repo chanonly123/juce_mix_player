@@ -1,5 +1,20 @@
 import Foundation
 
+extension Encodable {
+    func jsonString() throws -> String {
+        let data = try JSONEncoder().encode(self)
+        return String(data: data, encoding: .utf8)!
+    }
+}
+
+enum JuceMixPlayerState: String {
+    case IDLE, READY, PLAYING, PAUSED, STOPPED, ERROR, COMPLETED
+}
+
+enum JuceMixPlayerRecState: String {
+    case IDLE, READY, RECORDING, STOPPED, ERROR
+}
+
 typealias StringUpdateCallback = @convention(c) (UnsafeMutableRawPointer?, UnsafePointer<Int8>?) -> Void
 typealias FloatCallback = @convention(c) (UnsafeMutableRawPointer?, Float) -> Void
 
@@ -17,20 +32,32 @@ func onError(player: UnsafeMutableRawPointer!, error: UnsafePointer<Int8>!) {
     closuresError[player]?(err)
 }
 
-extension Encodable {
-    func jsonString() throws -> String {
-        let data = try JSONEncoder().encode(self)
-        return String(data: data, encoding: .utf8)!
-    }
-}
-
-enum JuceMixPlayerState: String {
-    case IDLE, READY, PLAYING, PAUSED, STOPPED, ERROR, COMPLETED
-}
-
 private var closuresProgress: [UnsafeMutableRawPointer: (Float)->Void] = [:]
 private var closuresStateUpdate: [UnsafeMutableRawPointer: (JuceMixPlayerState)->Void] = [:]
 private var closuresError: [UnsafeMutableRawPointer: (String)->Void] = [:]
+
+func onRecStateUpdate(player: UnsafeMutableRawPointer!, state: UnsafePointer<Int8>!) {
+    let str = String(cString: state)
+    closuresRecStateUpdate[player]?(JuceMixPlayerRecState(rawValue: str)!)
+}
+
+func onRecProgress(player: UnsafeMutableRawPointer!, progress: Float) {
+    closuresRecProgress[player]?(progress)
+}
+
+func onRecError(player: UnsafeMutableRawPointer!, error: UnsafePointer<Int8>!) {
+    let err = String(cString: error)
+    closuresRecError[player]?(err)
+}
+
+func onRecLevel(player: UnsafeMutableRawPointer!, level: Float) {
+    closuresRecLevel[player]?(level)
+}
+
+private var closuresRecProgress: [UnsafeMutableRawPointer: (Float)->Void] = [:]
+private var closuresRecStateUpdate: [UnsafeMutableRawPointer: (JuceMixPlayerRecState)->Void] = [:]
+private var closuresRecError: [UnsafeMutableRawPointer: (String)->Void] = [:]
+private var closuresRecLevel: [UnsafeMutableRawPointer: (Float)->Void] = [:]
 
 class JuceMixPlayer {
     private lazy var ptr: UnsafeMutableRawPointer = JuceMixPlayer_init(_record ? 1 : 0, _play ? 1 : 0)
@@ -56,6 +83,11 @@ class JuceMixPlayer {
     func setData(_ data: MixerData) {
         let str = (try? data.jsonString()) ?? ""
         JuceMixPlayer_set(ptr, str.cString(using: .utf8))
+    }
+
+    func setSettings(_ settings: MixerSettings) {
+        let str = (try? settings.jsonString()) ?? ""
+        JuceMixPlayer_setSettings(ptr, str.cString(using: .utf8))
     }
 
     func play() {
@@ -105,8 +137,34 @@ class JuceMixPlayer {
         JuceMixPlayer_seek(ptr, value)
     }
 
-    func startRecorder(file: String) {
-        JuceMixPlayer_startRecorder(ptr, file.cString(using: .utf8))
+    // MARK: Recorder
+
+    func setRecProgressHandler(_ handler: @escaping (Float)->Void) {
+        closuresRecProgress[ptr] = handler
+        JuceMixPlayer_onRecProgress(ptr, onRecProgress as FloatCallback)
+    }
+
+    func setRecStateUpdateHandler(_ handler: @escaping (JuceMixPlayerRecState)->Void) {
+        closuresRecStateUpdate[ptr] = handler
+        JuceMixPlayer_onRecStateUpdate(ptr, onRecStateUpdate as StringUpdateCallback)
+    }
+
+    func setRecErrorHandler(handler: @escaping (String)->Void) {
+        closuresRecError[ptr] = handler
+        JuceMixPlayer_onRecError(ptr, onRecError as StringUpdateCallback)
+    }
+
+    func setRecLevelHandler(_ handler: @escaping (Float)->Void) {
+        closuresRecLevel[ptr] = handler
+        JuceMixPlayer_onRecLevel(ptr, onRecLevel as FloatCallback)
+    }
+
+    func prepareRecorder(file: String) {
+        JuceMixPlayer_prepareRecorder(ptr, file.cString(using: .utf8))
+    }
+
+    func startRecorder() {
+        JuceMixPlayer_startRecorder(ptr)
     }
 
     func stopRecorder() {
@@ -118,8 +176,17 @@ class JuceMixPlayer {
         closuresError[ptr] = nil
         closuresStateUpdate[ptr] = nil
         closuresProgress[ptr] = nil
+        closuresRecError[ptr] = nil
+        closuresRecStateUpdate[ptr] = nil
+        closuresRecProgress[ptr] = nil
+        closuresRecLevel[ptr] = nil
         JuceMixPlayer_deinit(ptr)
     }
+}
+
+struct MixerSettings: Codable {
+    let progressUpdateInterval: Double?
+    let sampleRate: Int?
 }
 
 struct MixerData: Codable {

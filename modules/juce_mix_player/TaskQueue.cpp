@@ -4,7 +4,7 @@ TaskQueue TaskQueue::shared;
 
 void TaskQueue::executeNext() {
     TaskQueue* self = this;
-    std::thread thread([&]{
+    std::thread thread([&, self]{
         if (self == nullptr) {
             return;
         }

@@ -3,85 +3,93 @@
 #include "JuceMixPlayer.h"
 #include "Models.h"
 
-void Java_com_rmsl_juce_Java_juceMessageManagerInit()
-{
+void Java_com_rmsl_juce_Java_juceMessageManagerInit() {
     juce::MessageManager::getInstance();
 }
 
 // public method to enable/disable logging
-void juce_enableLogs(int enable)
-{
+void juce_enableLogs(int enable) {
     enableLogsValue = enable == 1;
 }
 
 // MARK: JuceMixPlayer
 
-void *JuceMixPlayer_init(int record, int play)
-{
+void *JuceMixPlayer_init(int record, int play) {
     return new JuceMixPlayer(record, play);
 }
 
-void JuceMixPlayer_deinit(void *ptr)
-{
+void JuceMixPlayer_deinit(void *ptr) {
     static_cast<JuceMixPlayer *>(ptr)->dispose();
 }
 
-void JuceMixPlayer_play(void *ptr)
-{
+void JuceMixPlayer_play(void *ptr) {
     static_cast<JuceMixPlayer *>(ptr)->play();
 }
 
-void JuceMixPlayer_pause(void *ptr)
-{
+void JuceMixPlayer_pause(void *ptr) {
     static_cast<JuceMixPlayer *>(ptr)->pause();
 }
 
-void JuceMixPlayer_stop(void *ptr)
-{
+void JuceMixPlayer_stop(void *ptr) {
     static_cast<JuceMixPlayer *>(ptr)->stop();
 }
 
-void JuceMixPlayer_set(void* ptr, const char* json)
-{
+void JuceMixPlayer_set(void* ptr, const char* json) {
     static_cast<JuceMixPlayer *>(ptr)->setJson(json);
 }
 
-void JuceMixPlayer_onStateUpdate(void* ptr, void (*onStateUpdate)(void* ptr, const char*))
-{
-    static_cast<JuceMixPlayer *>(ptr)->onStateUpdate(onStateUpdate);
+void JuceMixPlayer_setSettings(void* ptr, const char* json) {
+    static_cast<JuceMixPlayer *>(ptr)->setSettings(json);
 }
 
-void JuceMixPlayer_onProgress(void* ptr, void (*onProgress)(void* ptr, float))
-{
-    static_cast<JuceMixPlayer *>(ptr)->onProgress(onProgress);
+void JuceMixPlayer_onStateUpdate(void* ptr, void (*onStateUpdate)(void* ptr, const char*)) {
+    static_cast<JuceMixPlayer *>(ptr)->onStateUpdateCallback = onStateUpdate;
 }
 
-void JuceMixPlayer_onError(void* ptr, void (*onError)(void* ptr, const char*))
-{
-    static_cast<JuceMixPlayer *>(ptr)->onError(onError);
+void JuceMixPlayer_onProgress(void* ptr, void (*onProgress)(void* ptr, float)) {
+    static_cast<JuceMixPlayer *>(ptr)->onProgressCallback = onProgress;
 }
 
-float JuceMixPlayer_getDuration(void *ptr)
-{
+void JuceMixPlayer_onError(void* ptr, void (*onError)(void* ptr, const char*)) {
+    static_cast<JuceMixPlayer *>(ptr)->onErrorCallback = onError;
+}
+
+float JuceMixPlayer_getDuration(void *ptr) {
     return static_cast<JuceMixPlayer *>(ptr)->getDuration();
 }
 
-int JuceMixPlayer_isPlaying(void *ptr)
-{
+int JuceMixPlayer_isPlaying(void *ptr) {
     return static_cast<JuceMixPlayer *>(ptr)->isPlaying();
 }
 
-void JuceMixPlayer_seek(void* ptr, float value)
-{
+void JuceMixPlayer_seek(void* ptr, float value) {
     static_cast<JuceMixPlayer *>(ptr)->seek(value);
 }
 
-void JuceMixPlayer_startRecorder(void* ptr, const char* file)
-{
-    static_cast<JuceMixPlayer *>(ptr)->startRecorder(file);
+void JuceMixPlayer_prepareRecorder(void* ptr, const char* file) {
+    static_cast<JuceMixPlayer *>(ptr)->prepareRecorder(file);
 }
 
-void JuceMixPlayer_stopRecorder(void* ptr)
-{
+void JuceMixPlayer_startRecorder(void* ptr) {
+    static_cast<JuceMixPlayer *>(ptr)->startRecorder();
+}
+
+void JuceMixPlayer_stopRecorder(void* ptr) {
     static_cast<JuceMixPlayer *>(ptr)->stopRecorder();
+}
+
+void JuceMixPlayer_onRecStateUpdate(void* ptr, void (*onStateUpdate)(void* ptr, const char*)) {
+    static_cast<JuceMixPlayer *>(ptr)->onRecStateUpdateCallback = onStateUpdate;
+}
+
+void JuceMixPlayer_onRecProgress(void* ptr, void (*onProgress)(void* ptr, float)) {
+    static_cast<JuceMixPlayer *>(ptr)->onRecProgressCallback = onProgress;
+}
+
+void JuceMixPlayer_onRecError(void* ptr, void (*onError)(void* ptr, const char*)) {
+    static_cast<JuceMixPlayer *>(ptr)->onRecErrorCallback = onError;
+}
+
+void JuceMixPlayer_onRecLevel(void* ptr, void (*onLevel)(void* ptr, float)) {
+    static_cast<JuceMixPlayer *>(ptr)->onRecLevelCallback = onLevel;
 }

@@ -4,26 +4,37 @@ import AVKit
 struct ContentView: View {
 
     var body: some View {
-        NavigationLink {
-            PlayerPage()
-        } label: {
-            Text("ShowPlayer")
-        }
+//        NavigationLink {
+        PlayerPage(record: true, play: true)
+//        } label: {
+//            Text("ShowPlayer")
+//        }
     }
 }
 
 struct PlayerPage: View {
 
-    @State private var player = JuceMixPlayer(record: true, play: true)
+    @State private var player: JuceMixPlayer
     @State private var progress: Float = 0
     @State private var sliderEditing: Bool = false
     @State private var playerState: JuceMixPlayerState = .IDLE
+    @State private var recState: JuceMixPlayerRecState = .IDLE
+    @State private var recProgress: Float = 0
+    @State private var recLevel: Float = 0
+    @State private var recLevelMax: Float = 0
 
-    @State private var isRecording = false
+    var recordFile: String {
+        FileManager.default.temporaryDirectory.appending(path: "/rec.wav").path()
+    }
+
+    init(record: Bool, play: Bool) {
+        _player = State(wrappedValue: JuceMixPlayer(record: record, play: play))
+    }
 
     var body: some View {
-        let _ = Self._printChanges()
         VStack {
+            Spacer()
+
             Text("\(playerState.rawValue)")
 
             Text("\(progress * player.getDuration()) / \(player.getDuration())")
@@ -40,17 +51,13 @@ struct PlayerPage: View {
                     Button(playerState == .PLAYING ? "pause" : "play") {
                         player.togglePlayPause()
                     }
-                    Button(isRecording ? "Stop Rec" : "Start Rec") {
-                        if isRecording {
-                            player.stopRecorder()
-                        } else {
-                            player.startRecorder(file: "/Users/apple/Downloads/rec.wav");
-                        }
-                        isRecording.toggle()
-                    }
                 }
+
+                Button("Set recorded file") {
+                    player.setFile(recordFile)
+                }
+
                 Button("Set file") {
-//                    let path = Bundle.main.path(forResource: "music_big", ofType: "mp3")!
                     let path = Bundle.main.path(forResource: "music_small", ofType: "wav")!
                     player.setFile(path)
                 }
@@ -87,6 +94,38 @@ struct PlayerPage: View {
                     )
                 }
             }
+
+            Spacer()
+
+            Text("\(recState)")
+            Text("Time: \(recProgress)")
+            Text("Levels: \(recLevel), Max: \(recLevelMax)")
+
+            Button("Prepare Recorder") {
+                player.prepareRecorder(file: recordFile);
+                player.setSettings(MixerSettings(progressUpdateInterval: 0.05, sampleRate: 48000))
+            }
+            HStack {
+                Button(recState == .RECORDING ? "Stop Rec" : "Start Rec") {
+                    if recState == .RECORDING {
+                        player.stopRecorder()
+                    } else {
+                        player.startRecorder();
+                    }
+                }
+
+                Button(recState == .RECORDING ? "Pause & Stop rec" : "Play & Start rec") {
+                    if recState == .RECORDING {
+                        player.stopRecorder()
+                        player.stop()
+                    } else {
+                        player.startRecorder();
+                        player.play()
+                    }
+                }
+            }
+
+            Spacer()
         }
         .padding()
         .buttonStyle(.bordered)
@@ -99,15 +138,33 @@ struct PlayerPage: View {
             }
             player.setStateUpdateHandler { state in
                 playerState = state
-                print("state: \(state)")
+                if state == .COMPLETED {
+                    player.stopRecorder()
+                }
             }
             player.setErrorHandler { error in
                 print("error: \(error)")
+            }
+
+            player.setRecProgressHandler { progress in
+                recProgress = progress
+            }
+            player.setRecStateUpdateHandler { state in
+                recState = state
+            }
+            player.setRecErrorHandler { error in
+                print("rec error: \(error)")
+            }
+            player.setRecLevelHandler { level in
+                recLevel = level
+                if recLevel > recLevelMax {
+                    recLevelMax = recLevel
+                }
             }
         }
     }
 }
 
-//#Preview {
-//    ContentView()
-//}
+#Preview {
+    PlayerPage(record: false, play: true)
+}

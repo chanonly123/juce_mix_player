@@ -57,7 +57,6 @@
 		1826AD022CA7C7DD0068C0F7 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		1826AD042CA7D60C0068C0F7 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		1854B1E02CEC914C005EA5F6 /* juce_lib.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = juce_lib.xcodeproj; path = ../juce_lib/Builds/iOS/juce_lib.xcodeproj; sourceTree = SOURCE_ROOT; };
-		1875145C2D3255E90086C3CF /* music.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = music.mp3; sourceTree = "<group>"; };
 		1881FF6C2D24A3D2009CEEDA /* music_small.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = music_small.wav; sourceTree = "<group>"; };
 		1881FF6E2D24A514009CEEDA /* music_big.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = music_big.mp3; sourceTree = "<group>"; };
 		189627BF2CA6C27000364235 /* ios_app.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ios_app.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -165,7 +164,6 @@
 				1881FF6E2D24A514009CEEDA /* music_big.mp3 */,
 				18ED0B6D2D364489004FED56 /* met_h.wav */,
 				18ED0B6E2D364489004FED56 /* met_l.wav */,
-				1875145C2D3255E90086C3CF /* music.mp3 */,
 			);
 			path = MusicFiles;
 			sourceTree = "<group>";
@@ -416,6 +414,7 @@
 				DEVELOPMENT_TEAM = C4CZBNFBQY;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "To record audio";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -447,6 +446,7 @@
 				DEVELOPMENT_TEAM = C4CZBNFBQY;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "To record audio";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

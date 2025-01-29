@@ -11,23 +11,35 @@
 typedef void (*JuceMixPlayerCallbackFloat)(void*, float);
 typedef void (*JuceMixPlayerCallbackString)(void*, const char*);
 
-enum JuceMixPlayerState
-{
+enum class JuceMixPlayerState {
     IDLE, READY, PLAYING, PAUSED, STOPPED, ERROR, COMPLETED
 };
 
+enum class JuceMixPlayerRecState {
+    IDLE, READY, RECORDING, STOPPED, ERROR
+};
+
+NLOHMANN_JSON_SERIALIZE_ENUM(JuceMixPlayerRecState,{
+    {JuceMixPlayerRecState::IDLE, "IDLE"},
+    {JuceMixPlayerRecState::READY, "READY"},
+    {JuceMixPlayerRecState::RECORDING, "RECORDING"},
+    {JuceMixPlayerRecState::STOPPED, "STOPPED"},
+    {JuceMixPlayerRecState::ERROR, "ERROR"},
+});
+
+std::string JuceMixPlayerRecState_toString(JuceMixPlayerRecState state);
+
 NLOHMANN_JSON_SERIALIZE_ENUM(JuceMixPlayerState,{
-    {IDLE, "IDLE"},
-    {READY, "READY"},
-    {PLAYING, "PLAYING"},
-    {PAUSED, "PAUSED"},
-    {STOPPED, "STOPPED"},
-    {ERROR, "ERROR"},
-    {COMPLETED, "COMPLETED"},
+    {JuceMixPlayerState::IDLE, "IDLE"},
+    {JuceMixPlayerState::READY, "READY"},
+    {JuceMixPlayerState::PLAYING, "PLAYING"},
+    {JuceMixPlayerState::PAUSED, "PAUSED"},
+    {JuceMixPlayerState::STOPPED, "STOPPED"},
+    {JuceMixPlayerState::ERROR, "ERROR"},
+    {JuceMixPlayerState::COMPLETED, "COMPLETED"},
 });
 
 std::string JuceMixPlayerState_toString(JuceMixPlayerState state);
-JuceMixPlayerState JuceMixPlayerState_make(std::string state);
 
 class JuceMixPlayer : private juce::Timer, public juce::AudioIODeviceCallback
 {
@@ -37,33 +49,39 @@ private:
     TaskQueue recWriteTaskQueue;
     int samplesPerBlockExpected = 0;
     float deviceSampleRate = 0;
-    float progressUpdateInterval = 0.05;
+
+    MixerSettings settings;
+
     juce::AudioFormatManager formatManager;
     juce::LinearInterpolator interpolator[2];
     juce::AudioDeviceManager* deviceManager;
 
-    JuceMixPlayerState currentState = IDLE;
+    // MARK: Playing
+    JuceMixPlayerState currentState = JuceMixPlayerState::IDLE;
 
-    JuceMixPlayerCallbackFloat onProgressCallback = nullptr;
-    JuceMixPlayerCallbackString onStateUpdateCallback = nullptr;
-    JuceMixPlayerCallbackString onErrorCallback = nullptr;
-
+    MixerData mixerData;
     bool _isPlaying = false;
-    bool _isRecording = false;
-
+    int playHeadIndex = 0;
     juce::AudioBuffer<float> playBuffer;
 
-    juce::AudioBuffer<float> recordBuffer;
+    // MARK: Recording
+
+    JuceMixPlayerRecState currentRecState = JuceMixPlayerRecState::IDLE;
+
+    bool _isRecording = false;
+    bool _isRecorderPrepared = false;
+    int recordHeadIndex = 0;
+    int recordTimerIndex = 0;
+    int recordBufferSelect = 0;
+    juce::AudioBuffer<float> recordBuffer1;
+    juce::AudioBuffer<float> recordBuffer2;
+    int recordBufferDuration = 5; // seconds
     std::shared_ptr<juce::AudioFormat> recAudioFormat;
     std::shared_ptr<juce::AudioFormatWriter> recWriter;
     std::string recordPath;
+    juce::ReferenceCountedObjectPtr<juce::AudioDeviceManager::LevelMeter> inputLevelMeter;
 
-    MixerData mixerData;
-
-    int playHeadIndex = 0;
-    int recordHeadIndex = 0;
-    int recordHeadWriteIndex = 0;
-
+    // loading buffer into chunks
     std::unordered_set<int> loadingBlocks;
     std::unordered_set<int> loadedBlocks;
     const float blockDuration = 10; // second
@@ -95,15 +113,29 @@ private:
 
     void createWriterForRecorder();
 
-    void writeRecChunk();
+    void flushRecordBufferToFile(juce::AudioBuffer<float>& buffer, float sampleCount);
 
-    bool writeBufferToFile(juce::AudioBuffer<float>& buffer,
-                           const juce::String& outputFilePath,
-                           double targetSampleRate,
-                           int numChannels,
-                           int sampleCount,
-                           std::string format);
+    void _onRecStateUpdateNotify(JuceMixPlayerRecState state);
+
+    void _finishRecording();
+
+    void _resetRecorder();
+
+    void _startProgressTimer();
+
+    void _stopProgressTimer();
+
 public:
+
+    JuceMixPlayerCallbackFloat onProgressCallback = nullptr;
+    JuceMixPlayerCallbackString onStateUpdateCallback = nullptr;
+    JuceMixPlayerCallbackString onErrorCallback = nullptr;
+
+    JuceMixPlayerCallbackFloat onRecLevelCallback = nullptr;
+    JuceMixPlayerCallbackFloat onRecProgressCallback = nullptr;
+    JuceMixPlayerCallbackString onRecStateUpdateCallback = nullptr;
+    JuceMixPlayerCallbackString onRecErrorCallback = nullptr;
+
     JuceMixPlayer(int record, int play);
 
     ~JuceMixPlayer();
@@ -120,24 +152,13 @@ public:
 
     void setJson(const char* json);
 
+    void setSettings(const char* json);
+
     /// value range 0 to 1
     void seek(float value);
 
-    void startRecorder(const char* file);
-
-    void stopRecorder();
-
-    void onProgress(JuceMixPlayerCallbackFloat callback);
-
-    void onStateUpdate(JuceMixPlayerCallbackString callback);
-
-    void onError(JuceMixPlayerCallbackString callback);
-
     // get curent time in seconds
     float getCurrentTime();
-
-    // set timer fire interval, in seconds
-    void setProgressUpdateInterval(float time);
 
     // get total duration in seconds
     float getDuration();
@@ -145,6 +166,13 @@ public:
     int isPlaying();
 
     std::string getCurrentState();
+
+    // MARK: Recorder
+    void prepareRecorder(const char* file);
+
+    void startRecorder();
+
+    void stopRecorder();
 
     // juce::AudioIODeviceCallback
     void audioDeviceAboutToStart(juce::AudioIODevice *device) override;

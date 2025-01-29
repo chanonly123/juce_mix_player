@@ -18,6 +18,8 @@ EXPORT_C_FUNC void JuceMixPlayer_stop(void *ptr);
 
 EXPORT_C_FUNC void JuceMixPlayer_set(void* ptr, const char* json);
 
+EXPORT_C_FUNC void JuceMixPlayer_setSettings(void* ptr, const char* json);
+
 EXPORT_C_FUNC void JuceMixPlayer_onStateUpdate(void* ptr, void (*JuceMixPlayerCallbackString)(void*, const char*));
 
 /// callback with progress value range 0 to 1
@@ -34,6 +36,19 @@ EXPORT_C_FUNC int JuceMixPlayer_isPlaying(void *ptr);
 /// value range 0 to 1
 EXPORT_C_FUNC void JuceMixPlayer_seek(void* ptr, float value);
 
-EXPORT_C_FUNC void JuceMixPlayer_startRecorder(void* ptr, const char* file);
+// MARK: Recorder
+
+EXPORT_C_FUNC void JuceMixPlayer_prepareRecorder(void* ptr, const char* file);
+
+EXPORT_C_FUNC void JuceMixPlayer_startRecorder(void* ptr);
 
 EXPORT_C_FUNC void JuceMixPlayer_stopRecorder(void* ptr);
+
+EXPORT_C_FUNC void JuceMixPlayer_onRecStateUpdate(void* ptr, void (*onStateUpdate)(void* ptr, const char*));
+
+EXPORT_C_FUNC void JuceMixPlayer_onRecProgress(void* ptr, void (*onProgress)(void* ptr, float));
+
+EXPORT_C_FUNC void JuceMixPlayer_onRecError(void* ptr, void (*onError)(void* ptr, const char*));
+
+EXPORT_C_FUNC void JuceMixPlayer_onRecLevel(void* ptr, void (*onLevel)(void* ptr, float));
+

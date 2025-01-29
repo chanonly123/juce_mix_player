@@ -2,6 +2,19 @@
 
 #include "nlohmann/json.hpp"
 
+struct MixerSettings {
+
+    // seconds
+    float progressUpdateInterval = 0.05;
+
+    // player and recorder sample rate
+    int sampleRate = 48000;
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(MixerSettings,
+                                                progressUpdateInterval,
+                                                sampleRate);
+};
+
 struct MixerTrack {
 
     std::string id_ = "";
@@ -39,7 +52,7 @@ struct MixerTrack {
                                                 duration,
                                                 repeat,
                                                 repeatInterval,
-                                                enabled)
+                                                enabled);
 
     bool operator==(const MixerTrack& other) const {
         return
@@ -70,7 +83,7 @@ struct MixerData {
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(MixerData,
                                                 tracks,
                                                 output,
-                                                outputDuration)
+                                                outputDuration);
 
     bool operator==(const MixerData& other) const {
         return
@@ -85,8 +98,11 @@ class MixerModel {
 public:
     static MixerData parse(const char* json);
 
-    /// Throws std::string
+    static MixerSettings parseSettings(const char* json);
+
     static void isValid(MixerData& mixerData);
+
+    static void isValid(MixerSettings& settings);
 
     /// Returns total duration in seconds. Requires reader for each track.
     static float getTotalDuration(MixerData& mixerData);
