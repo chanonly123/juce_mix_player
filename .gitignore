@@ -8,6 +8,7 @@ xcuserdata/
 # JUCE
 **/Builds
 **/JuceLibraryCode
+crash.log
 
 # General
 .DS_Store

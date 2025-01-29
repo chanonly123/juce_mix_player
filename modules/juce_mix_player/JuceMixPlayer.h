@@ -44,6 +44,10 @@ std::string JuceMixPlayerState_toString(JuceMixPlayerState state);
 class JuceMixPlayer : private juce::Timer, public juce::AudioIODeviceCallback
 {
 private:
+
+    bool _record;
+    bool _play;
+
     juce::CriticalSection lock;
     TaskQueue taskQueue;
     TaskQueue recWriteTaskQueue;
@@ -89,9 +93,9 @@ private:
 
     void prepare();
 
-    void _play();
+    void _playInternal();
 
-    void _pause(bool stop);
+    void _pauseInternal(bool stop);
 
     /// create reader for files
     void _createFileReadersAndTotalDuration();
