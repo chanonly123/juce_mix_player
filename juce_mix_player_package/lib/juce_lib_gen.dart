@@ -135,6 +135,24 @@ class JuceLibGen {
   late final _JuceMixPlayer_set = _JuceMixPlayer_setPtr.asFunction<
       void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>();
 
+  void JuceMixPlayer_setSettings(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<pkg_ffi.Utf8> json,
+  ) {
+    return _JuceMixPlayer_setSettings(
+      ptr,
+      json,
+    );
+  }
+
+  late final _JuceMixPlayer_setSettingsPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<ffi.Void>,
+              ffi.Pointer<pkg_ffi.Utf8>)>>('JuceMixPlayer_setSettings');
+  late final _JuceMixPlayer_setSettings =
+      _JuceMixPlayer_setSettingsPtr.asFunction<
+          void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>();
+
   void JuceMixPlayer_onStateUpdate(
     ffi.Pointer<ffi.Void> ptr,
     ffi.Pointer<
@@ -276,23 +294,37 @@ class JuceLibGen {
   late final _JuceMixPlayer_seek = _JuceMixPlayer_seekPtr.asFunction<
       void Function(ffi.Pointer<ffi.Void>, double)>();
 
-  void JuceMixPlayer_startRecorder(
+  void JuceMixPlayer_prepareRecorder(
     ffi.Pointer<ffi.Void> ptr,
     ffi.Pointer<pkg_ffi.Utf8> file,
   ) {
-    return _JuceMixPlayer_startRecorder(
+    return _JuceMixPlayer_prepareRecorder(
       ptr,
       file,
     );
   }
 
-  late final _JuceMixPlayer_startRecorderPtr = _lookup<
+  late final _JuceMixPlayer_prepareRecorderPtr = _lookup<
       ffi.NativeFunction<
           ffi.Void Function(ffi.Pointer<ffi.Void>,
-              ffi.Pointer<pkg_ffi.Utf8>)>>('JuceMixPlayer_startRecorder');
-  late final _JuceMixPlayer_startRecorder =
-      _JuceMixPlayer_startRecorderPtr.asFunction<
+              ffi.Pointer<pkg_ffi.Utf8>)>>('JuceMixPlayer_prepareRecorder');
+  late final _JuceMixPlayer_prepareRecorder =
+      _JuceMixPlayer_prepareRecorderPtr.asFunction<
           void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>();
+
+  void JuceMixPlayer_startRecorder(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _JuceMixPlayer_startRecorder(
+      ptr,
+    );
+  }
+
+  late final _JuceMixPlayer_startRecorderPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'JuceMixPlayer_startRecorder');
+  late final _JuceMixPlayer_startRecorder = _JuceMixPlayer_startRecorderPtr
+      .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void JuceMixPlayer_stopRecorder(
     ffi.Pointer<ffi.Void> ptr,
@@ -307,4 +339,126 @@ class JuceLibGen {
           'JuceMixPlayer_stopRecorder');
   late final _JuceMixPlayer_stopRecorder = _JuceMixPlayer_stopRecorderPtr
       .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void JuceMixPlayer_onRecStateUpdate(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(
+                    ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>
+        onStateUpdate,
+  ) {
+    return _JuceMixPlayer_onRecStateUpdate(
+      ptr,
+      onStateUpdate,
+    );
+  }
+
+  late final _JuceMixPlayer_onRecStateUpdatePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(
+                  ffi.Pointer<ffi.Void>,
+                  ffi.Pointer<
+                      ffi.NativeFunction<
+                          ffi.Void Function(ffi.Pointer<ffi.Void>,
+                              ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
+      'JuceMixPlayer_onRecStateUpdate');
+  late final _JuceMixPlayer_onRecStateUpdate =
+      _JuceMixPlayer_onRecStateUpdatePtr.asFunction<
+          void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>,
+                          ffi.Pointer<pkg_ffi.Utf8>)>>)>();
+
+  void JuceMixPlayer_onRecProgress(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>
+        onProgress,
+  ) {
+    return _JuceMixPlayer_onRecProgress(
+      ptr,
+      onProgress,
+    );
+  }
+
+  late final _JuceMixPlayer_onRecProgressPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>,
+                          ffi.Float)>>)>>('JuceMixPlayer_onRecProgress');
+  late final _JuceMixPlayer_onRecProgress =
+      _JuceMixPlayer_onRecProgressPtr.asFunction<
+          void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>)>();
+
+  void JuceMixPlayer_onRecError(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(
+                    ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>
+        onError,
+  ) {
+    return _JuceMixPlayer_onRecError(
+      ptr,
+      onError,
+    );
+  }
+
+  late final _JuceMixPlayer_onRecErrorPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(
+                  ffi.Pointer<ffi.Void>,
+                  ffi.Pointer<
+                      ffi.NativeFunction<
+                          ffi.Void Function(ffi.Pointer<ffi.Void>,
+                              ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
+      'JuceMixPlayer_onRecError');
+  late final _JuceMixPlayer_onRecError =
+      _JuceMixPlayer_onRecErrorPtr.asFunction<
+          void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>,
+                          ffi.Pointer<pkg_ffi.Utf8>)>>)>();
+
+  void JuceMixPlayer_onRecLevel(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>
+        onLevel,
+  ) {
+    return _JuceMixPlayer_onRecLevel(
+      ptr,
+      onLevel,
+    );
+  }
+
+  late final _JuceMixPlayer_onRecLevelPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>,
+                          ffi.Float)>>)>>('JuceMixPlayer_onRecLevel');
+  late final _JuceMixPlayer_onRecLevel =
+      _JuceMixPlayer_onRecLevelPtr.asFunction<
+          void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>)>();
 }

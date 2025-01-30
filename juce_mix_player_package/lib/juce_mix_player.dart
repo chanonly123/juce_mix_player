@@ -11,13 +11,8 @@ typedef StringUpdateCallback = Void Function(Pointer<Void>, Pointer<Utf8>);
 typedef FloatCallback = Void Function(Pointer<Void>, Float);
 
 // Dart function typedefs
-typedef ProgressCallbackDart = void Function(double progress);
-typedef StateUpdateCallbackDart = void Function(JuceMixPlayerState state);
-typedef ErrorCallbackDart = void Function(String error);
-
-final _progressCallbacks = <Pointer<Void>, ProgressCallbackDart>{};
-final _stateCallbacks = <Pointer<Void>, StateUpdateCallbackDart>{};
-final _errorCallbacks = <Pointer<Void>, ErrorCallbackDart>{};
+typedef FloatCallbackDart = void Function(Pointer<Void> ptr, double progress);
+typedef NativeStringCallbackDart = void Function(Pointer<Void> ptr, Pointer<Utf8> state);
 
 enum JuceMixPlayerState { IDLE, READY, PLAYING, PAUSED, STOPPED, COMPLETED, ERROR }
 
@@ -25,9 +20,9 @@ class JuceMixPlayer {
   late JuceLibGen _juceLib;
   late Pointer<Void> _ptr;
 
-  late final NativeCallable<FloatCallback> _progressCallbackNativeCallable;
-  late final NativeCallable<StringUpdateCallback> _stateUpdateNativeCallable;
-  late final NativeCallable<StringUpdateCallback> _errorUpdateNativeCallable;
+  NativeCallable<FloatCallback>? _progressCallbackNativeCallable;
+  NativeCallable<StringUpdateCallback>? _stateUpdateNativeCallable;
+  NativeCallable<StringUpdateCallback>? _errorUpdateNativeCallable;
 
   static var libname = '';
 
@@ -42,40 +37,33 @@ class JuceMixPlayer {
         defaultTargetPlatform == TargetPlatform.iOS ? DynamicLibrary.process() : DynamicLibrary.open(libname));
 
     _ptr = _juceLib.JuceMixPlayer_init(record ? 1 : 0, play ? 1 : 0);
-
-    _progressCallbackNativeCallable = NativeCallable<FloatCallback>.listener(_onProgressCallback);
-    _stateUpdateNativeCallable = NativeCallable<StringUpdateCallback>.listener(_onStateUpdateCallback);
-    _errorUpdateNativeCallable = NativeCallable<StringUpdateCallback>.listener(_onErrorCallback);
-
-    _juceLib.JuceMixPlayer_onProgress(_ptr, _progressCallbackNativeCallable.nativeFunction);
-    _juceLib.JuceMixPlayer_onStateUpdate(_ptr, _stateUpdateNativeCallable.nativeFunction);
-    _juceLib.JuceMixPlayer_onError(_ptr, _errorUpdateNativeCallable.nativeFunction);
   }
 
-  void _onStateUpdateCallback(Pointer<Void> player, Pointer<Utf8> state) {
-    final stateStr = state.cast<Utf8>().toDartString();
-    _stateCallbacks[player]?.call(JuceMixPlayerState.values.byName(stateStr));
+  void setProgressHandler(void Function(double progress) callback) {
+    FloatCallbackDart closure = (ptr, progress) {
+      callback(progress);
+    };
+    _progressCallbackNativeCallable?.close();
+    _progressCallbackNativeCallable = NativeCallable<FloatCallback>.listener(closure);
+    _juceLib.JuceMixPlayer_onProgress(_ptr, _progressCallbackNativeCallable!.nativeFunction);
   }
 
-  void _onProgressCallback(Pointer<Void> player, double progress) {
-    _progressCallbacks[player]?.call(progress);
+  void setStateUpdateHandler(void Function(JuceMixPlayerState state) callback) {
+    NativeStringCallbackDart closure = (ptr, cstring) {
+      callback(JuceMixPlayerState.values.byName(cstring.toDartString()));
+    };
+    _stateUpdateNativeCallable?.close();
+    _stateUpdateNativeCallable = NativeCallable<StringUpdateCallback>.listener(closure);
+    _juceLib.JuceMixPlayer_onStateUpdate(_ptr, _stateUpdateNativeCallable!.nativeFunction);
   }
 
-  void _onErrorCallback(Pointer<Void> player, Pointer<Utf8> error) {
-    final errorStr = error.cast<Utf8>().toDartString();
-    _errorCallbacks[player]?.call(errorStr);
-  }
-
-  void setProgressHandler(ProgressCallbackDart callback) {
-    _progressCallbacks[_ptr] = callback;
-  }
-
-  void setStateUpdateHandler(StateUpdateCallbackDart callback) {
-    _stateCallbacks[_ptr] = callback;
-  }
-
-  void setErrorHandler(ErrorCallbackDart callback) {
-    _errorCallbacks[_ptr] = callback;
+  void setErrorHandler(void Function(String error) callback) {
+    NativeStringCallbackDart closure = (ptr, cstring) {
+      callback(cstring.toDartString());
+    };
+    _errorUpdateNativeCallable?.close();
+    _errorUpdateNativeCallable = NativeCallable<StringUpdateCallback>.listener(closure);
+    _juceLib.JuceMixPlayer_onError(_ptr, _errorUpdateNativeCallable!.nativeFunction);
   }
 
   void setFile(String path) {
@@ -125,14 +113,9 @@ class JuceMixPlayer {
 
   void dispose() {
     // Clear callbacks
-    _progressCallbacks.remove(_ptr);
-    _stateCallbacks.remove(_ptr);
-    _errorCallbacks.remove(_ptr);
-
-    _progressCallbackNativeCallable.close();
-    _stateUpdateNativeCallable.close();
-    _errorUpdateNativeCallable.close();
-
+    _progressCallbackNativeCallable?.close();
+    _stateUpdateNativeCallable?.close();
+    _errorUpdateNativeCallable?.close();
     _juceLib.JuceMixPlayer_deinit(_ptr);
   }
 }
