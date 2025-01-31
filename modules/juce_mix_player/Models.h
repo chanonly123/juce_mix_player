@@ -2,6 +2,76 @@
 
 #include "nlohmann/json.hpp"
 
+typedef void (*JuceMixPlayerCallbackFloat)(void*, float);
+typedef void (*JuceMixPlayerCallbackString)(void*, const char*);
+
+enum class JuceMixPlayerState {
+    IDLE, READY, PLAYING, PAUSED, STOPPED, ERROR, COMPLETED
+};
+
+enum class JuceMixPlayerRecState {
+    IDLE, READY, RECORDING, STOPPED, ERROR
+};
+
+NLOHMANN_JSON_SERIALIZE_ENUM(JuceMixPlayerRecState,{
+    {JuceMixPlayerRecState::IDLE, "IDLE"},
+    {JuceMixPlayerRecState::READY, "READY"},
+    {JuceMixPlayerRecState::RECORDING, "RECORDING"},
+    {JuceMixPlayerRecState::STOPPED, "STOPPED"},
+    {JuceMixPlayerRecState::ERROR, "ERROR"},
+});
+
+std::string JuceMixPlayerRecState_toString(JuceMixPlayerRecState state);
+
+NLOHMANN_JSON_SERIALIZE_ENUM(JuceMixPlayerState,{
+    {JuceMixPlayerState::IDLE, "IDLE"},
+    {JuceMixPlayerState::READY, "READY"},
+    {JuceMixPlayerState::PLAYING, "PLAYING"},
+    {JuceMixPlayerState::PAUSED, "PAUSED"},
+    {JuceMixPlayerState::STOPPED, "STOPPED"},
+    {JuceMixPlayerState::ERROR, "ERROR"},
+    {JuceMixPlayerState::COMPLETED, "COMPLETED"},
+});
+
+std::string JuceMixPlayerState_toString(JuceMixPlayerState state);
+
+struct MixerDevice {
+
+    std::string name = "";
+    bool isInput = false;
+    bool isSelected = false;
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(MixerDevice,
+                                                name,
+                                                isInput,
+                                                isSelected);
+
+    bool operator==(const MixerDevice& other) const {
+        return
+        name == other.name
+        && isInput == other.isInput
+        && isSelected == other.isSelected;
+    }
+};
+
+struct MixerDeviceList {
+
+    std::vector<MixerDevice> devices = {};
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(MixerDeviceList,
+                                                devices);
+
+    bool operator==(const MixerDeviceList& other) const {
+        return
+        devices == other.devices;
+    }
+
+    static MixerDeviceList decode(std::string str) {
+        nlohmann::json jsonPerson = nlohmann::json::parse(str);
+        return jsonPerson.get<MixerDeviceList>();
+    }
+};
+
 struct MixerSettings {
 
     // seconds

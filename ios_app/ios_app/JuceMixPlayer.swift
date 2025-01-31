@@ -1,9 +1,28 @@
 import Foundation
 
+typealias StringUpdateCallback = @convention(c) (UnsafeMutableRawPointer?, UnsafePointer<Int8>?) -> Void
+typealias FloatCallback = @convention(c) (UnsafeMutableRawPointer?, Float) -> Void
+
 extension Encodable {
     func jsonString() throws -> String {
         let data = try JSONEncoder().encode(self)
         return String(data: data, encoding: .utf8)!
+    }
+}
+
+extension Decodable {
+    init(_ jsonString_: String?) throws {
+        if let jsonString = jsonString_, let data = jsonString.data(using: .utf8) {
+            do {
+                let obj = try JSONDecoder().decode(Self.self, from: data)
+                self = obj
+                return
+            } catch let err {
+                print(err, String(describing: Self.self))
+                throw err
+            }
+        }
+        throw NSError(domain: "JSONDecoder error", code: -1)
     }
 }
 
@@ -15,8 +34,9 @@ enum JuceMixPlayerRecState: String {
     case IDLE, READY, RECORDING, STOPPED, ERROR
 }
 
-typealias StringUpdateCallback = @convention(c) (UnsafeMutableRawPointer?, UnsafePointer<Int8>?) -> Void
-typealias FloatCallback = @convention(c) (UnsafeMutableRawPointer?, Float) -> Void
+private var closuresProgress: [UnsafeMutableRawPointer: (Float)->Void] = [:]
+private var closuresStateUpdate: [UnsafeMutableRawPointer: (JuceMixPlayerState)->Void] = [:]
+private var closuresError: [UnsafeMutableRawPointer: (String)->Void] = [:]
 
 func onStateUpdate(player: UnsafeMutableRawPointer!, state: UnsafePointer<Int8>!) {
     let str = String(cString: state)
@@ -32,9 +52,10 @@ func onError(player: UnsafeMutableRawPointer!, error: UnsafePointer<Int8>!) {
     closuresError[player]?(err)
 }
 
-private var closuresProgress: [UnsafeMutableRawPointer: (Float)->Void] = [:]
-private var closuresStateUpdate: [UnsafeMutableRawPointer: (JuceMixPlayerState)->Void] = [:]
-private var closuresError: [UnsafeMutableRawPointer: (String)->Void] = [:]
+private var closuresRecProgress: [UnsafeMutableRawPointer: (Float)->Void] = [:]
+private var closuresRecStateUpdate: [UnsafeMutableRawPointer: (JuceMixPlayerRecState)->Void] = [:]
+private var closuresRecError: [UnsafeMutableRawPointer: (String)->Void] = [:]
+private var closuresRecLevel: [UnsafeMutableRawPointer: (Float)->Void] = [:]
 
 func onRecStateUpdate(player: UnsafeMutableRawPointer!, state: UnsafePointer<Int8>!) {
     let str = String(cString: state)
@@ -54,10 +75,13 @@ func onRecLevel(player: UnsafeMutableRawPointer!, level: Float) {
     closuresRecLevel[player]?(level)
 }
 
-private var closuresRecProgress: [UnsafeMutableRawPointer: (Float)->Void] = [:]
-private var closuresRecStateUpdate: [UnsafeMutableRawPointer: (JuceMixPlayerRecState)->Void] = [:]
-private var closuresRecError: [UnsafeMutableRawPointer: (String)->Void] = [:]
-private var closuresRecLevel: [UnsafeMutableRawPointer: (Float)->Void] = [:]
+private var closuresDeviceUpdate: [UnsafeMutableRawPointer: (MixerDeviceList)->Void] = [:]
+
+func onDeviceUpdate(player: UnsafeMutableRawPointer!, devices: UnsafePointer<Int8>!) {
+    let json = String(cString: devices)
+    closuresDeviceUpdate[player]?(try! MixerDeviceList(json))
+}
+
 
 class JuceMixPlayer {
     private lazy var ptr: UnsafeMutableRawPointer = JuceMixPlayer_init(_record ? 1 : 0, _play ? 1 : 0)
@@ -159,6 +183,11 @@ class JuceMixPlayer {
         JuceMixPlayer_onRecLevel(ptr, onRecLevel as FloatCallback)
     }
 
+    func setDeviceUpdateHandler(_ handler: @escaping (MixerDeviceList)->Void) {
+        closuresDeviceUpdate[ptr] = handler
+        JuceMixPlayer_onDeviceUpdate(ptr, onDeviceUpdate as StringUpdateCallback)
+    }
+
     func prepareRecorder(file: String) {
         JuceMixPlayer_prepareRecorder(ptr, file.cString(using: .utf8))
     }
@@ -250,4 +279,12 @@ struct MixerTrack: Codable {
         case repeat_ = "repeat"
         case repeatInterval = "repeatInterval"
     }
+}
+
+struct MixerDevice: Codable, Equatable, Hashable {
+    let name: String
+};
+
+struct MixerDeviceList: Codable, Equatable, Hashable {
+    let devices: [MixerDevice]
 }

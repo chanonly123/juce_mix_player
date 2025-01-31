@@ -23,6 +23,8 @@ struct PlayerPage: View {
     @State private var recLevel: Float = 0
     @State private var recLevelMax: Float = 0
 
+    @State private var deviceList = MixerDeviceList(devices: [])
+
     var recordFile: String {
         FileManager.default.temporaryDirectory.appending(path: "/rec.wav").path()
     }
@@ -97,8 +99,7 @@ struct PlayerPage: View {
 
             Spacer()
 
-            Text("\(recState)")
-            Text("Time: \(recProgress)")
+            Text("\(recState)") + Text("Time: \(recProgress)")
             Text("Levels: \(recLevel), Max: \(recLevelMax)")
 
             Button("Prepare Recorder") {
@@ -121,6 +122,16 @@ struct PlayerPage: View {
                     } else {
                         player.startRecorder();
                         player.play()
+                    }
+                }
+            }
+
+            Spacer()
+
+            Menu("DEVICES") {
+                ForEach(deviceList.devices, id: \.self) { dev in
+                    Button(dev.name) {
+                        
                     }
                 }
             }
@@ -161,10 +172,13 @@ struct PlayerPage: View {
                     recLevelMax = recLevel
                 }
             }
+            player.setDeviceUpdateHandler { devices in
+
+            }
         }
     }
 }
 
 #Preview {
-    PlayerPage(record: false, play: true)
+    PlayerPage(record: false, play: false)
 }

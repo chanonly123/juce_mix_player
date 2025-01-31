@@ -93,3 +93,11 @@ void JuceMixPlayer_onRecError(void* ptr, void (*onError)(void* ptr, const char*)
 void JuceMixPlayer_onRecLevel(void* ptr, void (*onLevel)(void* ptr, float)) {
     static_cast<JuceMixPlayer *>(ptr)->onRecLevelCallback = onLevel;
 }
+
+void JuceMixPlayer_onDeviceUpdate(void* ptr, void (*onDeviceUpdate)(void* ptr, const char*)) {
+    static_cast<JuceMixPlayer *>(ptr)->onDeviceUpdateCallback = onDeviceUpdate;
+}
+
+void JuceMixPlayer_setDeviceUpdate(void* ptr, const char* json) {
+    static_cast<JuceMixPlayer *>(ptr)->setDeviceUpdate(json);
+}

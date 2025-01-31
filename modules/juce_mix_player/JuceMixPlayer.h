@@ -8,40 +8,7 @@
 #include <iostream>
 #include <tuple>
 
-typedef void (*JuceMixPlayerCallbackFloat)(void*, float);
-typedef void (*JuceMixPlayerCallbackString)(void*, const char*);
-
-enum class JuceMixPlayerState {
-    IDLE, READY, PLAYING, PAUSED, STOPPED, ERROR, COMPLETED
-};
-
-enum class JuceMixPlayerRecState {
-    IDLE, READY, RECORDING, STOPPED, ERROR
-};
-
-NLOHMANN_JSON_SERIALIZE_ENUM(JuceMixPlayerRecState,{
-    {JuceMixPlayerRecState::IDLE, "IDLE"},
-    {JuceMixPlayerRecState::READY, "READY"},
-    {JuceMixPlayerRecState::RECORDING, "RECORDING"},
-    {JuceMixPlayerRecState::STOPPED, "STOPPED"},
-    {JuceMixPlayerRecState::ERROR, "ERROR"},
-});
-
-std::string JuceMixPlayerRecState_toString(JuceMixPlayerRecState state);
-
-NLOHMANN_JSON_SERIALIZE_ENUM(JuceMixPlayerState,{
-    {JuceMixPlayerState::IDLE, "IDLE"},
-    {JuceMixPlayerState::READY, "READY"},
-    {JuceMixPlayerState::PLAYING, "PLAYING"},
-    {JuceMixPlayerState::PAUSED, "PAUSED"},
-    {JuceMixPlayerState::STOPPED, "STOPPED"},
-    {JuceMixPlayerState::ERROR, "ERROR"},
-    {JuceMixPlayerState::COMPLETED, "COMPLETED"},
-});
-
-std::string JuceMixPlayerState_toString(JuceMixPlayerState state);
-
-class JuceMixPlayer : private juce::Timer, public juce::AudioIODeviceCallback
+class JuceMixPlayer : private juce::Timer, public juce::AudioIODeviceCallback, public juce::ChangeListener
 {
 private:
 
@@ -53,6 +20,8 @@ private:
     TaskQueue recWriteTaskQueue;
     int samplesPerBlockExpected = 0;
     float deviceSampleRate = 0;
+
+    MixerDeviceList deviceList;
 
     MixerSettings settings;
 
@@ -128,6 +97,8 @@ private:
     void _startProgressTimer();
 
     void _stopProgressTimer();
+    
+    void notifyDeviceUpdates();
 
 public:
 
@@ -139,6 +110,8 @@ public:
     JuceMixPlayerCallbackFloat onRecProgressCallback = nullptr;
     JuceMixPlayerCallbackString onRecStateUpdateCallback = nullptr;
     JuceMixPlayerCallbackString onRecErrorCallback = nullptr;
+
+    JuceMixPlayerCallbackString onDeviceUpdateCallback = nullptr;
 
     JuceMixPlayer(int record, int play);
 
@@ -178,7 +151,11 @@ public:
 
     void stopRecorder();
 
-    // juce::AudioIODeviceCallback
+    // MARK: device management
+
+    void setDeviceUpdate(const char* json);
+
+    // MARK: juce::AudioIODeviceCallback
     void audioDeviceAboutToStart(juce::AudioIODevice *device) override;
 
     void audioDeviceIOCallbackWithContext(const float *const *inputChannelData, int numInputChannels, float *const *outputChannelData, int numOutputChannels, int numSamples, const juce::AudioIODeviceCallbackContext &context) override;
@@ -187,6 +164,10 @@ public:
 
     void audioDeviceError(const juce::String &errorMessage) override;
 
-    // juce::Timer
+    // MARK: juce::Timer
     void timerCallback() override;
+
+    // MARK: juce::ChangeListener
+
+    void changeListenerCallback (juce::ChangeBroadcaster* source) override;
 };

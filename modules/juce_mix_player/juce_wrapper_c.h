@@ -52,3 +52,6 @@ EXPORT_C_FUNC void JuceMixPlayer_onRecError(void* ptr, void (*onError)(void* ptr
 
 EXPORT_C_FUNC void JuceMixPlayer_onRecLevel(void* ptr, void (*onLevel)(void* ptr, float));
 
+EXPORT_C_FUNC void JuceMixPlayer_onDeviceUpdate(void* ptr, void (*onDeviceUpdate)(void* ptr, const char*));
+
+EXPORT_C_FUNC void JuceMixPlayer_setDeviceUpdate(void* ptr, const char* json);

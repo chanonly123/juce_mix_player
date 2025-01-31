@@ -3,12 +3,14 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_app/asset_helper.dart';
 import 'package:juce_mix_player/juce_mix_player.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 void main() async {
   JuceMixPlayer.libname = "libjuce_lib.so";
   WidgetsFlutterBinding.ensureInitialized();
   JuceMixPlayer.enableLogs(true);
   runApp(const MyApp());
+  await Permission.microphone.request();
 }
 
 class MyApp extends StatelessWidget {
@@ -30,7 +32,7 @@ class PlayerPage extends StatefulWidget {
 }
 
 class PlayerPageState extends State<PlayerPage> {
-  final player = JuceMixPlayer(record: false, play: true);
+  final player = JuceMixPlayer(record: true, play: true);
   double progress = 0.0;
   bool isSliderEditing = false;
   bool isPlaying = false;
@@ -75,6 +77,10 @@ class PlayerPageState extends State<PlayerPage> {
           backgroundColor: Colors.red,
         ));
       }
+    });
+
+    player.setDeviceUpdateHandler((devices) {
+      log('devices: $devices');
     });
   }
 

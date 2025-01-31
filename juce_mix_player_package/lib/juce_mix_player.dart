@@ -23,6 +23,7 @@ class JuceMixPlayer {
   NativeCallable<FloatCallback>? _progressCallbackNativeCallable;
   NativeCallable<StringUpdateCallback>? _stateUpdateNativeCallable;
   NativeCallable<StringUpdateCallback>? _errorUpdateNativeCallable;
+  NativeCallable<StringUpdateCallback>? _deviceUpdateNativeCallable;
 
   static var libname = '';
 
@@ -64,6 +65,15 @@ class JuceMixPlayer {
     _errorUpdateNativeCallable?.close();
     _errorUpdateNativeCallable = NativeCallable<StringUpdateCallback>.listener(closure);
     _juceLib.JuceMixPlayer_onError(_ptr, _errorUpdateNativeCallable!.nativeFunction);
+  }
+
+  void setDeviceUpdateHandler(void Function(String devices) callback) {
+    NativeStringCallbackDart closure = (ptr, cstring) {
+      callback(cstring.toDartString());
+    };
+    _deviceUpdateNativeCallable?.close();
+    _deviceUpdateNativeCallable = NativeCallable<StringUpdateCallback>.listener(closure);
+    _juceLib.JuceMixPlayer_onDeviceUpdate(_ptr, _deviceUpdateNativeCallable!.nativeFunction);
   }
 
   void setFile(String path) {

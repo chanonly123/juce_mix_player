@@ -39,6 +39,7 @@ dependencies:
   rename: ^3.0.2
   juce_mix_player:
     path: ../juce_mix_player_package
+  permission_handler: ^11.3.1
 
 dev_dependencies:
   flutter_test:

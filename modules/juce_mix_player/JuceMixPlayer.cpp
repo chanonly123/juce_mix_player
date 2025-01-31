@@ -27,13 +27,13 @@ JuceMixPlayer::JuceMixPlayer(int record, int play) {
         juce::MessageManager::getInstanceWithoutCreating()->callAsync([&, this, record, play]{
             deviceManager = new juce::AudioDeviceManager();
             deviceManager->addAudioCallback(this);
+            deviceManager->addChangeListener(this);
             deviceManager->initialiseWithDefaultDevices(record == 1 ? 1 : 0, play == 1 ? 2 : 0);
 
             juce::AudioDeviceManager::AudioDeviceSetup setup = deviceManager->getAudioDeviceSetup();
             setup.sampleRate = settings.sampleRate;
             bool treatAsChosenDevice = true;
             deviceManager->setAudioDeviceSetup(setup, treatAsChosenDevice);
-
             inputLevelMeter = deviceManager->getInputLevelGetter();
         });
     });
@@ -503,6 +503,82 @@ void JuceMixPlayer::_onRecStateUpdateNotify(JuceMixPlayerRecState state) {
     }
 }
 
+// MARK: Device management
+void JuceMixPlayer::notifyDeviceUpdates() {
+    MixerDeviceList list;
+    juce::AudioIODeviceType* audioDeviceType = deviceManager->getCurrentDeviceTypeObject();
+    juce::AudioDeviceManager::AudioDeviceSetup setup = deviceManager->getAudioDeviceSetup();
+    if (audioDeviceType) {
+        juce::StringArray inputDevices = audioDeviceType->getDeviceNames(true);
+        juce::StringArray outputDevices = audioDeviceType->getDeviceNames(false);
+        for (juce::String& name : inputDevices) {
+            MixerDevice dev;
+            dev.name = name.toStdString();
+            dev.isInput = true;
+            dev.isSelected = setup.inputDeviceName == name;
+            list.devices.push_back(dev);
+        }
+        for (juce::String& name : outputDevices) {
+            MixerDevice dev;
+            dev.name = name.toStdString();
+            dev.isInput = false;
+            dev.isSelected = setup.outputDeviceName == name;
+            list.devices.push_back(dev);
+        }
+    }
+    taskQueue.async([&, list]{
+        if (!(deviceList == list)) {
+            deviceList = list;
+            nlohmann::json j = list;
+            if (onDeviceUpdateCallback)
+                onDeviceUpdateCallback(this, returnCopyCharDelete(j.dump(4)));
+        }
+    });
+}
+
+void JuceMixPlayer::setDeviceUpdate(const char* json) {
+    std::string json_(json);
+    taskQueue.async([&, json_]{
+        try {
+            MixerDeviceList list = MixerDeviceList::decode(json_);
+            if (!(deviceList == list)) {
+                deviceList = list;
+
+                MixerDevice inp;
+                MixerDevice out;
+                for (auto& dev: list.devices) {
+                    if (dev.isSelected && dev.isInput && inp.name == "") {
+                        inp = dev;
+                    }
+                    if (dev.isSelected && !dev.isInput && out.name == "") {
+                        out = dev;
+                    }
+                }
+
+                if (inp.name == "") {
+                    throw std::runtime_error("selected input device not found");
+                }
+
+                if (out.name == "") {
+                    throw std::runtime_error("selected out device not found");
+                }
+
+                juce::MessageManager::getInstanceWithoutCreating()->callAsync([&, inp, out]{
+                    juce::AudioDeviceManager::AudioDeviceSetup setup = deviceManager->getAudioDeviceSetup();
+                    setup.inputDeviceName = juce::String(inp.name);
+                    setup.outputDeviceName = juce::String(out.name);
+                    bool treatAsChosenDevice = true;
+                    deviceManager->setAudioDeviceSetup(setup, treatAsChosenDevice);
+                });
+            } else {
+                PRINT("setDeviceUpdate: Same device data! ignoring");
+            }
+        } catch (const std::exception& e) {
+            PRINT("setDeviceUpdate: error: " << e.what());
+        }
+    });
+}
+
 // MARK: AudioIODeviceCallback
 void JuceMixPlayer::audioDeviceAboutToStart(juce::AudioIODevice *device) {
     this->deviceSampleRate = device->getCurrentSampleRate();
@@ -596,4 +672,9 @@ void JuceMixPlayer::timerCallback() {
             }
         }
     });
+}
+
+void JuceMixPlayer::changeListenerCallback(juce::ChangeBroadcaster* source) {
+    PRINT("changeListenerCallback");
+    notifyDeviceUpdates();
 }

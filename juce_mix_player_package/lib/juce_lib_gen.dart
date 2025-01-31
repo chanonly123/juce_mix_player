@@ -461,4 +461,36 @@ class JuceLibGen {
               ffi.Pointer<
                   ffi.NativeFunction<
                       ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>)>();
+
+  void JuceMixPlayer_onDeviceUpdate(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(
+                    ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>
+        onDeviceUpdate,
+  ) {
+    return _JuceMixPlayer_onDeviceUpdate(
+      ptr,
+      onDeviceUpdate,
+    );
+  }
+
+  late final _JuceMixPlayer_onDeviceUpdatePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(
+                  ffi.Pointer<ffi.Void>,
+                  ffi.Pointer<
+                      ffi.NativeFunction<
+                          ffi.Void Function(ffi.Pointer<ffi.Void>,
+                              ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
+      'JuceMixPlayer_onDeviceUpdate');
+  late final _JuceMixPlayer_onDeviceUpdate =
+      _JuceMixPlayer_onDeviceUpdatePtr.asFunction<
+          void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>,
+                          ffi.Pointer<pkg_ffi.Utf8>)>>)>();
 }
