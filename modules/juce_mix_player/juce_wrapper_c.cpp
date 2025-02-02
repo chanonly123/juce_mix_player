@@ -98,6 +98,6 @@ void JuceMixPlayer_onDeviceUpdate(void* ptr, void (*onDeviceUpdate)(void* ptr, c
     static_cast<JuceMixPlayer *>(ptr)->onDeviceUpdateCallback = onDeviceUpdate;
 }
 
-void JuceMixPlayer_setDeviceUpdate(void* ptr, const char* json) {
-    static_cast<JuceMixPlayer *>(ptr)->setDeviceUpdate(json);
+void JuceMixPlayer_setUpdatedDevices(void* ptr, const char* json) {
+    static_cast<JuceMixPlayer *>(ptr)->setUpdatedDevices(json);
 }

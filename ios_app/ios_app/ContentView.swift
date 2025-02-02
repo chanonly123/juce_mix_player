@@ -128,10 +128,17 @@ struct PlayerPage: View {
 
             Spacer()
 
-            Menu("DEVICES") {
-                ForEach(deviceList.devices, id: \.self) { dev in
-                    Button(dev.name) {
-                        
+            Menu("DEVICES: " + "\(deviceList.devices.count)") {
+                ForEach(deviceList.devices.indices, id: \.self) { i in
+                    let dev = deviceList.devices[i]
+                    Button(getName(dev)) {
+                        deviceList.devices.forEach({
+                            if $0.isInput == dev.isInput {
+                                $0.isSelected = false
+                            }
+                        })
+                        dev.isSelected = true
+                        player.setUpdatedDevices(devices: deviceList)
                     }
                 }
             }
@@ -173,9 +180,13 @@ struct PlayerPage: View {
                 }
             }
             player.setDeviceUpdateHandler { devices in
-
+                deviceList = devices
             }
         }
+    }
+
+    func getName(_ dev: MixerDevice) -> String {
+        dev.name + (dev.isInput ? " (input)" : " (output)") + (dev.isSelected ? " ✅" : "")
     }
 }
 

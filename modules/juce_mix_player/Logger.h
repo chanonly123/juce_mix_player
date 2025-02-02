@@ -14,6 +14,6 @@ bool setContains(std::unordered_set<int>& set, int val);
 #define PRINT(textToWrite) \
     if (enableLogsValue) { \
         juce::String tempDbgBuf; \
-        tempDbgBuf << textToWrite; \
+        tempDbgBuf << "JUCE: " << textToWrite; \
         juce::Logger::writeToLog(tempDbgBuf); \
     }

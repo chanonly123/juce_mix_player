@@ -153,7 +153,7 @@ public:
 
     // MARK: device management
 
-    void setDeviceUpdate(const char* json);
+    void setUpdatedDevices(const char* json);
 
     // MARK: juce::AudioIODeviceCallback
     void audioDeviceAboutToStart(juce::AudioIODevice *device) override;

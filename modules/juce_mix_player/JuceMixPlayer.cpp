@@ -536,7 +536,7 @@ void JuceMixPlayer::notifyDeviceUpdates() {
     });
 }
 
-void JuceMixPlayer::setDeviceUpdate(const char* json) {
+void JuceMixPlayer::setUpdatedDevices(const char* json) {
     std::string json_(json);
     taskQueue.async([&, json_]{
         try {
@@ -571,10 +571,10 @@ void JuceMixPlayer::setDeviceUpdate(const char* json) {
                     deviceManager->setAudioDeviceSetup(setup, treatAsChosenDevice);
                 });
             } else {
-                PRINT("setDeviceUpdate: Same device data! ignoring");
+                PRINT("setUpdatedDevices: Same device data! ignoring");
             }
         } catch (const std::exception& e) {
-            PRINT("setDeviceUpdate: error: " << e.what());
+            PRINT("setUpdatedDevices: error: " << e.what());
         }
     });
 }

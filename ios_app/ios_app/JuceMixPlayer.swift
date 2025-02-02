@@ -200,6 +200,11 @@ class JuceMixPlayer {
         JuceMixPlayer_stopRecorder(ptr)
     }
 
+    func setUpdatedDevices(devices: MixerDeviceList) {
+        let str = (try? devices.jsonString()) ?? ""
+        JuceMixPlayer_setUpdatedDevices(ptr, str.cString(using: .utf8))
+    }
+
     deinit {
         print("swift ~JuceMixPlayer")
         closuresError[ptr] = nil
@@ -281,10 +286,16 @@ struct MixerTrack: Codable {
     }
 }
 
-struct MixerDevice: Codable, Equatable, Hashable {
+class MixerDevice: Codable {
     let name: String
+    let isInput: Bool
+    var isSelected: Bool
 };
 
-struct MixerDeviceList: Codable, Equatable, Hashable {
-    let devices: [MixerDevice]
+class MixerDeviceList: Codable {
+    var devices: [MixerDevice]
+
+    init(devices: [MixerDevice]) {
+        self.devices = devices
+    }
 }
