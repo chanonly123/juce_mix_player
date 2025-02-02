@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
@@ -36,6 +37,7 @@ class PlayerPageState extends State<PlayerPage> {
   double progress = 0.0;
   bool isSliderEditing = false;
   bool isPlaying = false;
+  MixerDeviceList deviceList = MixerDeviceList(devices: []);
 
   JuceMixPlayerState state = JuceMixPlayerState.IDLE;
 
@@ -79,8 +81,11 @@ class PlayerPageState extends State<PlayerPage> {
       }
     });
 
-    player.setDeviceUpdateHandler((devices) {
-      log('devices: $devices');
+    player.setDeviceUpdateHandler((deviceList) {
+      setState(() {
+        this.deviceList = deviceList;
+      });
+      log('devices: ${JsonEncoder.withIndent('  ').convert(deviceList.toJson())}');
     });
   }
 
@@ -153,12 +158,37 @@ class PlayerPageState extends State<PlayerPage> {
                   },
                   child: const Text('Set mixed with metronome'),
                 ),
+                const SizedBox(width: 16),
+                popupMenu(),
               ],
             ),
           ],
         ),
       ),
     );
+  }
+
+  PopupMenuButton popupMenu() {
+    return PopupMenuButton<MixerDevice>(
+      child: Text("DEVICES: ${deviceList.devices.length}"),
+      itemBuilder: (context) => deviceList.devices.map((dev) {
+        return PopupMenuItem<MixerDevice>(
+          value: dev,
+          child: Text(getName(dev)),
+        );
+      }).toList(),
+      onSelected: (selectedDevice) {
+        deviceList.devices.forEach((d) {
+          d.isSelected = false;
+        });
+        selectedDevice.isSelected = true;
+        player.setUpdatedDevices(deviceList);
+      },
+    );
+  }
+
+  String getName(MixerDevice device) {
+    return "${device.name} ${device.isSelected ? " ✅" : ""}";
   }
 
   Future<MixerData> createMetronomeTracks() async {

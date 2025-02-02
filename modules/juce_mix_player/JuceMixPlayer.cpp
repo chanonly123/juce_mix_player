@@ -555,26 +555,32 @@ void JuceMixPlayer::setUpdatedDevices(const char* json) {
                     }
                 }
 
-                if (inp.name == "") {
-                    throw std::runtime_error("selected input device not found");
+                bool hasChanges = inp.name != "" || out.name != "";
+
+                if (!hasChanges) {
+                    PRINT("setUpdatedDevices: No selected device found");
+                    return;
                 }
 
-                if (out.name == "") {
-                    throw std::runtime_error("selected out device not found");
-                }
+                PRINT("setUpdatedDevices: selected inp: " << inp.name << ", out: " << out.name);
 
                 juce::MessageManager::getInstanceWithoutCreating()->callAsync([&, inp, out]{
                     juce::AudioDeviceManager::AudioDeviceSetup setup = deviceManager->getAudioDeviceSetup();
-                    setup.inputDeviceName = juce::String(inp.name);
-                    setup.outputDeviceName = juce::String(out.name);
+                    if (inp.name != "") setup.inputDeviceName = juce::String(inp.name);
+                    if (out.name != "") setup.outputDeviceName = juce::String(out.name);
                     bool treatAsChosenDevice = true;
-                    deviceManager->setAudioDeviceSetup(setup, treatAsChosenDevice);
+                    juce::String err = deviceManager->setAudioDeviceSetup(setup, treatAsChosenDevice);
+                    if (err.isNotEmpty()) {
+                        _onErrorNotify(err.toStdString());
+                    }
+                    notifyDeviceUpdates();
                 });
             } else {
                 PRINT("setUpdatedDevices: Same device data! ignoring");
             }
         } catch (const std::exception& e) {
-            PRINT("setUpdatedDevices: error: " << e.what());
+            _onErrorNotify(std::string(e.what()));
+            notifyDeviceUpdates();
         }
     });
 }

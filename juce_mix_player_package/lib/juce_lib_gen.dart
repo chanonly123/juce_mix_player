@@ -493,4 +493,22 @@ class JuceLibGen {
                   ffi.NativeFunction<
                       ffi.Void Function(ffi.Pointer<ffi.Void>,
                           ffi.Pointer<pkg_ffi.Utf8>)>>)>();
+
+  void JuceMixPlayer_setUpdatedDevices(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<pkg_ffi.Utf8> json,
+  ) {
+    return _JuceMixPlayer_setUpdatedDevices(
+      ptr,
+      json,
+    );
+  }
+
+  late final _JuceMixPlayer_setUpdatedDevicesPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<ffi.Void>,
+              ffi.Pointer<pkg_ffi.Utf8>)>>('JuceMixPlayer_setUpdatedDevices');
+  late final _JuceMixPlayer_setUpdatedDevices =
+      _JuceMixPlayer_setUpdatedDevicesPtr.asFunction<
+          void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>();
 }

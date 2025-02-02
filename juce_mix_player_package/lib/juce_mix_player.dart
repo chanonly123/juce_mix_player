@@ -16,10 +16,12 @@ typedef NativeStringCallbackDart = void Function(Pointer<Void> ptr, Pointer<Utf8
 
 enum JuceMixPlayerState { IDLE, READY, PLAYING, PAUSED, STOPPED, COMPLETED, ERROR }
 
+/// initialize will fail if (record: true) and no mic permission
 class JuceMixPlayer {
   late JuceLibGen _juceLib;
   late Pointer<Void> _ptr;
 
+NativeCallable<FloatCallback>? _levelCallbackNativeCallable;
   NativeCallable<FloatCallback>? _progressCallbackNativeCallable;
   NativeCallable<StringUpdateCallback>? _stateUpdateNativeCallable;
   NativeCallable<StringUpdateCallback>? _errorUpdateNativeCallable;
@@ -32,7 +34,7 @@ class JuceMixPlayer {
         defaultTargetPlatform == TargetPlatform.iOS ? DynamicLibrary.process() : DynamicLibrary.open(libname));
     _juceLib.juce_enableLogs(enable ? 1 : 0);
   }
-
+  
   JuceMixPlayer({required bool record, required bool play}) {
     _juceLib = JuceLibGen(
         defaultTargetPlatform == TargetPlatform.iOS ? DynamicLibrary.process() : DynamicLibrary.open(libname));
@@ -67,9 +69,10 @@ class JuceMixPlayer {
     _juceLib.JuceMixPlayer_onError(_ptr, _errorUpdateNativeCallable!.nativeFunction);
   }
 
-  void setDeviceUpdateHandler(void Function(String devices) callback) {
+  void setDeviceUpdateHandler(void Function(MixerDeviceList deviceList) callback) {
     NativeStringCallbackDart closure = (ptr, cstring) {
-      callback(cstring.toDartString());
+      MixerDeviceList data = MixerDeviceList.fromJson(json.decode(cstring.toDartString()));
+      callback(data);
     };
     _deviceUpdateNativeCallable?.close();
     _deviceUpdateNativeCallable = NativeCallable<StringUpdateCallback>.listener(closure);
@@ -119,6 +122,20 @@ class JuceMixPlayer {
     } else {
       play();
     }
+  }
+
+  void setUpdatedDevices(MixerDeviceList devices) {
+    final jsonStr = json.encode(devices.toJson());
+    _juceLib.JuceMixPlayer_setUpdatedDevices(_ptr, jsonStr.toNativeUtf8());
+  }
+
+  void setRecLevelHandler(void Function(double level) callback) {
+    FloatCallbackDart closure = (ptr, progress) {
+      callback(progress);
+    };
+    _levelCallbackNativeCallable?.close();
+    _levelCallbackNativeCallable = NativeCallable<FloatCallback>.listener(closure);
+    _juceLib.JuceMixPlayer_onRecLevel(_ptr, _levelCallbackNativeCallable!.nativeFunction);
   }
 
   void dispose() {
@@ -202,6 +219,52 @@ class MixerTrack {
     if (enabled != null) json['enabled'] = enabled;
     if (repeat != null) json['repeat'] = repeat;
     if (repeatInterval != null) json['repeatInterval'] = repeatInterval;
+    return json;
+  }
+}
+
+class MixerDevice {
+  String name;
+  bool isInput;
+  bool isSelected;
+
+  MixerDevice({
+    required this.name,
+    required this.isInput,
+    required this.isSelected,
+  });
+
+  factory MixerDevice.fromJson(Map<String, dynamic> json) => MixerDevice(
+        name: json['name'],
+        isInput: json['isInput'],
+        isSelected: json['isSelected'],
+      );
+
+  Map<String, dynamic> toJson() {
+    final json = <String, dynamic>{};
+    json['name'] = name;
+    json['isInput'] = isInput;
+    json['isSelected'] = isSelected;
+    return json;
+  }
+}
+
+class MixerDeviceList {
+  List<MixerDevice> devices;
+
+  MixerDeviceList({
+    required this.devices,
+  });
+
+  factory MixerDeviceList.fromJson(Map<String, dynamic> json) => MixerDeviceList(
+        devices:
+            (json['devices'] as List<dynamic>?)?.map((e) => MixerDevice.fromJson(e as Map<String, dynamic>)).toList() ??
+                [],
+      );
+
+  Map<String, dynamic> toJson() {
+    final json = <String, dynamic>{};
+    json['devices'] = devices.map((e) => e.toJson()).toList();
     return json;
   }
 }
