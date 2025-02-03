@@ -4,11 +4,12 @@
 [![](https://markdown-videos-api.jorgenkh.no/youtube/3ZiBKfGdLjs)](https://youtu.be/3ZiBKfGdLjs)
 
 ### Requirements
-- Macos
-- JUCE directory in `/Users/<username>/JUCE/` (JUCE VERSION 8.0.2 [download](https://juce.com/download/))
-- Xcode `xcodebuild -version`
-- Cocoapods (`brew install cocoapods`). `pod --version` should work.
-- Gradle (`brew install gradle`) `gradle --version` should work.
+- Android Studio (for Android)
+- JUCE directory in `/Users/<username>/JUCE/` or `C:\JUCE\` (JUCE VERSION 8.0.2 [download](https://juce.com/download/))
+- Xcode `xcodebuild -version` (for iOS)
+- Cocoapods (`brew install cocoapods`). `pod --version` should work. (for iOS)
+- Gradle (`brew install gradle`) `gradle --version` should work. (for Android)
+- `flutter` and `dart` (to generate cpp to dart bindings)
 
 ### Regenerate Projucer generated projects
 - open `juce_lib/juce_lib.jucer` using Projucer and hit (command+P to regenerate)
