@@ -8,19 +8,18 @@
 - JUCE directory in `/Users/<username>/JUCE/` or `C:\JUCE\` (JUCE VERSION 8.0.2 [download](https://juce.com/download/))
 - Xcode `xcodebuild -version` (for iOS)
 - Cocoapods (`brew install cocoapods`). `pod --version` should work. (for iOS)
-- Gradle (`brew install gradle`) `gradle --version` should work. (for Android)
 - `flutter` and `dart` (to generate cpp to dart bindings)
 
 ### Regenerate Projucer generated projects
 - open `juce_lib/juce_lib.jucer` using Projucer and hit (command+P to regenerate)
 or
-- run `sh setup_clean_projects.sh`
+- run `sh setup_clean_projects.sh` or `win_setup_clean_projects.bat`
 
 ### Development
-- To develop the native code use `ios_app/ios_app.xcodeproj`, (to debug native code)
+- To develop the native code use `ios_app/ios_app.xcodeproj`, (to debug native code) (not possible for windows for now)
 
 ### build flutter project
-- run `sh android_juce_lib_build.sh` or `ios_juce_lib_build.sh`. This will build juce native library and copy output binary to flutter project
+- run `sh android_juce_lib_build.sh` or `win_android_build.bat` or `ios_juce_lib_build.sh`. This will build juce native library and copy output binary to flutter project
 - run flutter project normally
 or
 - use vscode launch tasks `flutter_app_android` and `flutter_app_ios`

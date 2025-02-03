@@ -24,12 +24,12 @@ dart run ffigen
 
 # go to gradle project
 cd "$root_dir"
-cd "$libname/Builds/Android/lib" &&
+cd "$libname/Builds/Android" &&
 
 # clean build dir
 if [[ "$2" = "-clean" ]]; then
     echo "✅ cleaning build directory"
-    gradle clean
+    ./gradlew clean
     rm -rf build
 else
     echo "✅ using cached build directory"
@@ -47,15 +47,15 @@ awk '
         print $0;
     }
 }
-' "CMakeLists.txt" > CMakeLists_new.txt
+' "lib/CMakeLists.txt" > lib/CMakeLists_new.txt
 
-mv CMakeLists_new.txt CMakeLists.txt
+mv lib/CMakeLists_new.txt lib/CMakeLists.txt
 
 # gradle build
 if $debug; then
-    gradle assembleDebug --debug
+    ./gradlew assembleDebug --debug
 else
-    gradle assembleRelease
+    ./gradlew assembleRelease
 fi
 
 echo "✅ Build Success [debug $debug] ✅"
