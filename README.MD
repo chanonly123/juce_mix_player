@@ -9,6 +9,7 @@
 - Xcode `xcodebuild -version` (for iOS)
 - Cocoapods (`brew install cocoapods`). `pod --version` should work. (for iOS)
 - `flutter` and `dart` (to generate cpp to dart bindings)
+- supported sample rate is 48000. (Variable rate is coming soon) 
 
 ### Regenerate Projucer generated projects
 - open `juce_lib/juce_lib.jucer` using Projucer and hit (command+P to regenerate)
