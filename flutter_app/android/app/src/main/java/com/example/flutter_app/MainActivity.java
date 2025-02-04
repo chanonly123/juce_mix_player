@@ -3,8 +3,6 @@ package com.example.flutter_app;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
 
-import com.rmsl.juce.Java;
-
 import io.flutter.embedding.android.FlutterActivity;
 
 public class MainActivity extends FlutterActivity {
@@ -12,6 +10,5 @@ public class MainActivity extends FlutterActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Java.juceMessageManagerInit();
     }
 }

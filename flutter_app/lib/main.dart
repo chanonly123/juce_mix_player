@@ -7,7 +7,7 @@ import 'package:juce_mix_player/juce_mix_player.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 void main() async {
-  JuceMixPlayer.libname = "libjuce_lib.so";
+  JuceMixPlayer.libname = "libjuce_jni.so";
   WidgetsFlutterBinding.ensureInitialized();
   JuceMixPlayer.enableLogs(true);
   runApp(const MyApp());
@@ -33,7 +33,7 @@ class PlayerPage extends StatefulWidget {
 }
 
 class PlayerPageState extends State<PlayerPage> {
-  final player = JuceMixPlayer(record: true, play: true);
+  final player = JuceMixPlayer(record: false, play: true);
   double progress = 0.0;
   bool isSliderEditing = false;
   bool isPlaying = false;

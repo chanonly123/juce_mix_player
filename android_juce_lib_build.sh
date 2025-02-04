@@ -64,26 +64,22 @@ cd "$root_dir"
 
 # find build output directory
 if $debug; then
-    libDirectory=`realpath | find . -type d -path "*/$libname/*/cxx/Debug/*/obj"`
+    libOutFile="$libname/Builds/Android/lib/build/outputs/aar/lib-debug_-debug.aar"
 else
-    libDirectory=`realpath | find . -type d -path "*/$libname/*/stripped_native_libs/release_Release/*/lib"`
+    libOutFile="$libname/Builds/Android/lib/build/outputs/aar/lib-release_-release.aar"
 fi
 
-if [ ! -d "$libDirectory" ]; then
-    echo "🔴 build output binary directory not found!"
+if [ ! -f "$libOutFile" ]; then
+    echo "🔴 build output binary not found!"
     exit 1
 else 
-    echo "✅ build directory found [$libDirectory]"
+    echo "✅ build output found [$libOutFile]"
 fi
 
-if [ -d "$flutter_app/android/app/src/main" ]; then
-
-    rm -rf "$flutter_app/android/app/src/main/jniLibs"
-    
-    cp -r $libDirectory "$flutter_app/android/app/src/main/jniLibs/" &&
-
+if [ -d "$flutter_app/android/$libname" ]; then
+    cp -r $libOutFile "$flutter_app/android/juce_lib/$libname.aar" &&
     echo "✅ Copy to [$flutter_app] project Success ✅"
 else
-    echo "🔴 [$flutter_app/android/app/src/main] not found ✅"
+    echo "🔴 [$flutter_app/android/$libname] not found ✅"
     exit 1
 fi

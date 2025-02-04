@@ -35,6 +35,8 @@ JuceMixPlayer::JuceMixPlayer(int record, int play) {
             bool treatAsChosenDevice = true;
             deviceManager->setAudioDeviceSetup(setup, treatAsChosenDevice);
             inputLevelMeter = deviceManager->getInputLevelGetter();
+
+            PRINT("JuceMixPlayer initialized");
         });
     });
 }

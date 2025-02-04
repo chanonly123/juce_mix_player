@@ -21,15 +21,15 @@ class JuceLibGen {
           lookup)
       : _lookup = lookup;
 
-  void Java_com_rmsl_juce_Java_juceMessageManagerInit() {
-    return _Java_com_rmsl_juce_Java_juceMessageManagerInit();
+  void Java_com_example_flutter_1app_MyApp_juceMessageManagerInit() {
+    return _Java_com_example_flutter_1app_MyApp_juceMessageManagerInit();
   }
 
-  late final _Java_com_rmsl_juce_Java_juceMessageManagerInitPtr =
+  late final _Java_com_example_flutter_1app_MyApp_juceMessageManagerInitPtr =
       _lookup<ffi.NativeFunction<ffi.Void Function()>>(
-          'Java_com_rmsl_juce_Java_juceMessageManagerInit');
-  late final _Java_com_rmsl_juce_Java_juceMessageManagerInit =
-      _Java_com_rmsl_juce_Java_juceMessageManagerInitPtr.asFunction<
+          'Java_com_example_flutter_1app_MyApp_juceMessageManagerInit');
+  late final _Java_com_example_flutter_1app_MyApp_juceMessageManagerInit =
+      _Java_com_example_flutter_1app_MyApp_juceMessageManagerInitPtr.asFunction<
           void Function()>();
 
   void juce_enableLogs(

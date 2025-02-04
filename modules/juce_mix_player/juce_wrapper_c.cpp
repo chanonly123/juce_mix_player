@@ -3,8 +3,8 @@
 #include "JuceMixPlayer.h"
 #include "Models.h"
 
-void Java_com_rmsl_juce_Java_juceMessageManagerInit() {
-    juce::MessageManager::getInstance();
+void Java_com_example_flutter_1app_MyApp_juceMessageManagerInit() {
+    juce::MessageManager::getInstanceWithoutCreating();
 }
 
 // public method to enable/disable logging
