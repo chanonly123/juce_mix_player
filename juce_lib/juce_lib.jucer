@@ -4,7 +4,8 @@
               displaySplashScreen="1" jucerFormatVersion="1" defines="JUCE_USE_MP3AUDIOFORMAT=1">
   <MAINGROUP id="fjboZk" name="juce_lib">
     <GROUP id="{1C9A39F7-F1DF-DAE6-7A86-0D474460ADD4}" name="includes">
-      <FILE id="P7rO4t" name="juce_lib.h" compile="0" resource="0" file="includes/juce_lib.h"/>
+      <FILE id="bWxi3Q" name="juce_wrapper_c.h" compile="0" resource="0"
+            file="../modules/juce_mix_player/includes/juce_wrapper_c.h"/>
     </GROUP>
   </MAINGROUP>
   <MODULES>

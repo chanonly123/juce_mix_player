@@ -35,8 +35,8 @@ cp "build/Release/lib${libname}.a" "build/Release-iphonesimulator/${libname}.a" 
 
 # create xcframework, with native headers
 xcodebuild -create-xcframework \
-    -library "build/Release-iphoneos/${libname}.a" -headers ../../../$libname/includes \
-    -library "build/Release-iphonesimulator/${libname}.a" -headers ../../../$libname/includes \
+    -library "build/Release-iphoneos/${libname}.a" -headers ../../../modules/juce_mix_player/includes \
+    -library "build/Release-iphonesimulator/${libname}.a" -headers ../../../modules/juce_mix_player/includes \
     -output "build/${libname}.xcframework" &&
 
 echo "✅ Build Success ✅"

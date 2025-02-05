@@ -17,7 +17,7 @@ ffigen:
   output: 'lib/juce_lib_gen.dart'
   headers:
     entry-points:
-      - '../juce_lib/includes/juce_lib.h'
+      - '../modules/juce_mix_player/includes/juce_wrapper_c.h'
   type-map:
     'native-types':
       'char':

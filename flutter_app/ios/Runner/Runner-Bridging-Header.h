@@ -1,2 +1,2 @@
 #import "GeneratedPluginRegistrant.h"
-#import "juce_lib.h"
+#import "juce_wrapper_c.h"

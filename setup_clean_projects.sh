@@ -1,6 +1,6 @@
 libname="juce_lib"
 
-rm -rf "$libname/Builds"
+# rm -rf "$libname/Builds"
 
 # generate native juce projects for iOS and Android
 # you can open JuceKit/$libname.jucer using projucer

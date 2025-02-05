@@ -1,10 +1,10 @@
-#include "juce_wrapper_c.h"
+#include "includes/juce_wrapper_c.h"
 #include "Logger.h"
 #include "JuceMixPlayer.h"
 #include "Models.h"
 
 void Java_com_example_flutter_1app_MyApp_juceMessageManagerInit() {
-    juce::MessageManager::getInstanceWithoutCreating();
+    juce::MessageManager::getInstance();
 }
 
 // public method to enable/disable logging

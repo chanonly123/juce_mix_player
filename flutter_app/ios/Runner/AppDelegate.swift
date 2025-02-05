@@ -8,7 +8,6 @@ import UIKit
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
-    juceEnableLogs()
     Java_com_example_flutter_1app_MyApp_juceMessageManagerInit()
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }

@@ -5,7 +5,7 @@ struct ContentView: View {
 
     var body: some View {
 //        NavigationLink {
-        PlayerPage(record: true, play: true)
+        PlayerPage(record: false, play: true)
 //        } label: {
 //            Text("ShowPlayer")
 //        }

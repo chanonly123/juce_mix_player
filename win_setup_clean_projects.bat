@@ -1,8 +1,8 @@
 @echo off
 set libname=juce_lib
 
-rem Remove the Builds directory
-rmdir /s /q "%libname%\Builds"
+:: rem Remove the Builds directory
+:: rmdir /s /q "%libname%\Builds"
 
 rem Generate native JUCE projects for iOS and Android
 rem You can open JuceKit/%libname%.jucer using Projucer
