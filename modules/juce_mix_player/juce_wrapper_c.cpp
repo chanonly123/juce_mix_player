@@ -3,7 +3,7 @@
 #include "JuceMixPlayer.h"
 #include "Models.h"
 
-void Java_com_example_flutter_1app_MyApp_juceMessageManagerInit() {
+void Java_com_rmsl_juce_Native_juceMessageManagerInit() {
     juce::MessageManager::getInstance();
 }
 
