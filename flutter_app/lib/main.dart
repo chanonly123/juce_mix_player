@@ -7,7 +7,6 @@ import 'package:juce_mix_player/juce_mix_player.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 void main() async {
-  JuceMixPlayer.libname = "libjuce_jni.so";
   WidgetsFlutterBinding.ensureInitialized();
   JuceMixPlayer.enableLogs(true);
   runApp(const MyApp());

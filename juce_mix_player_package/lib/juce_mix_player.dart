@@ -27,7 +27,7 @@ NativeCallable<FloatCallback>? _levelCallbackNativeCallable;
   NativeCallable<StringUpdateCallback>? _errorUpdateNativeCallable;
   NativeCallable<StringUpdateCallback>? _deviceUpdateNativeCallable;
 
-  static var libname = '';
+  static var libname = 'libjuce_jni.so';
 
   static void enableLogs(bool enable) {
     var _juceLib = JuceLibGen(
