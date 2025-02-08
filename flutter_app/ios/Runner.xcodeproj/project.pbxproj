@@ -8,16 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
-		181603A72CEC978F00F59770 /* juce_lib.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 181603A62CEC978F00F59770 /* juce_lib.xcframework */; };
-		183F25052CE7AE9D00B5C176 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 18A986212CE79B79007C2044 /* AudioToolbox.framework */; };
-		183F25062CE7AEA900B5C176 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 18A986232CE79B83007C2044 /* Foundation.framework */; };
-		183F25072CE7AEB200B5C176 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 18A986272CE79B94007C2044 /* CoreAudio.framework */; };
-		183F25082CE7AEBE00B5C176 /* CoreAudioKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 18A986292CE79B9D007C2044 /* CoreAudioKit.framework */; };
-		183F25092CE7AEC600B5C176 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 18A9862B2CE79BA4007C2044 /* Accelerate.framework */; };
-		183F250A2CE7AECF00B5C176 /* CoreMIDI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 18A9862D2CE79BAB007C2044 /* CoreMIDI.framework */; };
-		183F250B2CE7AED700B5C176 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 18A9862F2CE79BB5007C2044 /* MobileCoreServices.framework */; };
-		183F250C2CE7AEE200B5C176 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 18A986252CE79B8B007C2044 /* libc++.tbd */; };
-		183F250E2CE7AF5300B5C176 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 183F250D2CE7AF5300B5C176 /* AVFoundation.framework */; };
+		1830D30A2D58E5350089D61C /* JuceMixPlayerSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 1830D3092D58E5350089D61C /* JuceMixPlayerSwift */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
 		33879C34D7A59B3E316E33DE /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F706FCF0B5CC430B1E3D3FB /* Pods_RunnerTests.framework */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
@@ -54,7 +45,6 @@
 /* Begin PBXFileReference section */
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
-		181603A62CEC978F00F59770 /* juce_lib.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = juce_lib.xcframework; sourceTree = "<group>"; };
 		183F25032CE7ACED00B5C176 /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
 		183F250D2CE7AF5300B5C176 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		18A986212CE79B79007C2044 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
@@ -93,17 +83,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				183F250E2CE7AF5300B5C176 /* AVFoundation.framework in Frameworks */,
-				183F250C2CE7AEE200B5C176 /* libc++.tbd in Frameworks */,
-				181603A72CEC978F00F59770 /* juce_lib.xcframework in Frameworks */,
-				183F250B2CE7AED700B5C176 /* MobileCoreServices.framework in Frameworks */,
-				183F250A2CE7AECF00B5C176 /* CoreMIDI.framework in Frameworks */,
-				183F25092CE7AEC600B5C176 /* Accelerate.framework in Frameworks */,
-				183F25082CE7AEBE00B5C176 /* CoreAudioKit.framework in Frameworks */,
-				183F25072CE7AEB200B5C176 /* CoreAudio.framework in Frameworks */,
-				183F25062CE7AEA900B5C176 /* Foundation.framework in Frameworks */,
-				183F25052CE7AE9D00B5C176 /* AudioToolbox.framework in Frameworks */,
 				E7C5A9AF4907D1C24E8CBC76 /* Pods_Runner.framework in Frameworks */,
+				1830D30A2D58E5350089D61C /* JuceMixPlayerSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -180,7 +161,6 @@
 		97C146F01CF9000F007C117D /* Runner */ = {
 			isa = PBXGroup;
 			children = (
-				181603A62CEC978F00F59770 /* juce_lib.xcframework */,
 				97C146FA1CF9000F007C117D /* Main.storyboard */,
 				97C146FD1CF9000F007C117D /* Assets.xcassets */,
 				97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */,
@@ -203,7 +183,6 @@
 				54BDD9BD62D871A691E06E7E /* Pods-RunnerTests.release.xcconfig */,
 				AB201EE0191663A44B38A4A0 /* Pods-RunnerTests.profile.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -281,6 +260,9 @@
 				Base,
 			);
 			mainGroup = 97C146E51CF9000F007C117D;
+			packageReferences = (
+				1830D3082D58E5350089D61C /* XCLocalSwiftPackageReference "../../../juce_mix_player" */,
+			);
 			productRefGroup = 97C146EF1CF9000F007C117D /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -789,6 +771,20 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		1830D3082D58E5350089D61C /* XCLocalSwiftPackageReference "../../../juce_mix_player" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../../juce_mix_player;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		1830D3092D58E5350089D61C /* JuceMixPlayerSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = JuceMixPlayerSwift;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 97C146E61CF9000F007C117D /* Project object */;
 }

@@ -43,6 +43,13 @@ echo "✅ Build Success ✅"
 
 cd "$root_dir"
 
+rm -rf \
+"$libname/Builds/iOS/build/${libname}.xcframework"
+
+cp -r \
+"$libname/Builds/iOS/build/${libname}.xcframework" \
+"dist/$libname.xcframework"
+
 # copy framework to flutter_app project
 
 if [ -d "$flutter_app/ios/Runner/" ]; then
