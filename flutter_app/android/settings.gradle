@@ -1,7 +1,5 @@
 pluginManagement {
 
-    include(":juce_lib")
-
     def flutterSdkPath = {
         def properties = new Properties()
         file("local.properties").withInputStream { properties.load(it) }
@@ -9,6 +7,9 @@ pluginManagement {
         assert flutterSdkPath != null, "flutter.sdk not set in local.properties"
         return flutterSdkPath
     }()
+
+    include(':juce_lib')
+    project(':juce_lib').projectDir = new File('../../')
 
     includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
 

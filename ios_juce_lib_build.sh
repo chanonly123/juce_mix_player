@@ -50,14 +50,4 @@ cp -r \
 "$libname/Builds/iOS/build/${libname}.xcframework" \
 "dist/$libname.xcframework"
 
-# copy framework to flutter_app project
-
-if [ -d "$flutter_app/ios/Runner/" ]; then
-    rm -rf "$flutter_app/ios/Runner/$libname.xcframework"
-
-    cp -r \
-    "$libname/Builds/iOS/build/$libname.xcframework" \
-    "$flutter_app/ios/Runner/$libname.xcframework" &&
-
-    echo "✅ Copy to project Success ✅"
-fi
+echo "✅ Copy framework to 'dist' success ✅"

@@ -76,10 +76,13 @@ else
     echo "✅ build output found [$libOutFile]"
 fi
 
-if [ -d "$flutter_app/android/$libname" ]; then
-    cp -r $libOutFile "$flutter_app/android/juce_lib/$libname.aar" &&
-    echo "✅ Copy to [$flutter_app] project Success ✅"
-else
-    echo "🔴 [$flutter_app/android/$libname] not found ✅"
-    exit 1
-fi
+cd "$root_dir"
+
+rm -rf \
+"dist/$libname.aar"
+
+cp -r \
+"$libOutFile" \
+"dist/$libname.aar"
+
+echo "✅ Copy arr to 'dist' success ✅"
