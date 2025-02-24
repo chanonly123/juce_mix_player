@@ -80,14 +80,14 @@ NativeCallable<FloatCallback>? _levelCallbackNativeCallable;
   }
 
   void setFile(String path) {
-    MixerData data = MixerData(tracks: [
+    MixerComposeModel data = MixerComposeModel(tracks: [
       MixerTrack(id: "id_0", path: path),
     ]);
     final jsonStr = json.encode(data.toJson());
     _juceLib.JuceMixPlayer_set(_ptr, jsonStr.toNativeUtf8());
   }
 
-  void setMixData(MixerData data) {
+  void setMixData(MixerComposeModel data) {
     final jsonStr = json.encode(data.toJson());
     _juceLib.JuceMixPlayer_set(_ptr, jsonStr.toNativeUtf8());
   }
@@ -147,18 +147,18 @@ NativeCallable<FloatCallback>? _levelCallbackNativeCallable;
   }
 }
 
-class MixerData {
+class MixerComposeModel {
   List<MixerTrack>? tracks;
   String? output;
   double? outputDuration;
 
-  MixerData({
+  MixerComposeModel({
     required this.tracks,
     this.output,
     this.outputDuration,
   });
 
-  factory MixerData.fromJson(Map<String, dynamic> json) => MixerData(
+  factory MixerComposeModel.fromJson(Map<String, dynamic> json) => MixerComposeModel(
         tracks: (json['tracks'] as List<dynamic>?)?.map((e) => MixerTrack.fromJson(e as Map<String, dynamic>)).toList(),
         output: json['output'],
         outputDuration: json['outputDuration']?.toDouble(),

@@ -140,7 +140,7 @@ class PlayerPageState extends State<PlayerPage> {
                 ElevatedButton(
                   onPressed: () async {
                     final path = await AssetHelper.extractAsset('assets/media/music_big.mp3');
-                    player.setMixData(MixerData(
+                    player.setMixData(MixerComposeModel(
                       outputDuration: 150,
                       tracks: [
                         MixerTrack(id: "0", path: path),
@@ -190,12 +190,12 @@ class PlayerPageState extends State<PlayerPage> {
     return "${device.name} ${device.isSelected ? " ✅" : ""}";
   }
 
-  Future<MixerData> createMetronomeTracks() async {
+  Future<MixerComposeModel> createMetronomeTracks() async {
     final path = await AssetHelper.extractAsset('assets/media/music_big.mp3');
     final pathH = await AssetHelper.extractAsset('assets/media/met_h.wav');
     final pathL = await AssetHelper.extractAsset('assets/media/met_l.wav');
     double metVol = 0.1;
-    return MixerData(
+    return MixerComposeModel(
       tracks: [
         MixerTrack(id: "music", path: path),
         MixerTrack(id: "met_1", path: pathH, offset: 0, repeat: true, repeatInterval: 2, volume: metVol),
