@@ -3,3 +3,4 @@
 #include "Models.cpp"
 #include "Logger.cpp"
 #include "TaskQueue.cpp"
+#include "RemoteFetch.cpp"

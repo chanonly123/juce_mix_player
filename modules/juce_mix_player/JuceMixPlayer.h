@@ -7,6 +7,7 @@
 #include "Models.h"
 #include <iostream>
 #include <tuple>
+#include "RemoteFetch.h"
 
 class JuceMixPlayer : private juce::Timer, public juce::AudioIODeviceCallback, public juce::ChangeListener
 {
@@ -42,6 +43,8 @@ private:
                        float* const *outputChannelData,
                        int numOutputChannels,
                        int numSamples)>> externalFilterClosure;
+
+    RemoteFetch remoteFetch;
 
     // MARK: Recording
 
