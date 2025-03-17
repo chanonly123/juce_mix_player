@@ -7,6 +7,7 @@
 #include "Models.h"
 #include <iostream>
 #include <tuple>
+#include "RemoteFetch.h"
 
 class JuceMixPlayer : private juce::Timer, public juce::AudioIODeviceCallback, public juce::ChangeListener
 {
@@ -36,6 +37,8 @@ private:
     bool _isPlaying = false;
     int playHeadIndex = 0;
     juce::AudioBuffer<float> playBuffer;
+
+    RemoteFetch remoteFetch;
 
     // MARK: Recording
 

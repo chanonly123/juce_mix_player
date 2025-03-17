@@ -19,7 +19,8 @@ JuceMixPlayer::JuceMixPlayer(int record, int play) {
     taskQueue.name = "taskQueue";
     recWriteTaskQueue.name = "recWriteTaskQueue";
 
-    formatManager.registerBasicFormats();
+//    formatManager.registerBasicFormats();
+    formatManager.registerFormat(new juce::MP3AudioFormat(), false);
 
     juce::WindowedSincInterpolator interpolator;
 
@@ -223,10 +224,14 @@ void JuceMixPlayer::prepare() {
 void JuceMixPlayer::_createFileReadersAndTotalDuration() {
     for (MixerTrack& track: mixerData.tracks) {
         if (track.enabled) {
-            juce::File file(track.path);
-            track.reader.reset(formatManager.createReaderFor(file));
-            if (!track.reader) {
-                _onErrorNotify("unable to read " + track.path);
+            if (juce::String(track.path).startsWith("/")) {
+                juce::File file(track.path);
+                track.reader.reset(formatManager.createReaderFor(file));
+                if (!track.reader) {
+                    _onErrorNotify("unable to read " + track.path);
+                }
+            } else {
+                remoteFetch.startFetching(track.path);
             }
         }
     }
