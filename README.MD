@@ -15,21 +15,16 @@
 - JUCE directory in `/Users/<username>/JUCE/` or `C:\JUCE\` (JUCE VERSION 8.0.5 [download](https://juce.com/download/))
 - Xcode `xcodebuild -version` (for iOS)
 - Cocoapods (`brew install cocoapods`). `pod --version` should work. (for iOS)
-- `flutter` and `dart` (to generate cpp to dart bindings)
+- Commands `flutter` and `dart` (to generate cpp to dart bindings)
 
 ### Regenerate Projucer generated projects
 - open `juce_lib/juce_lib.jucer` using Projucer and hit (command+P to regenerate)
 or
-- run `sh setup_clean_projects.sh` or `win_setup_clean_projects.bat`
-
-### Development
-- To develop the native code use `ios_app/ios_app.xcodeproj`, (to debug native code) (not possible for windows for now)
+- run `sh setup_clean_projects.sh` or `win_setup_clean_projects.bat` (needs work)
 
 ### build flutter project
-- run `sh android_juce_lib_build.sh` or `win_android_build.bat` or `ios_juce_lib_build.sh`. This will build juce native library and copy output binary to flutter project
+- inside `flutter_app` run `dart run ffigen`
 - run flutter project normally
-or
-- use vscode launch tasks `flutter_app_android` and `flutter_app_ios`
 
 ### Usage
 - The player takes json string input
@@ -75,10 +70,11 @@ or
     ]
 }
 ```
-- Check `/flutter_app` or `/ios_app` for details
+- Check `/flutter_app`
 
 ### License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ### Contact
-- email: chan.only.123@gmail.com
+- Email: chan.only.123@gmail.com
+- Turorials [Bringing JUCE to Flutter](https://medium.com/@chan.only.123/bringing-juce-to-flutter-a-walk-in-the-park-part-1-flutter-ios-569dee72d7e8)
