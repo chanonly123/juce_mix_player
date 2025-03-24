@@ -8,8 +8,8 @@ pluginManagement {
         return flutterSdkPath
     }()
 
-    include(':juce_lib')
-    project(':juce_lib').projectDir = new File('../../')
+    include(':juce_jni')
+    project(':juce_jni').projectDir = new File(rootProject.projectDir, '../../juce_lib/Builds/Android/lib')
 
     includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
 

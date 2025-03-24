@@ -9,20 +9,6 @@
             "cwd": "flutter_app",
             "request": "launch",
             "type": "dart",
-        },
-        {
-            "name": "flutter_app_android",
-            "cwd": "flutter_app",
-            "request": "launch",
-            "type": "dart",
-            "preLaunchTask": "build-juce-lib-android"
-        },
-        {
-            "name": "flutter_app_ios",
-            "cwd": "flutter_app",
-            "request": "launch",
-            "type": "dart",
-            "preLaunchTask": "build-juce-lib-ios"
         }
     ]
 }

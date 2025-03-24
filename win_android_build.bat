@@ -73,14 +73,7 @@ if not defined libDirectory (
     echo ✅ build directory found [%libDirectory%]
 )
 
-:: Copy to flutter project
-if exist "%flutter_app%\android\app\src\main" (
-    rmdir /s /q "%flutter_app%\android\app\src\main\jniLibs"
-    xcopy /e /i /h /y %libDirectory% "%flutter_app%\android\app\src\main\jniLibs\"
-    echo ✅ Copy to [%flutter_app%] project Success ✅
-) else (
-    echo 🔴 [%flutter_app%\android\app\src\main] not found
-    exit /b 1
-)
+:: Copy to dist folder
+
 
 endlocal

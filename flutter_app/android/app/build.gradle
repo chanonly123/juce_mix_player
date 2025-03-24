@@ -44,5 +44,5 @@ flutter {
 }
 
 dependencies {
-    implementation project(":juce_lib")
+    implementation project(":juce_jni")
 }

@@ -1,6 +1,5 @@
 import Flutter
 import UIKit
-import JuceMixPlayerSwift
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {

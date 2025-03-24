@@ -12,7 +12,7 @@
 
 ### Requirements
 - Android Studio (for Android)
-- JUCE directory in `/Users/<username>/JUCE/` or `C:\JUCE\` (JUCE VERSION 8.0.2 [download](https://juce.com/download/))
+- JUCE directory in `/Users/<username>/JUCE/` or `C:\JUCE\` (JUCE VERSION 8.0.5 [download](https://juce.com/download/))
 - Xcode `xcodebuild -version` (for iOS)
 - Cocoapods (`brew install cocoapods`). `pod --version` should work. (for iOS)
 - `flutter` and `dart` (to generate cpp to dart bindings)
