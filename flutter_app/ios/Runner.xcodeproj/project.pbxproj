@@ -8,8 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
+		1838E6562D92E67700040FB3 /* libjuce_lib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1838E6552D92E67100040FB3 /* libjuce_lib.a */; };
 		185F524C2D88815A00AF7EBA /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 183F250D2CE7AF5300B5C176 /* AVFoundation.framework */; };
-		185F524F2D88816400AF7EBA /* libjuce_lib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 185F524A2D8880E700AF7EBA /* libjuce_lib.a */; };
 		185F52502D88816C00AF7EBA /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 18A986212CE79B79007C2044 /* AudioToolbox.framework */; };
 		185F52512D88817500AF7EBA /* CoreAudioKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 18A986292CE79B9D007C2044 /* CoreAudioKit.framework */; };
 		185F52522D88817A00AF7EBA /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 18A986272CE79B94007C2044 /* CoreAudio.framework */; };
@@ -28,18 +28,18 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		185F52492D8880E700AF7EBA /* PBXContainerItemProxy */ = {
+		1838E6512D92E67100040FB3 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 185F52432D8880E700AF7EBA /* juce_lib.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = EA7DE8E26488331D60A86F2C;
-			remoteInfo = "juce_lib - Static Library";
-		};
-		185F524D2D88815F00AF7EBA /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 185F52432D8880E700AF7EBA /* juce_lib.xcodeproj */;
+			containerPortal = 1838E64E2D92E67100040FB3 /* juce_lib.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = D06947CC80B55EA099B4C785;
+			remoteInfo = "juce_lib - Static Library";
+		};
+		1838E6542D92E67100040FB3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1838E64E2D92E67100040FB3 /* juce_lib.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = EA7DE8E26488331D60A86F2C;
 			remoteInfo = "juce_lib - Static Library";
 		};
 		331C8085294A63A400263BE5 /* PBXContainerItemProxy */ = {
@@ -67,9 +67,10 @@
 /* Begin PBXFileReference section */
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
+		1838E64E2D92E67100040FB3 /* juce_lib.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = juce_lib.xcodeproj; path = /Users/apple/Documents/Melodyze/juce_mix_player/juce_lib/Builds/iOS/juce_lib.xcodeproj; sourceTree = "<absolute>"; };
 		183F25032CE7ACED00B5C176 /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
 		183F250D2CE7AF5300B5C176 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
-		185F52432D8880E700AF7EBA /* juce_lib.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = juce_lib.xcodeproj; path = /Users/apple/Documents/Melodyze/juce_mix_player/juce_lib/Builds/iOS/juce_lib.xcodeproj; sourceTree = "<absolute>"; };
+		185F52432D8880E700AF7EBA /* juce_lib.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = juce_lib.xcodeproj; path = ../../../juce_lib/Builds/iOS/juce_lib.xcodeproj; sourceTree = "<group>"; };
 		18A986212CE79B79007C2044 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		18A986232CE79B83007C2044 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		18A986252CE79B8B007C2044 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
@@ -106,6 +107,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1838E6562D92E67700040FB3 /* libjuce_lib.a in Frameworks */,
 				185F525A2D8885C400AF7EBA /* CoreMIDI.framework in Frameworks */,
 				185F52552D88819500AF7EBA /* libc++.tbd in Frameworks */,
 				185F52542D88818B00AF7EBA /* Foundation.framework in Frameworks */,
@@ -113,7 +115,6 @@
 				185F52522D88817A00AF7EBA /* CoreAudio.framework in Frameworks */,
 				185F52512D88817500AF7EBA /* CoreAudioKit.framework in Frameworks */,
 				185F52502D88816C00AF7EBA /* AudioToolbox.framework in Frameworks */,
-				185F524F2D88816400AF7EBA /* libjuce_lib.a in Frameworks */,
 				185F524C2D88815A00AF7EBA /* AVFoundation.framework in Frameworks */,
 				E7C5A9AF4907D1C24E8CBC76 /* Pods_Runner.framework in Frameworks */,
 			);
@@ -130,10 +131,10 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		185F52462D8880E700AF7EBA /* Products */ = {
+		1838E64F2D92E67100040FB3 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				185F524A2D8880E700AF7EBA /* libjuce_lib.a */,
+				1838E6552D92E67100040FB3 /* libjuce_lib.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -185,6 +186,7 @@
 				331C8082294A63A400263BE5 /* RunnerTests */,
 				18A986202CE79B79007C2044 /* Frameworks */,
 				F399F960A71A1B44F444869B /* Pods */,
+				1838E64E2D92E67100040FB3 /* juce_lib.xcodeproj */,
 			);
 			sourceTree = "<group>";
 		};
@@ -265,7 +267,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				185F524E2D88815F00AF7EBA /* PBXTargetDependency */,
+				1838E6522D92E67100040FB3 /* PBXTargetDependency */,
 			);
 			name = Runner;
 			productName = Runner;
@@ -307,8 +309,8 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
-					ProductGroup = 185F52462D8880E700AF7EBA /* Products */;
-					ProjectRef = 185F52432D8880E700AF7EBA /* juce_lib.xcodeproj */;
+					ProductGroup = 1838E64F2D92E67100040FB3 /* Products */;
+					ProjectRef = 1838E64E2D92E67100040FB3 /* juce_lib.xcodeproj */;
 				},
 			);
 			projectRoot = "";
@@ -320,11 +322,11 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
-		185F524A2D8880E700AF7EBA /* libjuce_lib.a */ = {
+		1838E6552D92E67100040FB3 /* libjuce_lib.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libjuce_lib.a;
-			remoteRef = 185F52492D8880E700AF7EBA /* PBXContainerItemProxy */;
+			remoteRef = 1838E6542D92E67100040FB3 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -483,10 +485,10 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		185F524E2D88815F00AF7EBA /* PBXTargetDependency */ = {
+		1838E6522D92E67100040FB3 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = "juce_lib - Static Library";
-			targetProxy = 185F524D2D88815F00AF7EBA /* PBXContainerItemProxy */;
+			targetProxy = 1838E6512D92E67100040FB3 /* PBXContainerItemProxy */;
 		};
 		331C8086294A63A400263BE5 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
