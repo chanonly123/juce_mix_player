@@ -2,7 +2,7 @@
 
 <JUCERPROJECT id="ORjX0y" name="juce_lib" projectType="library" addUsingNamespaceToJuceHeader="0"
               displaySplashScreen="1" jucerFormatVersion="1" defines="JUCE_USE_MP3AUDIOFORMAT=1"
-              postExportShellCommandPosix="/bin/sh '%%1%%/post_gen.sh'">
+              postExportShellCommandPosix="/bin/sh '%%1%%/post_gen.sh'" postExportShellCommandWin="C:\Windows\system32\cmd.exe /c %%1%%\post_gen.bat">
   <MAINGROUP id="fjboZk" name="juce_lib">
     <GROUP id="{1C9A39F7-F1DF-DAE6-7A86-0D474460ADD4}" name="includes">
       <FILE id="bWxi3Q" name="juce_wrapper_c.h" compile="0" resource="0"
