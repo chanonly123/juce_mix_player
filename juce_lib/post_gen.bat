@@ -1,8 +1,8 @@
 @echo off
 setlocal enabledelayedexpansion
 
-set "currentDir=%~dp0"
-set "input_file=%currentDir%Builds\Android\lib\CMakeLists.txt"
+set "scriptDir=%~dp0"
+set "input_file=%scriptDir%Builds\Android\lib\CMakeLists.txt"
 set "temp_file=%input_file%_out.txt"
 
 if not exist "%input_file%" (

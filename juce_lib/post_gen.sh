@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # convert to SHARED library for android
-currentDir="$(dirname "$(realpath "$0")")"
+scriptDir="$(dirname "$(realpath "$0")")"
 
 awk '
 {
@@ -14,6 +14,6 @@ awk '
         print $0;
     }
 }
-' "$currentDir/Builds/Android/lib/CMakeLists.txt" > "$currentDir/Builds/Android/lib/CMakeLists_new.txt"
+' "$scriptDir/Builds/Android/lib/CMakeLists.txt" > "$scriptDir/Builds/Android/lib/CMakeLists_new.txt"
 
-mv "$currentDir/Builds/Android/lib/CMakeLists_new.txt" "$currentDir/Builds/Android/lib/CMakeLists.txt"
+mv "$scriptDir/Builds/Android/lib/CMakeLists_new.txt" "$scriptDir/Builds/Android/lib/CMakeLists.txt"
