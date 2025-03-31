@@ -6,7 +6,7 @@
 #define EXPORT_C_FUNC extern
 #endif
 
-EXPORT_C_FUNC void Java_com_rmsl_juce_Native_juceMessageManagerInit();
+EXPORT_C_FUNC void juce_init();
 EXPORT_C_FUNC void juce_enableLogs(int enable);
 
 EXPORT_C_FUNC void* JuceMixPlayer_init(int record, int play);

@@ -42,6 +42,13 @@
 			remoteGlobalIDString = EA7DE8E26488331D60A86F2C;
 			remoteInfo = "juce_lib - Static Library";
 		};
+		18DF95572D9ABE4B00C205B7 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 185F52432D8880E700AF7EBA /* juce_lib.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = EA7DE8E26488331D60A86F2C;
+			remoteInfo = "juce_lib - Static Library";
+		};
 		331C8085294A63A400263BE5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
@@ -156,6 +163,14 @@
 				1F706FCF0B5CC430B1E3D3FB /* Pods_RunnerTests.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		18DF95542D9ABE4B00C205B7 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				18DF95582D9ABE4B00C205B7 /* libjuce_lib.a */,
+			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 		331C8082294A63A400263BE5 /* RunnerTests */ = {
@@ -309,6 +324,10 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
+					ProductGroup = 18DF95542D9ABE4B00C205B7 /* Products */;
+					ProjectRef = 185F52432D8880E700AF7EBA /* juce_lib.xcodeproj */;
+				},
+				{
 					ProductGroup = 1838E64F2D92E67100040FB3 /* Products */;
 					ProjectRef = 1838E64E2D92E67100040FB3 /* juce_lib.xcodeproj */;
 				},
@@ -327,6 +346,13 @@
 			fileType = archive.ar;
 			path = libjuce_lib.a;
 			remoteRef = 1838E6542D92E67100040FB3 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		18DF95582D9ABE4B00C205B7 /* libjuce_lib.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libjuce_lib.a;
+			remoteRef = 18DF95572D9ABE4B00C205B7 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -563,7 +589,6 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
-				STRIP_STYLE = "non-global";
 				SUPPORTED_PLATFORMS = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
@@ -583,6 +608,15 @@
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+					"-framework",
+					"\"path_provider_foundation\"",
+					"-framework",
+					"\"permission_handler_apple\"",
+					"-all_load",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.juce_mix_player;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -695,7 +729,6 @@
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
-				STRIP_STYLE = "non-global";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -746,7 +779,6 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
-				STRIP_STYLE = "non-global";
 				SUPPORTED_PLATFORMS = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
@@ -768,6 +800,15 @@
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+					"-framework",
+					"\"path_provider_foundation\"",
+					"-framework",
+					"\"permission_handler_apple\"",
+					"-all_load",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.juce_mix_player;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -791,6 +832,15 @@
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+					"-framework",
+					"\"path_provider_foundation\"",
+					"-framework",
+					"\"permission_handler_apple\"",
+					"-all_load",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.juce_mix_player;
 				PRODUCT_NAME = "$(TARGET_NAME)";

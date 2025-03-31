@@ -49,7 +49,7 @@
         <MODULEPATH id="juce_mix_player" path="../modules"/>
       </MODULEPATHS>
     </XCODE_IPHONE>
-    <ANDROIDSTUDIO targetFolder="Builds/Android" androidAdditionalJavaFolders="java">
+    <ANDROIDSTUDIO targetFolder="Builds/Android">
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug" targetName="juce_jni"/>
         <CONFIGURATION isDebug="0" name="Release" targetName="juce_jni"/>

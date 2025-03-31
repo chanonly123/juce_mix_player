@@ -18,7 +18,7 @@ enum JuceMixPlayerState { IDLE, READY, PLAYING, PAUSED, STOPPED, COMPLETED, ERRO
 
 /// initialize will fail if (record: true) and no mic permission
 class JuceMixPlayer {
-  late JuceLibGen _juceLib;
+  static late JuceLibGen _juceLib;
   late Pointer<Void> _ptr;
 
 NativeCallable<FloatCallback>? _levelCallbackNativeCallable;
@@ -29,9 +29,13 @@ NativeCallable<FloatCallback>? _levelCallbackNativeCallable;
 
   static var libname = 'libjuce_jni.so';
 
-  static void enableLogs(bool enable) {
-    var _juceLib = JuceLibGen(
+  static void juce_init() {
+    _juceLib = JuceLibGen(
         defaultTargetPlatform == TargetPlatform.iOS ? DynamicLibrary.process() : DynamicLibrary.open(libname));
+    _juceLib.juce_init();
+  }
+
+  static void enableLogs(bool enable) {
     _juceLib.juce_enableLogs(enable ? 1 : 0);
   }
   

@@ -3,7 +3,7 @@
 #include "JuceMixPlayer.h"
 #include "Models.h"
 
-void Java_com_rmsl_juce_Native_juceMessageManagerInit() {
+void juce_init() {
     juce::MessageManager::getInstance();
 }
 

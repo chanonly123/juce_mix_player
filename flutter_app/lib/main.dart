@@ -8,6 +8,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  JuceMixPlayer.juce_init();
   JuceMixPlayer.enableLogs(true);
   runApp(const MyApp());
   await Permission.microphone.request();
