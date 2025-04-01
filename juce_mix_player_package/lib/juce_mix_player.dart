@@ -16,12 +16,14 @@ typedef NativeStringCallbackDart = void Function(Pointer<Void> ptr, Pointer<Utf8
 
 enum JuceMixPlayerState { IDLE, READY, PLAYING, PAUSED, STOPPED, COMPLETED, ERROR }
 
+enum JuceMixRecState { IDLE, READY, RECORDING, STOPPED, ERROR }
+
 /// initialize will fail if (record: true) and no mic permission
 class JuceMixPlayer {
   static late JuceLibGen _juceLib;
   late Pointer<Void> _ptr;
 
-NativeCallable<FloatCallback>? _levelCallbackNativeCallable;
+  NativeCallable<FloatCallback>? _levelCallbackNativeCallable;
   NativeCallable<FloatCallback>? _progressCallbackNativeCallable;
   NativeCallable<StringUpdateCallback>? _stateUpdateNativeCallable;
   NativeCallable<StringUpdateCallback>? _errorUpdateNativeCallable;
@@ -30,18 +32,16 @@ NativeCallable<FloatCallback>? _levelCallbackNativeCallable;
   static var libname = 'libjuce_jni.so';
 
   static void juce_init() {
-    _juceLib = JuceLibGen(
-        defaultTargetPlatform == TargetPlatform.iOS ? DynamicLibrary.process() : DynamicLibrary.open(libname));
+    _juceLib = JuceLibGen(defaultTargetPlatform == TargetPlatform.iOS ? DynamicLibrary.process() : DynamicLibrary.open(libname));
     _juceLib.juce_init();
   }
 
   static void enableLogs(bool enable) {
     _juceLib.juce_enableLogs(enable ? 1 : 0);
   }
-  
+
   JuceMixPlayer({required bool record, required bool play}) {
-    _juceLib = JuceLibGen(
-        defaultTargetPlatform == TargetPlatform.iOS ? DynamicLibrary.process() : DynamicLibrary.open(libname));
+    _juceLib = JuceLibGen(defaultTargetPlatform == TargetPlatform.iOS ? DynamicLibrary.process() : DynamicLibrary.open(libname));
 
     _ptr = _juceLib.JuceMixPlayer_init(record ? 1 : 0, play ? 1 : 0);
   }
@@ -131,6 +131,46 @@ NativeCallable<FloatCallback>? _levelCallbackNativeCallable;
   void setUpdatedDevices(MixerDeviceList devices) {
     final jsonStr = json.encode(devices.toJson());
     _juceLib.JuceMixPlayer_setUpdatedDevices(_ptr, jsonStr.toNativeUtf8());
+  }
+
+  // Recordings
+  void prepareRecording(String path) {
+    _juceLib.JuceMixPlayer_prepareRecorder(_ptr, path.toNativeUtf8());
+  }
+
+  void startRecording(String path) {
+    _juceLib.JuceMixPlayer_startRecorder(_ptr);
+  }
+
+  void stopRecording() {
+    _juceLib.JuceMixPlayer_stopRecorder(_ptr);
+  }
+
+  void setRecErrorHandler(void Function(String error) callback) {
+    NativeStringCallbackDart closure = (ptr, cstring) {
+      callback(cstring.toDartString());
+    };
+    _errorUpdateNativeCallable?.close();
+    _errorUpdateNativeCallable = NativeCallable<StringUpdateCallback>.listener(closure);
+    _juceLib.JuceMixPlayer_onRecError(_ptr, _errorUpdateNativeCallable!.nativeFunction);
+  }
+
+  void setRecStateUpdateHandler(void Function(JuceMixRecState state) callback) {
+    NativeStringCallbackDart closure = (ptr, cstring) {
+      callback(JuceMixRecState.values.byName(cstring.toDartString()));
+    };
+    _stateUpdateNativeCallable?.close();
+    _stateUpdateNativeCallable = NativeCallable<StringUpdateCallback>.listener(closure);
+    _juceLib.JuceMixPlayer_onRecStateUpdate(_ptr, _stateUpdateNativeCallable!.nativeFunction);
+  }
+
+  void setRecProgressHandler(void Function(double level) callback) {
+    FloatCallbackDart closure = (ptr, progress) {
+      callback(progress);
+    };
+    _levelCallbackNativeCallable?.close();
+    _levelCallbackNativeCallable = NativeCallable<FloatCallback>.listener(closure);
+    _juceLib.JuceMixPlayer_onRecProgress(_ptr, _levelCallbackNativeCallable!.nativeFunction);
   }
 
   void setRecLevelHandler(void Function(double level) callback) {
@@ -261,9 +301,7 @@ class MixerDeviceList {
   });
 
   factory MixerDeviceList.fromJson(Map<String, dynamic> json) => MixerDeviceList(
-        devices:
-            (json['devices'] as List<dynamic>?)?.map((e) => MixerDevice.fromJson(e as Map<String, dynamic>)).toList() ??
-                [],
+        devices: (json['devices'] as List<dynamic>?)?.map((e) => MixerDevice.fromJson(e as Map<String, dynamic>)).toList() ?? [],
       );
 
   Map<String, dynamic> toJson() {
