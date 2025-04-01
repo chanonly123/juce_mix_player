@@ -7,6 +7,10 @@ void juce_init() {
     juce::MessageManager::getInstance();
 }
 
+void Java_com_rmsl_juce_Native_juceMessageManagerInit() {
+    juce_init();
+}
+
 // public method to enable/disable logging
 void juce_enableLogs(int enable) {
     enableLogsValue = enable == 1;
