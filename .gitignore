@@ -6,6 +6,7 @@ xcuserdata/
 **/JuceLibraryCode
 crash.log
 dist/**
+/.cxx
 
 # General
 .DS_Store
