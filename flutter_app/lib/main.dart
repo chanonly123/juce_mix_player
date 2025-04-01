@@ -6,12 +6,12 @@ import 'package:flutter_app/asset_helper.dart';
 import 'package:juce_mix_player/juce_mix_player.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
   JuceMixPlayer.juce_init();
   JuceMixPlayer.enableLogs(true);
   runApp(const MyApp());
-  await Permission.microphone.request();
+  Permission.microphone.request().then((_) {});
 }
 
 class MyApp extends StatelessWidget {
