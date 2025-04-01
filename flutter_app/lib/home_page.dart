@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/player_page.dart';
+import 'package:flutter_app/recorder_page.dart';
 // import 'package:flutter_app/recorder_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -15,7 +16,7 @@ class HomePageState extends State<HomePage> {
   // Using a getter instead of static final to create new instances when needed
   List<Widget> get _pages => [
         PlayerPage(),
-        // RecorderPage(),
+        RecorderPage(),
       ];
 
   void _onItemTapped(int index) {

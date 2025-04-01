@@ -1,0 +1,264 @@
+import 'dart:developer';
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:juce_mix_player/juce_mix_player.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+
+class RecorderPage extends StatefulWidget {
+  const RecorderPage({super.key});
+
+  @override
+  RecorderPageState createState() => RecorderPageState();
+}
+
+class RecorderPageState extends State<RecorderPage> {
+  final recorder = JuceMixPlayer(record: true, play: false);
+  bool isRecording = false;
+  bool isRecorderPrepared = false;
+  bool isMicPermissionGranted = false;
+  String recordingPath = '';
+  DateTime? recordingStartTime;
+  Duration recordingDuration = Duration.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    print("RecorderPageState.initState");
+
+    // Check microphone permission
+    _checkMicrophonePermission();
+
+    // Set up state update handler
+    recorder.setRecStateUpdateHandler((state) {
+      log("Recorder state: ${state.toString()}");
+      switch (state) {
+        case JuceMixRecState.IDLE:
+          break;
+        case JuceMixRecState.READY:
+          setState(() {
+            isRecorderPrepared = true;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Recorder is ready, you can start recording now!'),
+            backgroundColor: Colors.green,
+          ));
+          break;
+        case JuceMixRecState.RECORDING:
+          setState(() {
+            isRecording = true;
+            recordingStartTime = DateTime.now();
+          });
+          break;
+        case JuceMixRecState.STOPPED:
+          setState(() {
+            isRecording = false;
+            recordingStartTime = null;
+            recordingDuration = Duration.zero;
+          });
+          break;
+        case JuceMixRecState.ERROR:
+          break;
+        // Handle other states as needed
+      }
+    });
+
+    // Set up error handler
+    recorder.setErrorHandler((error) {
+      log('Error: $error');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(error),
+          backgroundColor: Colors.red,
+        ));
+      }
+    });
+
+    // Set up a timer to update recording duration
+    _setupDurationTimer();
+  }
+
+  void _setupDurationTimer() {
+    // Update recording duration every second
+    Future.delayed(Duration(seconds: 1), () {
+      if (mounted) {
+        if (isRecording && recordingStartTime != null) {
+          setState(() {
+            recordingDuration = DateTime.now().difference(recordingStartTime!);
+          });
+        }
+        _setupDurationTimer(); // Schedule next update
+      }
+    });
+  }
+
+  Future<void> _checkMicrophonePermission() async {
+    final status = await Permission.microphone.status;
+    print("Permission.microphone.status: ${status.toString()}");
+    setState(() {
+      isMicPermissionGranted = status.isGranted;
+    });
+
+    if (!status.isGranted) {
+      // Request permission if not granted
+      final result = await Permission.microphone.request();
+      setState(() {
+        isMicPermissionGranted = result.isGranted;
+      });
+
+      if (result.isGranted) {
+        // If permission is granted, prepare the recorder
+        _prepareRecorder();
+      } else {
+        // Show error message if permission is denied
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Microphone permission is required to record audio'),
+            backgroundColor: Colors.red,
+            action: SnackBarAction(
+              label: 'Settings',
+              onPressed: () async {
+                Navigator.pop(context); // Close dialog
+                await openAppSettings();
+              },
+            ),
+          ));
+        }
+      }
+    } else {
+      // If permission is already granted, prepare the recorder
+      _prepareRecorder();
+    }
+  }
+
+  Future<void> _prepareRecorder() async {
+    if (!isMicPermissionGranted) {
+      log('Cannot prepare recorder: Microphone permission not granted');
+      return;
+    }
+
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      recordingPath = '${directory.path}/recording_$timestamp.wav';
+      log('Preparing recorder with path: $recordingPath');
+      recorder.prepareRecording(recordingPath);
+      log('Recorder prepared successfully');
+      setState(() {
+        isRecorderPrepared = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Recorder prepared successfully'),
+        backgroundColor: Colors.red,
+      ));
+    } catch (e) {
+      log('Error preparing recorder: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Failed to prepare recorder: $e'),
+          backgroundColor: Colors.red,
+        ));
+      }
+    }
+  }
+
+  void _toggleRecording() {
+    if (!isMicPermissionGranted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Microphone permission is required to record audio'),
+        backgroundColor: Colors.red,
+        action: SnackBarAction(
+          label: 'Settings',
+          onPressed: () {
+            openAppSettings();
+          },
+        ),
+      ));
+      return;
+    }
+
+    if (!isRecorderPrepared) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Recorder is not ready yet, please wait'),
+        backgroundColor: Colors.orange,
+      ));
+      return;
+    }
+
+    if (isRecording) {
+      // Stop recording
+      recorder.stopRecording();
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Recording saved to: $recordingPath'),
+        backgroundColor: Colors.blue,
+      ));
+    } else {
+      // Start recording
+      recorder.startRecording(recordingPath);
+    }
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final minutes = twoDigits(duration.inMinutes.remainder(60));
+    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    return "$minutes:$seconds";
+  }
+
+  @override
+  void dispose() {
+    if (isRecording) {
+      recorder.stopRecording();
+    }
+    recorder.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Audio Recorder")),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Recording duration display
+            Text(
+              _formatDuration(recordingDuration),
+              style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 20),
+
+            // Recording status indicator
+            Text(
+              !isMicPermissionGranted
+                  ? "Microphone permission required"
+                  : (isRecording ? "Recording..." : (isRecorderPrepared ? "Ready to record" : "Preparing recorder...")),
+              style: TextStyle(fontSize: 16, color: !isMicPermissionGranted ? Colors.red : (isRecording ? Colors.red : Colors.grey)),
+            ),
+            SizedBox(height: 40),
+
+            // Record button
+            GestureDetector(
+              onTap: _toggleRecording,
+              child: Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isRecording ? Colors.red.shade800 : Colors.red,
+                ),
+                child: Icon(
+                  isRecording ? Icons.stop : Icons.mic,
+                  color: Colors.white,
+                  size: 40,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
