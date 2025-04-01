@@ -1,5 +1,6 @@
 import 'dart:developer';
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:juce_mix_player/juce_mix_player.dart';
@@ -21,6 +22,8 @@ class RecorderPageState extends State<RecorderPage> {
   String recordingPath = '';
   DateTime? recordingStartTime;
   Duration recordingDuration = Duration.zero;
+  MixerDeviceList deviceList = MixerDeviceList(devices: []);
+  JuceMixRecState state = JuceMixRecState.IDLE;
 
   @override
   void initState() {
@@ -33,8 +36,11 @@ class RecorderPageState extends State<RecorderPage> {
     // Set up state update handler
     recorder.setRecStateUpdateHandler((state) {
       log("Recorder state: ${state.toString()}");
+      setState(() => this.state = state);
+
       switch (state) {
         case JuceMixRecState.IDLE:
+          // _prepareRecorder();
           break;
         case JuceMixRecState.READY:
           setState(() {
@@ -64,6 +70,16 @@ class RecorderPageState extends State<RecorderPage> {
       }
     });
 
+    recorder.setDeviceUpdateHandler((deviceList) {
+      setState(() {
+        // Filter the deviceList to include only input devices and assign IDs
+        this.deviceList = MixerDeviceList(
+          devices: deviceList.devices.where((device) => device.isInput).toList(),
+        );
+      });
+      log('devices: ${JsonEncoder.withIndent('  ').convert(this.deviceList.toJson())}');
+    });
+
     // Set up error handler
     recorder.setErrorHandler((error) {
       log('Error: $error');
@@ -73,6 +89,10 @@ class RecorderPageState extends State<RecorderPage> {
           backgroundColor: Colors.red,
         ));
       }
+    });
+
+    recorder.setRecLevelHandler((level) {
+      log("Recorder level: $level");
     });
 
     // Set up a timer to update recording duration
@@ -140,8 +160,17 @@ class RecorderPageState extends State<RecorderPage> {
 
     try {
       final directory = await getApplicationDocumentsDirectory();
+      final recordingsDir = Directory('${directory.path}/recordings');
+
+      // Create the recordings directory if it doesn't exist
+      if (!await recordingsDir.exists()) {
+        await recordingsDir.create(recursive: true);
+        log('Recordings directory created');
+      }
+
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      recordingPath = '${directory.path}/recording_$timestamp.wav';
+      recordingPath = '${recordingsDir.path}/$timestamp.wav';
+
       log('Preparing recorder with path: $recordingPath');
       recorder.prepareRecording(recordingPath);
       log('Recorder prepared successfully');
@@ -150,7 +179,7 @@ class RecorderPageState extends State<RecorderPage> {
       });
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Recorder prepared successfully'),
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.blueAccent,
       ));
     } catch (e) {
       log('Error preparing recorder: $e');
@@ -238,6 +267,8 @@ class RecorderPageState extends State<RecorderPage> {
               style: TextStyle(fontSize: 16, color: !isMicPermissionGranted ? Colors.red : (isRecording ? Colors.red : Colors.grey)),
             ),
             SizedBox(height: 40),
+            Text("State: ${state.toString()}"),
+            SizedBox(height: 40),
 
             // Record button
             GestureDetector(
@@ -256,9 +287,39 @@ class RecorderPageState extends State<RecorderPage> {
                 ),
               ),
             ),
+            SizedBox(height: 40),
+            popupMenu()
           ],
         ),
       ),
     );
+  }
+
+  PopupMenuButton popupMenu() {
+    return PopupMenuButton<MixerDevice>(
+      child: Text("DEVICES: ${deviceList.devices.length}"),
+      itemBuilder: (context) => deviceList.devices.map((dev) {
+        return PopupMenuItem<MixerDevice>(
+          value: dev,
+          child: Text(getName(dev)),
+        );
+      }).toList(),
+      onSelected: (selectedDevice) {
+        deviceList.devices.forEach((d) {
+          d.isSelected = false;
+        });
+        selectedDevice.isSelected = true;
+        // Ensure the first device is always selected
+        // if (deviceList.devices.isNotEmpty) {
+        // deviceList.devices[3].isSelected = true;
+        // }
+        recorder.setUpdatedDevices(deviceList);
+        print("Selected device: ${deviceList.devices.toString()}");
+      },
+    );
+  }
+
+  String getName(MixerDevice device) {
+    return "${device.name} ${device.isSelected ? " ✅" : ""}";
   }
 }

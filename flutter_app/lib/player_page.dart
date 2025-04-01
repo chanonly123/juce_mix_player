@@ -73,7 +73,10 @@ class PlayerPageState extends State<PlayerPage> {
 
     player.setDeviceUpdateHandler((deviceList) {
       setState(() {
-        this.deviceList = deviceList;
+        this.deviceList = MixerDeviceList(
+          devices: deviceList.devices.where((device) => device.isInput == false).toList(),
+        );
+        // this.deviceList = deviceList;
       });
       log('devices: ${JsonEncoder.withIndent('  ').convert(deviceList.toJson())}');
     });
