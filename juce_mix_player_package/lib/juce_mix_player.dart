@@ -187,6 +187,7 @@ class JuceMixPlayer {
     _progressCallbackNativeCallable?.close();
     _stateUpdateNativeCallable?.close();
     _errorUpdateNativeCallable?.close();
+    _deviceUpdateNativeCallable?.close();
     _juceLib.JuceMixPlayer_deinit(_ptr);
   }
 }

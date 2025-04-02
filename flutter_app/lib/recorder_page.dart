@@ -40,7 +40,6 @@ class RecorderPageState extends State<RecorderPage> {
 
       switch (state) {
         case JuceMixRecState.IDLE:
-          // _prepareRecorder();
           break;
         case JuceMixRecState.READY:
           setState(() {
@@ -97,6 +96,15 @@ class RecorderPageState extends State<RecorderPage> {
 
     // Set up a timer to update recording duration
     _setupDurationTimer();
+  }
+
+  @override
+  void dispose() {
+    // if (isRecording) {
+    //   recorder.stopRecording();
+    // }
+    recorder.dispose();
+    super.dispose();
   }
 
   void _setupDurationTimer() {
@@ -233,15 +241,6 @@ class RecorderPageState extends State<RecorderPage> {
     final minutes = twoDigits(duration.inMinutes.remainder(60));
     final seconds = twoDigits(duration.inSeconds.remainder(60));
     return "$minutes:$seconds";
-  }
-
-  @override
-  void dispose() {
-    if (isRecording) {
-      recorder.stopRecording();
-    }
-    recorder.dispose();
-    super.dispose();
   }
 
   @override
