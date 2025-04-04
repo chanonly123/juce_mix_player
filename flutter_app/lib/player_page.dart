@@ -43,7 +43,6 @@ class PlayerPageState extends State<PlayerPage> {
           ));
         case JuceMixPlayerState.STOPPED:
           // TODO: Handle this case.
-          // TODO: Need to implement in stop inbuilt from juce_mix_player
           setState(() {
             isPlaying = false;
             // progress = 0.0;
@@ -73,10 +72,10 @@ class PlayerPageState extends State<PlayerPage> {
 
     player.setDeviceUpdateHandler((deviceList) {
       setState(() {
-        this.deviceList = MixerDeviceList(
-          devices: deviceList.devices.where((device) => device.isInput == false).toList(),
-        );
-        // this.deviceList = deviceList;
+        // this.deviceList = MixerDeviceList(
+        //   devices: deviceList.devices.where((device) => device.isInput == false).toList(),
+        // );
+        this.deviceList = deviceList;
       });
       log('devices: ${JsonEncoder.withIndent('  ').convert(deviceList.toJson())}');
     });

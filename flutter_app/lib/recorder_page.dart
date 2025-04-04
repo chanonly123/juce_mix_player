@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:juce_mix_player/juce_mix_player.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'audio_player_dialog.dart';
 
 class RecorderPage extends StatefulWidget {
   const RecorderPage({super.key});
@@ -18,6 +19,7 @@ class RecorderPageState extends State<RecorderPage> {
   final recorder = JuceMixPlayer(record: true, play: false);
   bool isRecording = false;
   bool isRecorderPrepared = false;
+  bool isRecorderPreparing = false;
   bool isMicPermissionGranted = false;
   String recordingPath = '';
   DateTime? recordingStartTime;
@@ -40,6 +42,9 @@ class RecorderPageState extends State<RecorderPage> {
 
       switch (state) {
         case JuceMixRecState.IDLE:
+          setState(() {
+            isRecorderPrepared = false;
+          });
           break;
         case JuceMixRecState.READY:
           setState(() {
@@ -59,6 +64,7 @@ class RecorderPageState extends State<RecorderPage> {
         case JuceMixRecState.STOPPED:
           setState(() {
             isRecording = false;
+            isRecorderPrepared = false;
             recordingStartTime = null;
             recordingDuration = Duration.zero;
           });
@@ -72,9 +78,10 @@ class RecorderPageState extends State<RecorderPage> {
     recorder.setDeviceUpdateHandler((deviceList) {
       setState(() {
         // Filter the deviceList to include only input devices and assign IDs
-        this.deviceList = MixerDeviceList(
-          devices: deviceList.devices.where((device) => device.isInput).toList(),
-        );
+        // this.deviceList = MixerDeviceList(
+        //   devices: deviceList.devices.where((device) => device.isInput).toList(),
+        // );
+        this.deviceList = deviceList;
       });
       log('devices: ${JsonEncoder.withIndent('  ').convert(this.deviceList.toJson())}');
     });
@@ -167,6 +174,9 @@ class RecorderPageState extends State<RecorderPage> {
     }
 
     try {
+      setState(() {
+        isRecorderPreparing = true;
+      });
       final directory = await getApplicationDocumentsDirectory();
       final recordingsDir = Directory('${directory.path}/recordings');
 
@@ -184,6 +194,7 @@ class RecorderPageState extends State<RecorderPage> {
       log('Recorder prepared successfully');
       setState(() {
         isRecorderPrepared = true;
+        isRecorderPreparing = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Recorder prepared successfully'),
@@ -191,6 +202,9 @@ class RecorderPageState extends State<RecorderPage> {
       ));
     } catch (e) {
       log('Error preparing recorder: $e');
+      setState(() {
+        isRecorderPreparing = false;
+      });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Failed to prepare recorder: $e'),
@@ -200,7 +214,7 @@ class RecorderPageState extends State<RecorderPage> {
     }
   }
 
-  void _toggleRecording() {
+  void _toggleRecording() async {
     if (!isMicPermissionGranted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Microphone permission is required to record audio'),
@@ -220,16 +234,29 @@ class RecorderPageState extends State<RecorderPage> {
         content: Text('Recorder is not ready yet, please wait'),
         backgroundColor: Colors.orange,
       ));
-      return;
+      // return;
+      if (!isRecorderPreparing) {
+        await _prepareRecorder();
+      } else {
+        return;
+      }
     }
 
     if (isRecording) {
       // Stop recording
       recorder.stopRecording();
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Recording saved to: $recordingPath'),
-        backgroundColor: Colors.blue,
-      ));
+      showDialog(
+        context: context,
+        builder: (context) => AudioPlayerDialog(
+          filePath: recordingPath,
+          onOkPressed: () {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('Recording processing completed'),
+              backgroundColor: Colors.green,
+            ));
+          },
+        ),
+      );
     } else {
       // Start recording
       recorder.startRecording(recordingPath);
@@ -262,7 +289,13 @@ class RecorderPageState extends State<RecorderPage> {
             Text(
               !isMicPermissionGranted
                   ? "Microphone permission required"
-                  : (isRecording ? "Recording..." : (isRecorderPrepared ? "Ready to record" : "Preparing recorder...")),
+                  : (isRecording
+                      ? "Recording..."
+                      : (isRecorderPrepared
+                          ? "Ready to record"
+                          : isRecorderPreparing
+                              ? "Preparing recorder..."
+                              : "Not Prepared")),
               style: TextStyle(fontSize: 16, color: !isMicPermissionGranted ? Colors.red : (isRecording ? Colors.red : Colors.grey)),
             ),
             SizedBox(height: 40),
