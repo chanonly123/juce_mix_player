@@ -381,13 +381,13 @@ class RecorderPageState extends State<RecorderPage> {
     Color getColorForLevel(double level) {
       // The level is a positive amplitude value (not in dB)
       // Adding debug log to see the actual range of values
-      log("Current amplitude level: $level, Max level: $maxReclevel");
+      // log("Current amplitude level: $level, Max level: $maxReclevel");
 
       // For amplitude values, a typical range might be 0.0 to 1.0
       // Adjust the normalization for the actual range we're seeing (around 0.007)
       // Using 0.02 as an upper bound for loud sounds based on the observed values
       double normalizedLevel = (level / 0.02).clamp(0.0, 1.0);
-
+      
       // Create a smoother gradient transition
       if (normalizedLevel < 0.3) {
         // Green range (quieter sounds)
@@ -436,20 +436,23 @@ class RecorderPageState extends State<RecorderPage> {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child: Container(
-                        height: 16,
+                        height: 4,
                         decoration: BoxDecoration(
                           color: Colors.grey.shade200,
                           borderRadius: BorderRadius.circular(8),
+                          
                         ),
                         child: Stack(
                           children: [
                             // Animated progress bar with gradient
                             AnimatedContainer(
                               duration: Duration(milliseconds: 200),
-                              width: (reclevel / 0.02).clamp(0.0, 1.0) * MediaQuery.of(context).size.width * 0.7,
+                              height: 4,
+                              width: (reclevel / 0.02).clamp(0.0, 1.0) * MediaQuery.of(context).size.width * 1,
                               decoration: BoxDecoration(
                                 color: getColorForLevel(reclevel),
                                 borderRadius: BorderRadius.circular(8),
+                                
                               ),
                             ),
                           ],
