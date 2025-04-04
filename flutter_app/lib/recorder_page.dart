@@ -26,6 +26,8 @@ class RecorderPageState extends State<RecorderPage> {
   Duration recordingDuration = Duration.zero;
   MixerDeviceList deviceList = MixerDeviceList(devices: []);
   JuceMixRecState state = JuceMixRecState.IDLE;
+  // in decibels
+  double reclevel = 0.0;
 
   @override
   void initState() {
@@ -98,6 +100,9 @@ class RecorderPageState extends State<RecorderPage> {
     });
 
     recorder.setRecLevelHandler((level) {
+      setState(() {
+        reclevel = level;
+      });
       log("Recorder level: $level");
     });
 

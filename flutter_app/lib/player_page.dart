@@ -149,7 +149,6 @@ class PlayerPageState extends State<PlayerPage> {
                       return;
                     }
                     player.togglePlayPause();
-                    // setState(() => isPlaying = !isPlaying);
                   },
                   child: Text(isPlaying ? 'Pause' : 'Play'),
                 ),

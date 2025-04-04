@@ -61,7 +61,6 @@ class AudioPlayerDialogState extends State<AudioPlayerDialog> {
     });
 
     player.setFile(widget.filePath);
-    // player.setProgressHandler((p) => setState(() => progress = p));
 
     player.setProgressHandler((progress) {
       if (!isSliderEditing) {
