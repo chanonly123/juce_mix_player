@@ -26,7 +26,7 @@ class RecorderPageState extends State<RecorderPage> {
   Duration recordingDuration = Duration.zero;
   MixerDeviceList deviceList = MixerDeviceList(devices: []);
   JuceMixRecState state = JuceMixRecState.IDLE;
-  // in decibels
+  // positive amplitude values (not in dB)
   double reclevel = 0.0;
   double maxReclevel = 0.0;
 
@@ -379,17 +379,25 @@ class RecorderPageState extends State<RecorderPage> {
   Widget _buildNoiseMeter() {
     // Define the color gradient based on the level
     Color getColorForLevel(double level) {
-      // Normalize level to 0-1 range for color interpolation
-      // Assuming typical audio levels range from -60 to 0 dB
-      double normalizedLevel = (level + 60) / 60;
-      normalizedLevel = normalizedLevel.clamp(0.0, 1.0);
+      // The level is a positive amplitude value (not in dB)
+      // Adding debug log to see the actual range of values
+      log("Current amplitude level: $level, Max level: $maxReclevel");
 
-      if (normalizedLevel < 0.5) {
-        // Green to Yellow gradient (0.0 - 0.5)
-        return Color.lerp(Colors.green, Colors.yellow, normalizedLevel * 2) ?? Colors.green;
+      // For amplitude values, a typical range might be 0.0 to 1.0
+      // Adjust the normalization for the actual range we're seeing (around 0.007)
+      // Using 0.02 as an upper bound for loud sounds based on the observed values
+      double normalizedLevel = (level / 0.02).clamp(0.0, 1.0);
+
+      // Create a smoother gradient transition
+      if (normalizedLevel < 0.3) {
+        // Green range (quieter sounds)
+        return Color.lerp(Colors.green, Colors.green.shade300, normalizedLevel / 0.3) ?? Colors.green;
+      } else if (normalizedLevel < 0.6) {
+        // Green to Yellow gradient (moderate sounds)
+        return Color.lerp(Colors.green.shade300, Colors.yellow, (normalizedLevel - 0.3) / 0.3) ?? Colors.green;
       } else {
-        // Yellow to Red gradient (0.5 - 1.0)
-        return Color.lerp(Colors.yellow, Colors.red, (normalizedLevel - 0.5) * 2) ?? Colors.yellow;
+        // Yellow to Red gradient (louder sounds)
+        return Color.lerp(Colors.yellow, Colors.red, (normalizedLevel - 0.6) / 0.4) ?? Colors.yellow;
       }
     }
 
@@ -413,11 +421,11 @@ class RecorderPageState extends State<RecorderPage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          "Max: ${maxReclevel.toStringAsFixed(4)} dB",
+                          "Max: ${maxReclevel.toStringAsFixed(4)}",
                           style: TextStyle(fontSize: 12),
                         ),
                         Text(
-                          "Min: ${reclevel.toStringAsFixed(4)} dB",
+                          "Current: ${reclevel.toStringAsFixed(4)}",
                           style: TextStyle(fontSize: 12),
                         ),
                       ],
@@ -438,7 +446,7 @@ class RecorderPageState extends State<RecorderPage> {
                             // Animated progress bar with gradient
                             AnimatedContainer(
                               duration: Duration(milliseconds: 200),
-                              width: ((reclevel + 60) / 60).clamp(0.0, 1.0) * MediaQuery.of(context).size.width * 0.7,
+                              width: (reclevel / 0.02).clamp(0.0, 1.0) * MediaQuery.of(context).size.width * 0.7,
                               decoration: BoxDecoration(
                                 color: getColorForLevel(reclevel),
                                 borderRadius: BorderRadius.circular(8),
