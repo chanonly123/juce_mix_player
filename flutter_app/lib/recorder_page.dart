@@ -28,6 +28,7 @@ class RecorderPageState extends State<RecorderPage> {
   JuceMixRecState state = JuceMixRecState.IDLE;
   // in decibels
   double reclevel = 0.0;
+  double maxReclevel = 0.0;
 
   @override
   void initState() {
@@ -102,6 +103,11 @@ class RecorderPageState extends State<RecorderPage> {
     recorder.setRecLevelHandler((level) {
       setState(() {
         reclevel = level;
+        if (isRecording) {
+          if (level > maxReclevel) {
+            maxReclevel = level;
+          }
+        }
       });
       log("Recorder level: $level");
     });
@@ -117,6 +123,13 @@ class RecorderPageState extends State<RecorderPage> {
     // }
     recorder.dispose();
     super.dispose();
+  }
+
+  // Reset min/max values when starting a new recording
+  void _resetMinMaxLevels() {
+    setState(() {
+      maxReclevel = 0.0;
+    });
   }
 
   void _setupDurationTimer() {
@@ -264,6 +277,7 @@ class RecorderPageState extends State<RecorderPage> {
       );
     } else {
       // Start recording
+      _resetMinMaxLevels();
       recorder.startRecording(recordingPath);
     }
   }
@@ -325,7 +339,9 @@ class RecorderPageState extends State<RecorderPage> {
               ),
             ),
             SizedBox(height: 40),
-            popupMenu()
+            popupMenu(),
+            SizedBox(height: 40),
+            _buildNoiseMeter()
           ],
         ),
       ),
@@ -358,5 +374,87 @@ class RecorderPageState extends State<RecorderPage> {
 
   String getName(MixerDevice device) {
     return "${device.name} ${device.isSelected ? " ✅" : ""}";
+  }
+
+  Widget _buildNoiseMeter() {
+    // Define the color gradient based on the level
+    Color getColorForLevel(double level) {
+      // Normalize level to 0-1 range for color interpolation
+      // Assuming typical audio levels range from -60 to 0 dB
+      double normalizedLevel = (level + 60) / 60;
+      normalizedLevel = normalizedLevel.clamp(0.0, 1.0);
+
+      if (normalizedLevel < 0.5) {
+        // Green to Yellow gradient (0.0 - 0.5)
+        return Color.lerp(Colors.green, Colors.yellow, normalizedLevel * 2) ?? Colors.green;
+      } else {
+        // Yellow to Red gradient (0.5 - 1.0)
+        return Color.lerp(Colors.yellow, Colors.red, (normalizedLevel - 0.5) * 2) ?? Colors.yellow;
+      }
+    }
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              // Left side icon
+              Icon(Icons.volume_up, color: getColorForLevel(reclevel)),
+              SizedBox(width: 12),
+
+              // Progress bar
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Min/Max labels
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Max: ${maxReclevel.toStringAsFixed(4)} dB",
+                          style: TextStyle(fontSize: 12),
+                        ),
+                        Text(
+                          "Min: ${reclevel.toStringAsFixed(4)} dB",
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 4),
+
+                    // Progress bar
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Stack(
+                          children: [
+                            // Animated progress bar with gradient
+                            AnimatedContainer(
+                              duration: Duration(milliseconds: 200),
+                              width: ((reclevel + 60) / 60).clamp(0.0, 1.0) * MediaQuery.of(context).size.width * 0.7,
+                              decoration: BoxDecoration(
+                                color: getColorForLevel(reclevel),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
