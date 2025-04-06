@@ -29,6 +29,17 @@ class JuceLibGen {
       _lookup<ffi.NativeFunction<ffi.Void Function()>>('juce_init');
   late final _juce_init = _juce_initPtr.asFunction<void Function()>();
 
+  void Java_com_rmsl_juce_Native_juceMessageManagerInit() {
+    return _Java_com_rmsl_juce_Native_juceMessageManagerInit();
+  }
+
+  late final _Java_com_rmsl_juce_Native_juceMessageManagerInitPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function()>>(
+          'Java_com_rmsl_juce_Native_juceMessageManagerInit');
+  late final _Java_com_rmsl_juce_Native_juceMessageManagerInit =
+      _Java_com_rmsl_juce_Native_juceMessageManagerInitPtr.asFunction<
+          void Function()>();
+
   void juce_enableLogs(
     int enable,
   ) {

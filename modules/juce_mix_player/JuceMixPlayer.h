@@ -12,6 +12,8 @@ class JuceMixPlayer : private juce::Timer, public juce::AudioIODeviceCallback, p
 {
 private:
 
+    inline static juce::AudioDeviceManager* deviceManager;
+
     bool _record;
     bool _play;
 
@@ -27,7 +29,6 @@ private:
 
     juce::AudioFormatManager formatManager;
     juce::LinearInterpolator interpolator[2];
-    juce::AudioDeviceManager* deviceManager;
 
     // MARK: Playing
     JuceMixPlayerState currentState = JuceMixPlayerState::IDLE;

@@ -25,7 +25,9 @@ JuceMixPlayer::JuceMixPlayer(int record, int play) {
 
     taskQueue.async([&, this, record, play]{
         juce::MessageManager::getInstanceWithoutCreating()->callAsync([&, this, record, play]{
-            deviceManager = new juce::AudioDeviceManager();
+            if (deviceManager == nullptr) {
+                deviceManager = new juce::AudioDeviceManager();
+            }
             deviceManager->addAudioCallback(this);
             deviceManager->addChangeListener(this);
             deviceManager->initialiseWithDefaultDevices(record == 1 ? 1 : 0, play == 1 ? 2 : 0);
@@ -34,6 +36,7 @@ JuceMixPlayer::JuceMixPlayer(int record, int play) {
             setup.sampleRate = settings.sampleRate;
             bool treatAsChosenDevice = true;
             deviceManager->setAudioDeviceSetup(setup, treatAsChosenDevice);
+
             inputLevelMeter = deviceManager->getInputLevelGetter();
 
             PRINT("JuceMixPlayer initialized");
@@ -42,21 +45,14 @@ JuceMixPlayer::JuceMixPlayer(int record, int play) {
 }
 
 void JuceMixPlayer::dispose() {
-    taskQueue.async([&, this]{
-        PRINT("JuceMixPlayer::dispose");
-
-        stop();
-        stopRecorder();
-
-        std::this_thread::sleep_for(std::chrono::seconds(2));
-        juce::MessageManager::getInstanceWithoutCreating()->callAsync([&] {
-            deviceManager->removeAudioCallback(this);
-            deviceManager->closeAudioDevice();
-            _stopProgressTimer();
-            delete deviceManager;
-            delete this;
-        });
-    });
+    PRINT("JuceMixPlayer::dispose");
+    taskQueue.stopQueue();
+    _stopProgressTimer();
+    deviceManager->removeAudioCallback(this);
+    deviceManager->removeChangeListener(this);
+    stop();
+    stopRecorder();
+    delete this;
 }
 
 JuceMixPlayer::~JuceMixPlayer() {
