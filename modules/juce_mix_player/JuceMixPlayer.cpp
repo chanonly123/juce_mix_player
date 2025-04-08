@@ -414,6 +414,7 @@ void JuceMixPlayer::startRecorder() {
             _onRecStateUpdateNotify(JuceMixPlayerRecState::ERROR);
             return;
         }
+        deviceManager->closeAudioDevice();
         deviceManager->initialise(1, 2, nullptr, true, {}, nullptr);
         _isRecording = true;
         _onRecStateUpdateNotify(JuceMixPlayerRecState::RECORDING);
@@ -426,7 +427,8 @@ void JuceMixPlayer::stopRecorder() {
     if (!_isRecording) return;
     juce::MessageManager::getInstanceWithoutCreating()->callAsync([&]{
         if (_isRecording) {
-            deviceManager->initialise(0, 2, nullptr, true, {}, nullptr);
+            deviceManager->closeAudioDevice();
+            deviceManager->initialiseWithDefaultDevices(0, 2);
             _isRecording = false;
             _stopProgressTimer();
             _finishRecording();
