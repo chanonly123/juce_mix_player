@@ -30,7 +30,8 @@ JuceMixPlayer::JuceMixPlayer(int record, int play) {
             }
             deviceManager->addAudioCallback(this);
             deviceManager->addChangeListener(this);
-            deviceManager->initialiseWithDefaultDevices(record == 1 ? 1 : 0, play == 1 ? 2 : 0);
+//            deviceManager->initialiseWithDefaultDevices(record == 1 ? 1 : 0, play == 1 ? 2 : 0);
+            deviceManager->initialise(0, 2, nullptr, true, {}, nullptr);
 
             juce::AudioDeviceManager::AudioDeviceSetup setup = deviceManager->getAudioDeviceSetup();
             setup.sampleRate = settings.sampleRate;
@@ -406,12 +407,14 @@ void JuceMixPlayer::prepareRecorder(const char *file) {
 
 void JuceMixPlayer::startRecorder() {
     if (!_record) return;
-    taskQueue.async([&]{
+    if (_isRecording) return;
+    juce::MessageManager::getInstanceWithoutCreating()->callAsync([&]{
         if (!_isRecorderPrepared) {
             if (onRecErrorCallback) onRecErrorCallback(this, "Failed to start recording, prepare not called");
             _onRecStateUpdateNotify(JuceMixPlayerRecState::ERROR);
             return;
         }
+        deviceManager->initialise(1, 2, nullptr, true, {}, nullptr);
         _isRecording = true;
         _onRecStateUpdateNotify(JuceMixPlayerRecState::RECORDING);
         _startProgressTimer();
@@ -420,8 +423,10 @@ void JuceMixPlayer::startRecorder() {
 
 void JuceMixPlayer::stopRecorder() {
     if (!_record) return;
-    taskQueue.async([&]{
+    if (!_isRecording) return;
+    juce::MessageManager::getInstanceWithoutCreating()->callAsync([&]{
         if (_isRecording) {
+            deviceManager->initialise(0, 2, nullptr, true, {}, nullptr);
             _isRecording = false;
             _stopProgressTimer();
             _finishRecording();
