@@ -54,21 +54,15 @@ class JuceLibGen {
   late final _juce_enableLogs =
       _juce_enableLogsPtr.asFunction<void Function(int)>();
 
-  ffi.Pointer<ffi.Void> JuceMixPlayer_init(
-    int record,
-    int play,
-  ) {
-    return _JuceMixPlayer_init(
-      record,
-      play,
-    );
+  ffi.Pointer<ffi.Void> JuceMixPlayer_init() {
+    return _JuceMixPlayer_init();
   }
 
-  late final _JuceMixPlayer_initPtr = _lookup<
-          ffi.NativeFunction<ffi.Pointer<ffi.Void> Function(ffi.Int, ffi.Int)>>(
-      'JuceMixPlayer_init');
-  late final _JuceMixPlayer_init = _JuceMixPlayer_initPtr.asFunction<
-      ffi.Pointer<ffi.Void> Function(int, int)>();
+  late final _JuceMixPlayer_initPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Void> Function()>>(
+          'JuceMixPlayer_init');
+  late final _JuceMixPlayer_init =
+      _JuceMixPlayer_initPtr.asFunction<ffi.Pointer<ffi.Void> Function()>();
 
   void JuceMixPlayer_deinit(
     ffi.Pointer<ffi.Void> ptr,

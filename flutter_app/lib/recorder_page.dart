@@ -16,7 +16,7 @@ class RecorderPage extends StatefulWidget {
 }
 
 class RecorderPageState extends State<RecorderPage> {
-  final recorder = JuceMixPlayer(record: true, play: false);
+  final recorder = JuceMixPlayer();
   bool isRecording = false;
   bool isRecorderPrepared = false;
   bool isRecorderPreparing = false;

@@ -18,8 +18,8 @@ void juce_enableLogs(int enable) {
 
 // MARK: JuceMixPlayer
 
-void *JuceMixPlayer_init(int record, int play) {
-    return new JuceMixPlayer(record, play);
+void *JuceMixPlayer_init() {
+    return new JuceMixPlayer();
 }
 
 void JuceMixPlayer_deinit(void *ptr) {

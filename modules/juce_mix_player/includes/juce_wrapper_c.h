@@ -10,7 +10,7 @@ EXPORT_C_FUNC void juce_init();
 EXPORT_C_FUNC void Java_com_rmsl_juce_Native_juceMessageManagerInit();
 EXPORT_C_FUNC void juce_enableLogs(int enable);
 
-EXPORT_C_FUNC void* JuceMixPlayer_init(int record, int play);
+EXPORT_C_FUNC void* JuceMixPlayer_init();
 EXPORT_C_FUNC void JuceMixPlayer_deinit(void* ptr);
 
 EXPORT_C_FUNC void JuceMixPlayer_play(void* ptr);

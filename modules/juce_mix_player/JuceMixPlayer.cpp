@@ -10,11 +10,8 @@ std::string JuceMixPlayerState_toString(JuceMixPlayerState state) {
     return j;
 }
 
-JuceMixPlayer::JuceMixPlayer(int record, int play) {
-    PRINT("JuceMixPlayer() record: " << record << ", play: " << play);
-
-    this->_record = record;
-    this->_play = play;
+JuceMixPlayer::JuceMixPlayer() {
+    PRINT("JuceMixPlayer()");
 
     taskQueue.name = "taskQueue";
     recWriteTaskQueue.name = "recWriteTaskQueue";
@@ -23,14 +20,13 @@ JuceMixPlayer::JuceMixPlayer(int record, int play) {
 
     juce::WindowedSincInterpolator interpolator;
 
-    taskQueue.async([&, this, record, play]{
-        juce::MessageManager::getInstanceWithoutCreating()->callAsync([&, this, record, play]{
+    taskQueue.async([&, this]{
+        juce::MessageManager::getInstanceWithoutCreating()->callAsync([&, this]{
             if (deviceManager == nullptr) {
                 deviceManager = new juce::AudioDeviceManager();
             }
             deviceManager->addAudioCallback(this);
             deviceManager->addChangeListener(this);
-//            deviceManager->initialiseWithDefaultDevices(record == 1 ? 1 : 0, play == 1 ? 2 : 0);
             deviceManager->initialise(0, 2, nullptr, true, {}, nullptr);
 
             juce::AudioDeviceManager::AudioDeviceSetup setup = deviceManager->getAudioDeviceSetup();
@@ -75,7 +71,6 @@ void JuceMixPlayer::_stopProgressTimer() {
 }
 
 void JuceMixPlayer::_playInternal() {
-    if (!_play) return;
     if (!_isPlaying) {
         _isPlaying = true;
         _onStateUpdateNotify(JuceMixPlayerState::PLAYING);
@@ -84,7 +79,6 @@ void JuceMixPlayer::_playInternal() {
 }
 
 void JuceMixPlayer::_pauseInternal(bool stop) {
-    if (!_play) return;
     if (_isPlaying) {
         _isPlaying = false;
         _stopProgressTimer();
@@ -116,7 +110,6 @@ void JuceMixPlayer::stop() {
 }
 
 void JuceMixPlayer::seek(float value) {
-    if (!_play) return;
     float _value = std::min(1.0f, std::max(value, 0.0f));
     taskQueue.async([&, _value]{
         bool wasPlaying = _isPlaying;
@@ -157,7 +150,6 @@ void JuceMixPlayer::togglePlayPause() {
 }
 
 void JuceMixPlayer::setJson(const char* json) {
-    if (!_play) return;
     std::string json_(json);
     taskQueue.async([&, json_]{
         try {
@@ -393,7 +385,6 @@ int JuceMixPlayer::isPlaying() {
 // MARK: Recorder
 
 void JuceMixPlayer::prepareRecorder(const char *file) {
-    if (!_record) return;
     std::string path(file);
     taskQueue.async([&, path]{
         if (_isRecording) {
@@ -406,7 +397,6 @@ void JuceMixPlayer::prepareRecorder(const char *file) {
 }
 
 void JuceMixPlayer::startRecorder() {
-    if (!_record) return;
     if (_isRecording) return;
     juce::MessageManager::getInstanceWithoutCreating()->callAsync([&]{
         if (!_isRecorderPrepared) {
@@ -414,8 +404,9 @@ void JuceMixPlayer::startRecorder() {
             _onRecStateUpdateNotify(JuceMixPlayerRecState::ERROR);
             return;
         }
+        deviceManagerSavedState = deviceManager->createStateXml();
         deviceManager->closeAudioDevice();
-        deviceManager->initialise(1, 2, nullptr, true, {}, nullptr);
+        deviceManager->initialise(1, 2, deviceManagerSavedState.get(), true, {}, nullptr);
         _isRecording = true;
         _onRecStateUpdateNotify(JuceMixPlayerRecState::RECORDING);
         _startProgressTimer();
@@ -423,12 +414,12 @@ void JuceMixPlayer::startRecorder() {
 }
 
 void JuceMixPlayer::stopRecorder() {
-    if (!_record) return;
     if (!_isRecording) return;
     juce::MessageManager::getInstanceWithoutCreating()->callAsync([&]{
         if (_isRecording) {
+            deviceManagerSavedState = deviceManager->createStateXml();
             deviceManager->closeAudioDevice();
-            deviceManager->initialiseWithDefaultDevices(0, 2);
+            deviceManager->initialise(0, 2, deviceManagerSavedState.get(), true, {}, nullptr);
             _isRecording = false;
             _stopProgressTimer();
             _finishRecording();
@@ -594,6 +585,7 @@ void JuceMixPlayer::setUpdatedDevices(const char* json) {
 void JuceMixPlayer::audioDeviceAboutToStart(juce::AudioIODevice *device) {
     this->deviceSampleRate = device->getCurrentSampleRate();
     this->samplesPerBlockExpected = device->getCurrentBufferSizeSamples();
+    PRINT("audioDeviceAboutToStart: deviceSampleRate: " << deviceSampleRate);
 }
 
 void JuceMixPlayer::audioDeviceIOCallbackWithContext(const float *const *inputChannelData,
@@ -671,10 +663,10 @@ void JuceMixPlayer::audioDeviceStopped() {
 // MARK: juce::Timer
 void JuceMixPlayer::timerCallback() {
     taskQueue.async([&]{
-        if (_isPlaying && _play && playBuffer.getNumSamples() > 0) {
+        if (_isPlaying && playBuffer.getNumSamples() > 0) {
             _onProgressNotify((float)playHeadIndex / (float)playBuffer.getNumSamples());
         }
-        if (_isRecording && _record) {
+        if (_isRecording) {
             if (onRecProgressCallback) {
                 onRecProgressCallback(this, (float)recordTimerIndex / (float)deviceSampleRate);
             }

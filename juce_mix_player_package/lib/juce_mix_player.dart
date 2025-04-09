@@ -40,10 +40,10 @@ class JuceMixPlayer {
     _juceLib.juce_enableLogs(enable ? 1 : 0);
   }
 
-  JuceMixPlayer({required bool record, required bool play}) {
+  JuceMixPlayer() {
     _juceLib = JuceLibGen(defaultTargetPlatform == TargetPlatform.iOS ? DynamicLibrary.process() : DynamicLibrary.open(libname));
 
-    _ptr = _juceLib.JuceMixPlayer_init(record ? 1 : 0, play ? 1 : 0);
+    _ptr = _juceLib.JuceMixPlayer_init();
   }
 
   void setProgressHandler(void Function(double progress) callback) {

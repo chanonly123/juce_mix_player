@@ -14,14 +14,12 @@ private:
 
     inline static juce::AudioDeviceManager* deviceManager;
 
-    bool _record;
-    bool _play;
-
     juce::CriticalSection lock;
     TaskQueue taskQueue;
     TaskQueue recWriteTaskQueue;
     int samplesPerBlockExpected = 0;
     float deviceSampleRate = 0;
+    std::unique_ptr<juce::XmlElement> deviceManagerSavedState;
 
     MixerDeviceList deviceList;
 
@@ -114,7 +112,7 @@ public:
 
     JuceMixPlayerCallbackString onDeviceUpdateCallback = nullptr;
 
-    JuceMixPlayer(int record, int play);
+    JuceMixPlayer();
 
     ~JuceMixPlayer();
 

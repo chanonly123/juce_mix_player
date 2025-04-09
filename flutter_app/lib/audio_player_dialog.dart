@@ -16,7 +16,7 @@ class AudioPlayerDialog extends StatefulWidget {
 }
 
 class AudioPlayerDialogState extends State<AudioPlayerDialog> {
-  final player = JuceMixPlayer(record: false, play: true);
+  final player = JuceMixPlayer();
   double progress = 0.0;
   bool isPlaying = false;
   bool isPlayerReady = false;
