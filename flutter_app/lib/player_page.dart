@@ -58,6 +58,7 @@ class PlayerPageState extends State<PlayerPage> {
     });
 
     player.setProgressHandler((progress) {
+      // TODO: add 1 sec debounce
       if (!isSliderEditing) {
         setState(() => this.progress = progress);
       }
@@ -75,9 +76,6 @@ class PlayerPageState extends State<PlayerPage> {
 
     player.setDeviceUpdateHandler((deviceList) {
       setState(() {
-        // this.deviceList = MixerDeviceList(
-        //   devices: deviceList.devices.where((device) => device.isInput == false).toList(),
-        // );
         this.deviceList = deviceList;
       });
       log('devices: ${JsonEncoder.withIndent('  ').convert(deviceList.toJson())}');
@@ -92,22 +90,11 @@ class PlayerPageState extends State<PlayerPage> {
     super.dispose();
   }
 
-  @override
-  void deactivate() {
-    print('PlayerPage:deactivate');
-    player.stop();
-    super.deactivate();
-  }
-
   // @override
-  // void didChangeDependencies() {
-  //   print('PlayerPage:didChangeDependencies');
-  //   super.didChangeDependencies();
-  //   if (ModalRoute.of(context)?.isCurrent ?? false) {
-  //     if (!isPlaying) player.play();
-  //   } else {
-  //     player.pause();
-  //   }
+  // void deactivate() {
+  //   print('PlayerPage:deactivate');
+  //   player.stop();
+  //   super.deactivate();
   // }
 
   @override
@@ -119,7 +106,7 @@ class PlayerPageState extends State<PlayerPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Progress: ${(progress * player.getDuration()).toStringAsFixed(2)} / ${player.getDuration().toStringAsFixed(2)}'),
+            Text('Progress: ${((progress * player.getDuration()) / 60 ).toStringAsFixed(2)} / ${(player.getDuration() / 60).toStringAsFixed(2)}'),
             Slider(
               value: progress,
               onChanged: (value) {

@@ -23,7 +23,7 @@ class RecorderPageState extends State<RecorderPage> {
   bool isMicPermissionGranted = false;
   String recordingPath = '';
   DateTime? recordingStartTime;
-  Duration recordingDuration = Duration.zero;
+  double recordingDuration = 0.0;
   MixerDeviceList deviceList = MixerDeviceList(devices: []);
   JuceMixRecState state = JuceMixRecState.IDLE;
   // positive amplitude values (not in dB)
@@ -69,7 +69,7 @@ class RecorderPageState extends State<RecorderPage> {
             isRecording = false;
             isRecorderPrepared = false;
             recordingStartTime = null;
-            recordingDuration = Duration.zero;
+            // recordingDuration = 0.0;
           });
           break;
         case JuceMixRecState.ERROR:
@@ -101,6 +101,7 @@ class RecorderPageState extends State<RecorderPage> {
     });
 
     recorder.setRecLevelHandler((level) {
+      // log("Recorder level: $level");
       setState(() {
         reclevel = level;
         if (isRecording) {
@@ -109,11 +110,15 @@ class RecorderPageState extends State<RecorderPage> {
           }
         }
       });
-      log("Recorder level: $level");
+    });
+
+    recorder.setRecProgressHandler((progress) {
+      log("Recorder progress: $progress");
+      setState(() => recordingDuration = progress);
     });
 
     // Set up a timer to update recording duration
-    _setupDurationTimer();
+    // _setupDurationTimer();
   }
 
   @override
@@ -121,6 +126,7 @@ class RecorderPageState extends State<RecorderPage> {
     // if (isRecording) {
     //   recorder.stopRecording();
     // }
+    recorder.stopRecording();
     recorder.dispose();
     super.dispose();
   }
@@ -129,20 +135,6 @@ class RecorderPageState extends State<RecorderPage> {
   void _resetMinMaxLevels() {
     setState(() {
       maxReclevel = 0.0;
-    });
-  }
-
-  void _setupDurationTimer() {
-    // Update recording duration every second
-    Future.delayed(Duration(seconds: 1), () {
-      if (mounted) {
-        if (isRecording && recordingStartTime != null) {
-          setState(() {
-            recordingDuration = DateTime.now().difference(recordingStartTime!);
-          });
-        }
-        _setupDurationTimer(); // Schedule next update
-      }
     });
   }
 
@@ -282,12 +274,6 @@ class RecorderPageState extends State<RecorderPage> {
     }
   }
 
-  String _formatDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    final minutes = twoDigits(duration.inMinutes.remainder(60));
-    final seconds = twoDigits(duration.inSeconds.remainder(60));
-    return "$minutes:$seconds";
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -299,7 +285,7 @@ class RecorderPageState extends State<RecorderPage> {
           children: [
             // Recording duration display
             Text(
-              _formatDuration(recordingDuration),
+              recordingDuration.toStringAsFixed(2),
               style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 20),
@@ -387,7 +373,7 @@ class RecorderPageState extends State<RecorderPage> {
       // Adjust the normalization for the actual range we're seeing (around 0.007)
       // Using 0.02 as an upper bound for loud sounds based on the observed values
       double normalizedLevel = (level / 0.02).clamp(0.0, 1.0);
-      
+
       // Create a smoother gradient transition
       if (normalizedLevel < 0.3) {
         // Green range (quieter sounds)
@@ -440,7 +426,6 @@ class RecorderPageState extends State<RecorderPage> {
                         decoration: BoxDecoration(
                           color: Colors.grey.shade200,
                           borderRadius: BorderRadius.circular(8),
-                          
                         ),
                         child: Stack(
                           children: [
@@ -452,7 +437,6 @@ class RecorderPageState extends State<RecorderPage> {
                               decoration: BoxDecoration(
                                 color: getColorForLevel(reclevel),
                                 borderRadius: BorderRadius.circular(8),
-                                
                               ),
                             ),
                           ],
