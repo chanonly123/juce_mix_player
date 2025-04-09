@@ -31,26 +31,29 @@ class PlayerPageState extends State<PlayerPage> {
       switch (state) {
         case JuceMixPlayerState.PAUSED:
           setState(() => isPlaying = false);
+          break;
         case JuceMixPlayerState.PLAYING:
           setState(() => isPlaying = true);
+          break;
         case JuceMixPlayerState.IDLE:
-        // TODO: Handle this case.
-        case JuceMixPlayerState.READY:
           // TODO: Handle this case.
+          break;
+        case JuceMixPlayerState.READY:
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text('Player is ready, You can can play now!'),
             backgroundColor: Colors.green,
           ));
+          break;
         case JuceMixPlayerState.STOPPED:
           // TODO: Handle this case.
-          setState(() {
-            isPlaying = false;
-            // progress = 0.0;
-          });
+          setState(() =>isPlaying = false);
+          break;
         case JuceMixPlayerState.COMPLETED:
-        // TODO: Handle this case.
+          // TODO: Handle this case.
+          break;
         case JuceMixPlayerState.ERROR:
-        // TODO: Handle this case.
+          // TODO: Handle this case.
+          break;
       }
     });
 
