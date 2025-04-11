@@ -714,7 +714,9 @@ void JuceMixPlayer::timerCallback() {
                 onRecProgressCallback(this, (float)recordTimerIndex / (float)deviceSampleRate);
             }
             if (onRecLevelCallback) {
-                onRecLevelCallback(this, (float)inputLevelMeter->getCurrentLevel());
+                const float level = inputLevelMeter->getCurrentLevel();
+                const float levelInDb = juce::Decibels::gainToDecibels(level);
+                onRecLevelCallback(this, levelInDb);          
             }
         }
     });

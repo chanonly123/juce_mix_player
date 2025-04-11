@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_app/asset_helper.dart';
+import 'package:percent_indicator/percent_indicator.dart';
 import 'package:juce_mix_player/juce_mix_player.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -27,9 +28,11 @@ class RecorderPageState extends State<RecorderPage> {
   double recordingDuration = 0.0;
   MixerDeviceList deviceList = MixerDeviceList(devices: []);
   JuceMixRecState state = JuceMixRecState.IDLE;
-  // positive amplitude values (not in dB)
-  double reclevel = 0.0;
-  double maxReclevel = 0.0;
+  // in Db range -60 to 0
+  double currReclevel = -200.0;
+  double maxReclevel = -200.0;
+  final double minAllowedLevelDb = -60.0;
+  final double maxAllowedLevelDb = -10.0;
 
   @override
   void initState() {
@@ -40,10 +43,10 @@ class RecorderPageState extends State<RecorderPage> {
     _checkMicrophonePermission();
 
     recorder.setRecLevelHandler((level) {
-      // log("Recorder level=========: $level");
+      // log("Recorder level: $level");
       setState(() {
-        reclevel = level;
         if (isRecording) {
+          currReclevel = level;
           if (level > maxReclevel) {
             maxReclevel = level;
           }
@@ -132,7 +135,7 @@ class RecorderPageState extends State<RecorderPage> {
   // Reset min/max values when starting a new recording
   void _resetMinMaxLevels() {
     setState(() {
-      maxReclevel = 0.0;
+      maxReclevel = -200.0;
     });
   }
 
@@ -326,11 +329,131 @@ class RecorderPageState extends State<RecorderPage> {
             SizedBox(height: 40),
             popupMenu(),
             SizedBox(height: 40),
-            _buildNoiseMeter()
+            // Recording level in Decibles display Component
+            Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Current: ${currReclevel.toStringAsFixed(1)} dB', style: TextStyle(fontSize: 12)),
+                      Text('Max: ${maxReclevel.toStringAsFixed(1)} dB', style: TextStyle(fontSize: 12)),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 8),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    children: [
+                      LinearPercentIndicator(
+                        lineHeight: 4,
+                        percent: ((currReclevel + minAllowedLevelDb.abs()) / 65).clamp(0.0, 1.0),
+                        progressColor: _getProgressColor(currReclevel),
+                        backgroundColor: Colors.grey.withOpacity(0.1),
+                        barRadius: Radius.circular(2),
+                        animation: true,
+                        animateFromLastPercent: true,
+                      ),
+                      SizedBox(height: 4),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('$minAllowedLevelDb dB', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                          Text('$maxAllowedLevelDb dB', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 20),
+            _buildLevelWarning(),
           ],
         ),
       ),
     );
+  }
+
+  Color _getProgressColor(double level) {
+    if (level < -30) return Colors.blue;
+    if (level < -15) return Colors.green;
+    if (level < 0) return Colors.orange;
+    return Colors.red;
+  }
+
+  Widget _buildLevelWarning() {
+    return AnimatedSwitcher(
+      duration: Duration(milliseconds: 300),
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: child,
+      ),
+      child: isRecording ? _buildActualWarning() : Container(height: 40), // Maintain consistent height
+    );
+  }
+
+  Widget _buildActualWarning() {
+    return SizedBox(
+      width: 300,
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        padding: isRecording ? EdgeInsets.all(8) : EdgeInsets.zero,
+        decoration: _getWarningDecoration(),
+        child: isRecording
+            ? Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Flexible(
+                    child: Text(
+                      _getWarningText(),
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: TextStyle(
+                        color: _getTextColor(),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            : null,
+      ),
+    );
+  }
+
+  BoxDecoration _getWarningDecoration() {
+    if (currReclevel > maxAllowedLevelDb) {
+      return BoxDecoration(
+        color: Colors.red.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(4),
+      );
+    } else if (currReclevel < minAllowedLevelDb) {
+      return BoxDecoration(
+        color: Colors.amber.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(4),
+      );
+    }
+    return BoxDecoration(
+      color: Colors.green.withOpacity(0.8),
+      borderRadius: BorderRadius.circular(4),
+    );
+  }
+
+  String _getWarningText() {
+    if (currReclevel > maxAllowedLevelDb) return 'Voice is too loud! Audio may be clipped.';
+    if (currReclevel < minAllowedLevelDb) return 'Voice is too low! Speak louder.';
+    return 'Voice is in a good level.';
+  }
+
+  Color _getTextColor() {
+    if (currReclevel > maxAllowedLevelDb) return Colors.white;
+    if (currReclevel < minAllowedLevelDb) return Colors.black;
+    return Colors.white;
   }
 
   PopupMenuButton popupMenu() {
@@ -355,83 +478,5 @@ class RecorderPageState extends State<RecorderPage> {
 
   String getName(MixerDevice device) {
     return "${device.name} ${device.isSelected ? " ✅" : ""}";
-  }
-
-  Widget _buildNoiseMeter() {
-    Color getColorForLevel(double level) {
-      double normalizedLevel = (level / 0.02).clamp(0.0, 1.0);
-      if (normalizedLevel < 0.3) {
-        return Color.lerp(Colors.green, Colors.green.shade300, normalizedLevel / 0.3) ?? Colors.green;
-      } else if (normalizedLevel < 0.6) {
-        return Color.lerp(Colors.green.shade300, Colors.yellow, (normalizedLevel - 0.3) / 0.3) ?? Colors.green;
-      } else {
-        return Color.lerp(Colors.yellow, Colors.red, (normalizedLevel - 0.6) / 0.4) ?? Colors.yellow;
-      }
-    }
-
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              // Left side icon
-              Icon(Icons.volume_up, color: getColorForLevel(reclevel)),
-              SizedBox(width: 12),
-
-              // Progress bar
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Min/Max labels
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "Max: ${maxReclevel.toStringAsFixed(4)}",
-                          style: TextStyle(fontSize: 12),
-                        ),
-                        Text(
-                          "Current: ${reclevel.toStringAsFixed(4)}",
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 4),
-
-                    // Progress bar
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade200,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Stack(
-                          children: [
-                            // Animated progress bar with gradient
-                            AnimatedContainer(
-                              duration: Duration(milliseconds: 200),
-                              height: 4,
-                              width: (reclevel / 0.02).clamp(0.0, 1.0) * MediaQuery.of(context).size.width * 1,
-                              decoration: BoxDecoration(
-                                color: getColorForLevel(reclevel),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              )
-            ],
-          ),
-        ],
-      ),
-    );
   }
 }
