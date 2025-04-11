@@ -111,6 +111,23 @@ class RecorderPageState extends State<RecorderPage> {
             // recordingDuration = 0.0;
             isLevelTooHigh = false;
           });
+          // Show audio player dialog when recording stops
+          if (mounted) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              showDialog(
+                context: context,
+                builder: (context) => AudioPlayerDialog(
+                  filePath: recordingPath,
+                  onOkPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text('Recording processing completed'),
+                      backgroundColor: Colors.green,
+                    ));
+                  },
+                ),
+              );
+            });
+          }
           break;
         case JuceMixRecState.ERROR:
           break;
@@ -279,18 +296,6 @@ class RecorderPageState extends State<RecorderPage> {
       // Stop recording
       HapticFeedback.heavyImpact();
       recorder.stopRecording();
-      showDialog(
-        context: context,
-        builder: (context) => AudioPlayerDialog(
-          filePath: recordingPath,
-          onOkPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text('Recording processing completed'),
-              backgroundColor: Colors.green,
-            ));
-          },
-        ),
-      );
     } else {
       // Start recording
       HapticFeedback.heavyImpact();

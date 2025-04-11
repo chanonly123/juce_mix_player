@@ -105,7 +105,6 @@ class AudioPlayerDialogState extends State<AudioPlayerDialog> {
             IconButton(
               icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
               onPressed: () {
-                isPlaying ? player.pause() : player.play();
                 player.togglePlayPause();
               },
               iconSize: 36,
