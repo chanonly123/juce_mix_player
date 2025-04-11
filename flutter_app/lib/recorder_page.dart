@@ -35,6 +35,7 @@ class RecorderPageState extends State<RecorderPage> {
   final double minAllowedLevelDb = -24.0;
   final double maxAllowedLevelDb = -3.5;
   bool isLevelTooHigh = false; // Track if level is too high to avoid repeated vibrations
+  bool isMetronomeEnabled = false;
 
   String _formatDuration(double seconds) {
     final totalSeconds = seconds.round();
@@ -248,6 +249,21 @@ class RecorderPageState extends State<RecorderPage> {
       recorder.prepareRecording(recordingPath);
       final bgmPath = await AssetHelper.extractAsset('assets/media/tu_hi_re_92_D_sharp_bgm.mp3');
       recorder.setFile(bgmPath);
+      if (isMetronomeEnabled) {
+        final pathH = await AssetHelper.extractAsset('assets/media/met_h.wav');
+        final pathL = await AssetHelper.extractAsset('assets/media/met_l.wav');
+        double metVol = 0.5;
+        final mixComposeModel = MixerComposeModel(
+          tracks: [
+            MixerTrack(id: "music", path: bgmPath),
+            MixerTrack(id: "met_1", path: pathH, offset: 0, repeat: true, repeatInterval: 2, volume: metVol),
+            MixerTrack(id: "met_2", path: pathL, offset: 0.5, repeat: true, repeatInterval: 2, volume: metVol),
+            MixerTrack(id: "met_3", path: pathL, offset: 1, repeat: true, repeatInterval: 2, volume: metVol),
+            MixerTrack(id: "met_4", path: pathL, offset: 1.5, repeat: true, repeatInterval: 2, volume: metVol)
+          ],
+        );
+        recorder.setMixData(mixComposeModel);
+      }
       log('Recorder prepared successfully');
       setState(() {
         isRecorderPrepared = true;
@@ -314,14 +330,33 @@ class RecorderPageState extends State<RecorderPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Audio Recorder")),
+      appBar: AppBar(
+        title: const Text("Audio Recorder"),
+        actions: [
+          Visibility(
+            visible: !isRecording,
+            child: IconButton(
+              icon: Icon(
+                Icons.music_note,
+                color: isMetronomeEnabled ? Colors.blue : Colors.grey,
+              ),
+              onPressed: () {
+                setState(() {
+                  isMetronomeEnabled = !isMetronomeEnabled;
+                });
+                _prepareRecorder();
+              },
+            ),
+          ),
+        ],
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Recording duration display
             Text(
-              _formatDuration(recordingDuration) ,
+              _formatDuration(recordingDuration),
               style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 20),

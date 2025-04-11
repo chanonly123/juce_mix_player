@@ -445,7 +445,7 @@ void JuceMixPlayer::startRecorder(int startPlaying) {
         _onRecStateUpdateNotify(JuceMixPlayerRecState::RECORDING);
         _isRecording = true;
         if (startPlaying == 1) {
-//            play();
+            play();
         }
     });
 }
