@@ -199,8 +199,8 @@ class RecorderPageState extends State<RecorderPage> {
 
       log('Preparing recorder with path: $recordingPath');
       recorder.prepareRecording(recordingPath);
-      final path = await AssetHelper.extractAsset('assets/media/music_big.mp3');
-      recorder.setFile(path);
+      final bgmPath = await AssetHelper.extractAsset('assets/media/tu_hi_re_92_D_sharp_bgm.mp3');
+      recorder.setFile(bgmPath);
       log('Recorder prepared successfully');
       setState(() {
         isRecorderPrepared = true;
