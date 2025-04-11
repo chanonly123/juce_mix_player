@@ -99,6 +99,8 @@ private:
     
     void notifyDeviceUpdates();
 
+    void setDefaultSampleRate();
+
 public:
 
     JuceMixPlayerCallbackFloat onProgressCallback = nullptr;

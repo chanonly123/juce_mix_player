@@ -57,10 +57,7 @@ JuceMixPlayer::JuceMixPlayer() {
         deviceManager->addChangeListener(this);
         deviceManager->initialise(0, 2, nullptr, true, {}, nullptr);
 
-        juce::AudioDeviceManager::AudioDeviceSetup setup = deviceManager->getAudioDeviceSetup();
-        setup.sampleRate = settings.sampleRate;
-        bool treatAsChosenDevice = true;
-        deviceManager->setAudioDeviceSetup(setup, treatAsChosenDevice);
+        setDefaultSampleRate();
 
         inputLevelMeter = deviceManager->getInputLevelGetter();
 
@@ -618,6 +615,13 @@ void JuceMixPlayer::setUpdatedDevices(const char* json) {
             notifyDeviceUpdates();
         }
     });
+}
+
+void JuceMixPlayer::setDefaultSampleRate() {
+    juce::AudioDeviceManager::AudioDeviceSetup setup = deviceManager->getAudioDeviceSetup();
+    setup.sampleRate = settings.sampleRate;
+    bool treatAsChosenDevice = true;
+    deviceManager->setAudioDeviceSetup(setup, treatAsChosenDevice);
 }
 
 // MARK: AudioIODeviceCallback
