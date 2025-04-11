@@ -69,14 +69,20 @@ JuceMixPlayer::JuceMixPlayer() {
 }
 
 void JuceMixPlayer::dispose() {
-    PRINT("JuceMixPlayer::dispose");
-    taskQueue.stopQueue();
-    _stopProgressTimer();
-    deviceManager->removeAudioCallback(this);
-    deviceManager->removeChangeListener(this);
-    stop();
-    stopRecorder();
-    delete this;
+    juce::MessageManager::getInstanceWithoutCreating()->callAsync([&]{
+        PRINT("JuceMixPlayer::dispose");
+        taskQueue.stopQueue();
+        _stopProgressTimer();
+        deviceManager->removeAudioCallback(this);
+        deviceManager->removeChangeListener(this);
+        stop();
+        stopRecorder();
+        std::thread thread([&]{
+            juce::Thread::sleep(5000);
+            delete this;
+        });
+        thread.detach();
+    });
 }
 
 JuceMixPlayer::~JuceMixPlayer() {
