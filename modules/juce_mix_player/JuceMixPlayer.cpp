@@ -27,6 +27,9 @@ void setAudioSessionRecord() {
                                                          withOptions: options
                                                                error: &error]);
 }
+#else
+void setAudioSessionPlay() {}
+void setAudioSessionRecord() {}
 #endif
 
 std::string JuceMixPlayerRecState_toString(JuceMixPlayerRecState state) {
