@@ -10,7 +10,9 @@
     website:        https://github.com/chanonly123/juce_mix_player
     license:        MIT
 
-    dependencies:
+    dependencies:       juce_audio_basics, juce_events
+    OSXFrameworks:      CoreAudio CoreMIDI AudioToolbox
+    iOSFrameworks:      CoreAudio CoreMIDI AudioToolbox AVFoundation
 
     END_JUCE_MODULE_DECLARATION
 */

@@ -1,5 +1,34 @@
 #include "JuceMixPlayer.h"
 
+#if JUCE_IOS || JUCE_MAC
+
+#import <AVFoundation/AVFoundation.h>
+#define JUCE_NSERROR_CHECK(X)     { NSError* error = nil; X; logNSError (error); }
+
+// MARK: set audio session for iOS
+static void logNSError (NSError* e) {
+    if (e != nil) {
+        PRINT("iOS Audio error: " << [e.localizedDescription UTF8String]);
+//        jassertfalse;
+    }
+}
+
+void setAudioSessionPlay() {
+    NSUInteger options = AVAudioSessionCategoryOptionMixWithOthers;
+    JUCE_NSERROR_CHECK ([[AVAudioSession sharedInstance] setCategory: AVAudioSessionCategoryPlayback
+                                                         withOptions: options
+                                                               error: &error]);
+}
+
+void setAudioSessionRecord() {
+    NSUInteger options = AVAudioSessionCategoryOptionDefaultToSpeaker
+    | AVAudioSessionCategoryOptionAllowBluetoothA2DP;
+    JUCE_NSERROR_CHECK ([[AVAudioSession sharedInstance] setCategory: AVAudioSessionCategoryPlayAndRecord
+                                                         withOptions: options
+                                                               error: &error]);
+}
+#endif
+
 std::string JuceMixPlayerRecState_toString(JuceMixPlayerRecState state) {
     nlohmann::json j = state;
     return j;
@@ -405,6 +434,7 @@ void JuceMixPlayer::startRecorder(int startPlaying) {
         deviceManagerSavedState = deviceManager->createStateXml();
         deviceManager->closeAudioDevice();
         deviceManager->initialise(1, 2, deviceManagerSavedState.get(), true, {}, nullptr);
+        setAudioSessionRecord();
         _isRecording = true;
         _onRecStateUpdateNotify(JuceMixPlayerRecState::RECORDING);
         _startProgressTimer();
@@ -422,6 +452,7 @@ void JuceMixPlayer::stopRecorder() {
             deviceManagerSavedState = deviceManager->createStateXml();
             deviceManager->closeAudioDevice();
             deviceManager->initialise(0, 2, deviceManagerSavedState.get(), true, {}, nullptr);
+            setAudioSessionPlay();
             _isRecording = false;
             _stopProgressTimer();
             _finishRecording();
