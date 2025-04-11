@@ -21,6 +21,13 @@ class PlayerPageState extends State<PlayerPage> {
 
   JuceMixPlayerState state = JuceMixPlayerState.IDLE;
 
+    String _formatDuration(double seconds) {
+    final totalSeconds = seconds.round();
+    final minutes = (totalSeconds ~/ 60).toString().padLeft(2, '0');
+    final remainingSeconds = (totalSeconds % 60).toString().padLeft(2, '0');
+    return '$minutes:$remainingSeconds';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -99,7 +106,7 @@ class PlayerPageState extends State<PlayerPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Progress: ${((progress * player.getDuration()) / 60 ).toStringAsFixed(2)} / ${(player.getDuration() / 60).toStringAsFixed(2)} mins'),
+          Text('${_formatDuration(progress * player.getDuration())} / ${_formatDuration(player.getDuration())}'),
             Slider(
               value: progress,
               onChanged: (value) {

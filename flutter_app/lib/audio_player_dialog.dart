@@ -23,6 +23,13 @@ class AudioPlayerDialogState extends State<AudioPlayerDialog> {
   bool isSliderEditing = false;
   JuceMixPlayerState playerState = JuceMixPlayerState.IDLE;
 
+  String _formatDuration(double seconds) {
+    final totalSeconds = seconds.round();
+    final minutes = (totalSeconds ~/ 60).toString().padLeft(2, '0');
+    final remainingSeconds = (totalSeconds % 60).toString().padLeft(2, '0');
+    return '$minutes:$remainingSeconds';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -84,7 +91,7 @@ class AudioPlayerDialogState extends State<AudioPlayerDialog> {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('Progress: ${((progress * player.getDuration()) / 60).toStringAsFixed(2)} / ${(player.getDuration() / 60).toStringAsFixed(2)} mins'),
+          Text('${_formatDuration(progress * player.getDuration())} / ${_formatDuration(player.getDuration())}'),
           if (!isPlayerReady) const CircularProgressIndicator(),
           if (isPlayerReady)
             Slider(
