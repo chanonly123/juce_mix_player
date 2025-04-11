@@ -71,13 +71,13 @@ JuceMixPlayer::JuceMixPlayer() {
 void JuceMixPlayer::dispose() {
     juce::MessageManager::getInstanceWithoutCreating()->callAsync([&]{
         PRINT("JuceMixPlayer::dispose");
-        taskQueue.stopQueue();
         _stopProgressTimer();
         deviceManager->removeAudioCallback(this);
         deviceManager->removeChangeListener(this);
         stop();
         stopRecorder();
         std::thread thread([&]{
+            taskQueue.stopQueue();
             juce::Thread::sleep(5000);
             delete this;
         });
@@ -441,11 +441,11 @@ void JuceMixPlayer::startRecorder(int startPlaying) {
         deviceManager->closeAudioDevice();
         deviceManager->initialise(1, 2, deviceManagerSavedState.get(), true, {}, nullptr);
         setAudioSessionRecord();
-        _isRecording = true;
-        _onRecStateUpdateNotify(JuceMixPlayerRecState::RECORDING);
         _startProgressTimer();
+        _onRecStateUpdateNotify(JuceMixPlayerRecState::RECORDING);
+        _isRecording = true;
         if (startPlaying == 1) {
-            play();
+//            play();
         }
     });
 }
@@ -455,13 +455,13 @@ void JuceMixPlayer::stopRecorder() {
     juce::MessageManager::getInstanceWithoutCreating()->callAsync([&]{
         if (_isRecording) {
             stop();
+            _stopProgressTimer();
+            _isRecording = false;
+            _finishRecording();
             deviceManagerSavedState = deviceManager->createStateXml();
             deviceManager->closeAudioDevice();
             deviceManager->initialise(0, 2, deviceManagerSavedState.get(), true, {}, nullptr);
             setAudioSessionPlay();
-            _isRecording = false;
-            _stopProgressTimer();
-            _finishRecording();
         }
     });
 }
@@ -518,6 +518,7 @@ void JuceMixPlayer::flushRecordBufferToFile(juce::AudioBuffer<float>& buffer, fl
     if (sampleCount == 0) {
         return;
     }
+    PRINT("flushRecordBufferToFile: " << sampleCount / 48000);
     bool success = false;
     success = recWriter->writeFromAudioSampleBuffer(buffer, 0, sampleCount);
     success = recWriter->flush();
@@ -631,7 +632,11 @@ void JuceMixPlayer::setDefaultSampleRate() {
 void JuceMixPlayer::audioDeviceAboutToStart(juce::AudioIODevice *device) {
     this->deviceSampleRate = device->getCurrentSampleRate();
     this->samplesPerBlockExpected = device->getCurrentBufferSizeSamples();
-    PRINT("audioDeviceAboutToStart: deviceSampleRate: " << deviceSampleRate);
+    PRINT("audioDeviceAboutToStart" <<
+          ", deviceSampleRate: " << deviceSampleRate <<
+          ", getInputLatencyInSamples: " << device->getInputLatencyInSamples() <<
+          ", getOutputLatencyInSamples: " << device->getOutputLatencyInSamples()
+          );
 }
 
 void JuceMixPlayer::audioDeviceIOCallbackWithContext(const float *const *inputChannelData,

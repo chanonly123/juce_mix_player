@@ -43,5 +43,6 @@ void TaskQueue::async(TaskQueueItem task) {
 }
 
 void TaskQueue::stopQueue() {
+    taskList.clear();
     stop = true;
 }
