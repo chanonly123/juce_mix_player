@@ -32,8 +32,8 @@ class RecorderPageState extends State<RecorderPage> {
   // in Db range -60 to 0
   double currReclevel = -200.0;
   double maxReclevel = -200.0;
-  final double minAllowedLevelDb = -60.0;
-  final double maxAllowedLevelDb = -20.0;
+  final double minAllowedLevelDb = -24.0;
+  final double maxAllowedLevelDb = -3.5;
   bool isLevelTooHigh = false; // Track if level is too high to avoid repeated vibrations
 
   String _formatDuration(double seconds) {
