@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app/player_page.dart';
 import 'package:flutter_app/recorder_page.dart';
 // import 'package:flutter_app/recorder_page.dart';
+import 'package:flutter/services.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,6 +21,7 @@ class HomePageState extends State<HomePage> {
       ];
 
   void _onItemTapped(int index) {
+    HapticFeedback.heavyImpact();
     setState(() {
       _selectedIndex = index;
     });

@@ -9,6 +9,7 @@ import 'package:juce_mix_player/juce_mix_player.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'audio_player_dialog.dart';
+import 'package:flutter/services.dart';
 
 class RecorderPage extends StatefulWidget {
   const RecorderPage({super.key});
@@ -32,7 +33,8 @@ class RecorderPageState extends State<RecorderPage> {
   double currReclevel = -200.0;
   double maxReclevel = -200.0;
   final double minAllowedLevelDb = -60.0;
-  final double maxAllowedLevelDb = -10.0;
+  final double maxAllowedLevelDb = -20.0;
+  bool isLevelTooHigh = false; // Track if level is too high to avoid repeated vibrations
 
   @override
   void initState() {
@@ -49,6 +51,15 @@ class RecorderPageState extends State<RecorderPage> {
           currReclevel = level;
           if (level > maxReclevel) {
             maxReclevel = level;
+          }
+
+          // Check if level exceeds maximum allowed and trigger haptic feedback
+          if (level > maxAllowedLevelDb && !isLevelTooHigh) {
+            log("HapticFeedback");
+            isLevelTooHigh = true;
+            HapticFeedback.heavyImpact();
+          } else if (level <= maxAllowedLevelDb) {
+            isLevelTooHigh = false;
           }
         }
       });
@@ -68,6 +79,13 @@ class RecorderPageState extends State<RecorderPage> {
         case JuceMixRecState.IDLE:
           setState(() {
             isRecorderPrepared = false;
+            isRecorderPreparing = false;
+            isRecording = false;
+            recordingStartTime = null;
+            recordingDuration = 0.0;
+            currReclevel = -200.0;
+            maxReclevel = -200.0;
+            isLevelTooHigh = false;
           });
           break;
         case JuceMixRecState.READY:
@@ -91,6 +109,7 @@ class RecorderPageState extends State<RecorderPage> {
             isRecorderPrepared = false;
             recordingStartTime = null;
             // recordingDuration = 0.0;
+            isLevelTooHigh = false;
           });
           break;
         case JuceMixRecState.ERROR:
@@ -136,6 +155,7 @@ class RecorderPageState extends State<RecorderPage> {
   void _resetMinMaxLevels() {
     setState(() {
       maxReclevel = -200.0;
+      isLevelTooHigh = false; // Reset the level tracking flag
     });
   }
 
@@ -257,6 +277,7 @@ class RecorderPageState extends State<RecorderPage> {
 
     if (isRecording) {
       // Stop recording
+      HapticFeedback.heavyImpact();
       recorder.stopRecording();
       showDialog(
         context: context,
@@ -272,6 +293,7 @@ class RecorderPageState extends State<RecorderPage> {
       );
     } else {
       // Start recording
+      HapticFeedback.heavyImpact();
       _resetMinMaxLevels();
       recorder.startRecording(true);
     }
@@ -317,7 +339,7 @@ class RecorderPageState extends State<RecorderPage> {
                 height: 80,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: isRecording ? Colors.red.shade800 : Colors.red,
+                  color: isRecording ? Colors.red.shade900 : Colors.red,
                 ),
                 child: Icon(
                   isRecording ? Icons.stop : Icons.mic,
@@ -445,8 +467,12 @@ class RecorderPageState extends State<RecorderPage> {
   }
 
   String _getWarningText() {
-    if (currReclevel > maxAllowedLevelDb) return 'Voice is too loud! Audio may be clipped.';
-    if (currReclevel < minAllowedLevelDb) return 'Voice is too low! Speak louder.';
+    if (currReclevel > maxAllowedLevelDb) {
+      return 'Voice is too loud! Audio may be clipped.';
+    }
+    if (currReclevel < minAllowedLevelDb) {
+      return 'Voice is too low! Speak louder.';
+    }
     return 'Voice is in a good level.';
   }
 
