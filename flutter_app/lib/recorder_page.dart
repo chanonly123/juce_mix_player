@@ -36,6 +36,13 @@ class RecorderPageState extends State<RecorderPage> {
   final double maxAllowedLevelDb = -20.0;
   bool isLevelTooHigh = false; // Track if level is too high to avoid repeated vibrations
 
+  String _formatDuration(double seconds) {
+    final totalSeconds = seconds.round();
+    final minutes = (totalSeconds ~/ 60).toString().padLeft(2, '0');
+    final remainingSeconds = (totalSeconds % 60).toString().padLeft(2, '0');
+    return '$minutes:$remainingSeconds';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -314,7 +321,7 @@ class RecorderPageState extends State<RecorderPage> {
           children: [
             // Recording duration display
             Text(
-              recordingDuration.toStringAsFixed(2),
+              _formatDuration(recordingDuration) ,
               style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 20),
