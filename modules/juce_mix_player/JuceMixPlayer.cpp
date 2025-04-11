@@ -537,84 +537,84 @@ void JuceMixPlayer::_onRecStateUpdateNotify(JuceMixPlayerRecState state) {
 
 // MARK: Device management
 void JuceMixPlayer::notifyDeviceUpdates() {
-    MixerDeviceList list;
-    juce::AudioIODeviceType* audioDeviceType = deviceManager->getCurrentDeviceTypeObject();
-    juce::AudioDeviceManager::AudioDeviceSetup setup = deviceManager->getAudioDeviceSetup();
-    if (audioDeviceType) {
-        juce::StringArray inputDevices = audioDeviceType->getDeviceNames(true);
-        juce::StringArray outputDevices = audioDeviceType->getDeviceNames(false);
-        for (juce::String& name : inputDevices) {
-            MixerDevice dev;
-            dev.name = name.toStdString();
-            dev.isInput = true;
-            dev.isSelected = setup.inputDeviceName == name;
-            list.devices.push_back(dev);
-        }
-        for (juce::String& name : outputDevices) {
-            MixerDevice dev;
-            dev.name = name.toStdString();
-            dev.isInput = false;
-            dev.isSelected = setup.outputDeviceName == name;
-            list.devices.push_back(dev);
-        }
-    }
-    taskQueue.async([&, list]{
-        if (!(deviceList == list)) {
-            deviceList = list;
-            nlohmann::json j = list;
-            if (onDeviceUpdateCallback)
-                onDeviceUpdateCallback(this, returnCopyCharDelete(j.dump(4)));
-        }
-    });
+//    MixerDeviceList list;
+//    juce::AudioIODeviceType* audioDeviceType = deviceManager->getCurrentDeviceTypeObject();
+//    juce::AudioDeviceManager::AudioDeviceSetup setup = deviceManager->getAudioDeviceSetup();
+//    if (audioDeviceType) {
+//        juce::StringArray inputDevices = audioDeviceType->getDeviceNames(true);
+//        juce::StringArray outputDevices = audioDeviceType->getDeviceNames(false);
+//        for (juce::String& name : inputDevices) {
+//            MixerDevice dev;
+//            dev.name = name.toStdString();
+//            dev.isInput = true;
+//            dev.isSelected = setup.inputDeviceName == name;
+//            list.devices.push_back(dev);
+//        }
+//        for (juce::String& name : outputDevices) {
+//            MixerDevice dev;
+//            dev.name = name.toStdString();
+//            dev.isInput = false;
+//            dev.isSelected = setup.outputDeviceName == name;
+//            list.devices.push_back(dev);
+//        }
+//    }
+//    taskQueue.async([&, list]{
+//        if (!(deviceList == list)) {
+//            deviceList = list;
+//            nlohmann::json j = list;
+//            if (onDeviceUpdateCallback)
+//                onDeviceUpdateCallback(this, returnCopyCharDelete(j.dump(4)));
+//        }
+//    });
 }
 
 void JuceMixPlayer::setUpdatedDevices(const char* json) {
-    std::string json_(json);
-    taskQueue.async([&, json_]{
-        try {
-            MixerDeviceList list = MixerDeviceList::decode(json_);
-            if (!(deviceList == list)) {
-                deviceList = list;
-
-                MixerDevice inp;
-                MixerDevice out;
-                for (auto& dev: list.devices) {
-                    if (dev.isSelected && dev.isInput && inp.name == "") {
-                        inp = dev;
-                    }
-                    if (dev.isSelected && !dev.isInput && out.name == "") {
-                        out = dev;
-                    }
-                }
-
-                bool hasChanges = inp.name != "" || out.name != "";
-
-                if (!hasChanges) {
-                    PRINT("setUpdatedDevices: No selected device found");
-                    return;
-                }
-
-                PRINT("setUpdatedDevices: selected inp: " << inp.name << ", out: " << out.name);
-
-                juce::MessageManager::getInstanceWithoutCreating()->callAsync([&, inp, out]{
-                    juce::AudioDeviceManager::AudioDeviceSetup setup = deviceManager->getAudioDeviceSetup();
-                    if (inp.name != "") setup.inputDeviceName = juce::String(inp.name);
-                    if (out.name != "") setup.outputDeviceName = juce::String(out.name);
-                    bool treatAsChosenDevice = true;
-                    juce::String err = deviceManager->setAudioDeviceSetup(setup, treatAsChosenDevice);
-                    if (err.isNotEmpty()) {
-                        _onErrorNotify(err.toStdString());
-                    }
-                    notifyDeviceUpdates();
-                });
-            } else {
-                PRINT("setUpdatedDevices: Same device data! ignoring");
-            }
-        } catch (const std::exception& e) {
-            _onErrorNotify(std::string(e.what()));
-            notifyDeviceUpdates();
-        }
-    });
+//    std::string json_(json);
+//    taskQueue.async([&, json_]{
+//        try {
+//            MixerDeviceList list = MixerDeviceList::decode(json_);
+//            if (!(deviceList == list)) {
+//                deviceList = list;
+//
+//                MixerDevice inp;
+//                MixerDevice out;
+//                for (auto& dev: list.devices) {
+//                    if (dev.isSelected && dev.isInput && inp.name == "") {
+//                        inp = dev;
+//                    }
+//                    if (dev.isSelected && !dev.isInput && out.name == "") {
+//                        out = dev;
+//                    }
+//                }
+//
+//                bool hasChanges = inp.name != "" || out.name != "";
+//
+//                if (!hasChanges) {
+//                    PRINT("setUpdatedDevices: No selected device found");
+//                    return;
+//                }
+//
+//                PRINT("setUpdatedDevices: selected inp: " << inp.name << ", out: " << out.name);
+//
+//                juce::MessageManager::getInstanceWithoutCreating()->callAsync([&, inp, out]{
+//                    juce::AudioDeviceManager::AudioDeviceSetup setup = deviceManager->getAudioDeviceSetup();
+//                    if (inp.name != "") setup.inputDeviceName = juce::String(inp.name);
+//                    if (out.name != "") setup.outputDeviceName = juce::String(out.name);
+//                    bool treatAsChosenDevice = true;
+//                    juce::String err = deviceManager->setAudioDeviceSetup(setup, treatAsChosenDevice);
+//                    if (err.isNotEmpty()) {
+//                        _onErrorNotify(err.toStdString());
+//                    }
+//                    notifyDeviceUpdates();
+//                });
+//            } else {
+//                PRINT("setUpdatedDevices: Same device data! ignoring");
+//            }
+//        } catch (const std::exception& e) {
+//            _onErrorNotify(std::string(e.what()));
+//            notifyDeviceUpdates();
+//        }
+//    });
 }
 
 void JuceMixPlayer::setDefaultSampleRate() {
@@ -722,5 +722,5 @@ void JuceMixPlayer::timerCallback() {
 
 void JuceMixPlayer::changeListenerCallback(juce::ChangeBroadcaster* source) {
     PRINT("changeListenerCallback");
-    notifyDeviceUpdates();
+//    notifyDeviceUpdates();
 }
