@@ -20,24 +20,22 @@ JuceMixPlayer::JuceMixPlayer() {
 
     juce::WindowedSincInterpolator interpolator;
 
-    taskQueue.async([&, this]{
-        juce::MessageManager::getInstanceWithoutCreating()->callAsync([&, this]{
-            if (deviceManager == nullptr) {
-                deviceManager = new juce::AudioDeviceManager();
-            }
-            deviceManager->addAudioCallback(this);
-            deviceManager->addChangeListener(this);
-            deviceManager->initialise(0, 2, nullptr, true, {}, nullptr);
+    juce::MessageManager::getInstanceWithoutCreating()->callAsync([&, this]{
+        if (deviceManager == nullptr) {
+            deviceManager = new juce::AudioDeviceManager();
+        }
+        deviceManager->addAudioCallback(this);
+        deviceManager->addChangeListener(this);
+        deviceManager->initialise(0, 2, nullptr, true, {}, nullptr);
 
-            juce::AudioDeviceManager::AudioDeviceSetup setup = deviceManager->getAudioDeviceSetup();
-            setup.sampleRate = settings.sampleRate;
-            bool treatAsChosenDevice = true;
-            deviceManager->setAudioDeviceSetup(setup, treatAsChosenDevice);
+        juce::AudioDeviceManager::AudioDeviceSetup setup = deviceManager->getAudioDeviceSetup();
+        setup.sampleRate = settings.sampleRate;
+        bool treatAsChosenDevice = true;
+        deviceManager->setAudioDeviceSetup(setup, treatAsChosenDevice);
 
-            inputLevelMeter = deviceManager->getInputLevelGetter();
+        inputLevelMeter = deviceManager->getInputLevelGetter();
 
-            PRINT("JuceMixPlayer initialized");
-        });
+        PRINT("JuceMixPlayer initialized");
     });
 }
 
@@ -396,7 +394,7 @@ void JuceMixPlayer::prepareRecorder(const char *file) {
     });
 }
 
-void JuceMixPlayer::startRecorder() {
+void JuceMixPlayer::startRecorder(int startPlaying) {
     if (_isRecording) return;
     juce::MessageManager::getInstanceWithoutCreating()->callAsync([&]{
         if (!_isRecorderPrepared) {
@@ -410,6 +408,9 @@ void JuceMixPlayer::startRecorder() {
         _isRecording = true;
         _onRecStateUpdateNotify(JuceMixPlayerRecState::RECORDING);
         _startProgressTimer();
+        if (startPlaying == 1) {
+            play();
+        }
     });
 }
 
@@ -417,6 +418,7 @@ void JuceMixPlayer::stopRecorder() {
     if (!_isRecording) return;
     juce::MessageManager::getInstanceWithoutCreating()->callAsync([&]{
         if (_isRecording) {
+            stop();
             deviceManagerSavedState = deviceManager->createStateXml();
             deviceManager->closeAudioDevice();
             deviceManager->initialise(0, 2, deviceManagerSavedState.get(), true, {}, nullptr);

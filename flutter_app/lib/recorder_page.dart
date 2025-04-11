@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_app/asset_helper.dart';
 import 'package:juce_mix_player/juce_mix_player.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -198,6 +199,8 @@ class RecorderPageState extends State<RecorderPage> {
 
       log('Preparing recorder with path: $recordingPath');
       recorder.prepareRecording(recordingPath);
+      final path = await AssetHelper.extractAsset('assets/media/music_big.mp3');
+      recorder.setFile(path);
       log('Recorder prepared successfully');
       setState(() {
         isRecorderPrepared = true;
@@ -267,7 +270,7 @@ class RecorderPageState extends State<RecorderPage> {
     } else {
       // Start recording
       _resetMinMaxLevels();
-      recorder.startRecording(recordingPath);
+      recorder.startRecording(true);
     }
   }
 

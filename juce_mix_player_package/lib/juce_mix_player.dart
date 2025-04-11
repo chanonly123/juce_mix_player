@@ -143,8 +143,8 @@ class JuceMixPlayer {
     _juceLib.JuceMixPlayer_prepareRecorder(_ptr, path.toNativeUtf8());
   }
 
-  void startRecording(String path) {
-    _juceLib.JuceMixPlayer_startRecorder(_ptr);
+  void startRecording(bool play) {
+    _juceLib.JuceMixPlayer_startRecorder(_ptr, play ? 1 : 0);
   }
 
   void stopRecording() {

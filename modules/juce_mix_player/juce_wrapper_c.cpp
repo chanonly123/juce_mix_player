@@ -74,8 +74,8 @@ void JuceMixPlayer_prepareRecorder(void* ptr, const char* file) {
     static_cast<JuceMixPlayer *>(ptr)->prepareRecorder(file);
 }
 
-void JuceMixPlayer_startRecorder(void* ptr) {
-    static_cast<JuceMixPlayer *>(ptr)->startRecorder();
+void JuceMixPlayer_startRecorder(void* ptr, int startPlaying) {
+    static_cast<JuceMixPlayer *>(ptr)->startRecorder(startPlaying);
 }
 
 void JuceMixPlayer_stopRecorder(void* ptr) {
