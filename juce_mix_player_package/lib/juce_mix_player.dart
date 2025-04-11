@@ -23,11 +23,16 @@ class JuceMixPlayer {
   static late JuceLibGen _juceLib;
   late Pointer<Void> _ptr;
 
-  NativeCallable<FloatCallback>? _levelCallbackNativeCallable;
   NativeCallable<FloatCallback>? _progressCallbackNativeCallable;
   NativeCallable<StringUpdateCallback>? _stateUpdateNativeCallable;
   NativeCallable<StringUpdateCallback>? _errorUpdateNativeCallable;
   NativeCallable<StringUpdateCallback>? _deviceUpdateNativeCallable;
+
+  //Rec
+  NativeCallable<FloatCallback>? _recInputlevelCallbackNativeCallable;
+  NativeCallable<FloatCallback>? _recRrogressCallbackNativeCallable;
+  NativeCallable<StringUpdateCallback>? _recStateUpdateNativeCallable;
+  NativeCallable<StringUpdateCallback>? _recErrorUpdateNativeCallable;
 
   static var libname = 'libjuce_jni.so';
 
@@ -150,36 +155,36 @@ class JuceMixPlayer {
     NativeStringCallbackDart closure = (ptr, cstring) {
       callback(cstring.toDartString());
     };
-    _errorUpdateNativeCallable?.close();
-    _errorUpdateNativeCallable = NativeCallable<StringUpdateCallback>.listener(closure);
-    _juceLib.JuceMixPlayer_onRecError(_ptr, _errorUpdateNativeCallable!.nativeFunction);
+    _recErrorUpdateNativeCallable?.close();
+    _recErrorUpdateNativeCallable = NativeCallable<StringUpdateCallback>.listener(closure);
+    _juceLib.JuceMixPlayer_onRecError(_ptr, _recErrorUpdateNativeCallable!.nativeFunction);
   }
 
   void setRecStateUpdateHandler(void Function(JuceMixRecState state) callback) {
     NativeStringCallbackDart closure = (ptr, cstring) {
       callback(JuceMixRecState.values.byName(cstring.toDartString()));
     };
-    _stateUpdateNativeCallable?.close();
-    _stateUpdateNativeCallable = NativeCallable<StringUpdateCallback>.listener(closure);
-    _juceLib.JuceMixPlayer_onRecStateUpdate(_ptr, _stateUpdateNativeCallable!.nativeFunction);
+    _recStateUpdateNativeCallable?.close();
+    _recStateUpdateNativeCallable = NativeCallable<StringUpdateCallback>.listener(closure);
+    _juceLib.JuceMixPlayer_onRecStateUpdate(_ptr, _recStateUpdateNativeCallable!.nativeFunction);
   }
 
   void setRecProgressHandler(void Function(double level) callback) {
     FloatCallbackDart closure = (ptr, progress) {
       callback(progress);
     };
-    _levelCallbackNativeCallable?.close();
-    _levelCallbackNativeCallable = NativeCallable<FloatCallback>.listener(closure);
-    _juceLib.JuceMixPlayer_onRecProgress(_ptr, _levelCallbackNativeCallable!.nativeFunction);
+    _recRrogressCallbackNativeCallable?.close();
+    _recRrogressCallbackNativeCallable = NativeCallable<FloatCallback>.listener(closure);
+    _juceLib.JuceMixPlayer_onRecProgress(_ptr, _recRrogressCallbackNativeCallable!.nativeFunction);
   }
 
   void setRecLevelHandler(void Function(double level) callback) {
     FloatCallbackDart closure = (ptr, progress) {
       callback(progress);
     };
-    _levelCallbackNativeCallable?.close();
-    _levelCallbackNativeCallable = NativeCallable<FloatCallback>.listener(closure);
-    _juceLib.JuceMixPlayer_onRecLevel(_ptr, _levelCallbackNativeCallable!.nativeFunction);
+    _recInputlevelCallbackNativeCallable?.close();
+    _recInputlevelCallbackNativeCallable = NativeCallable<FloatCallback>.listener(closure);
+    _juceLib.JuceMixPlayer_onRecLevel(_ptr, _recInputlevelCallbackNativeCallable!.nativeFunction);
   }
 
   void dispose() {
@@ -188,6 +193,13 @@ class JuceMixPlayer {
     _stateUpdateNativeCallable?.close();
     _errorUpdateNativeCallable?.close();
     _deviceUpdateNativeCallable?.close();
+
+    //Rec
+    _recInputlevelCallbackNativeCallable?.close();
+    _recRrogressCallbackNativeCallable?.close();
+    _recStateUpdateNativeCallable?.close();
+    _recErrorUpdateNativeCallable?.close();
+
     _juceLib.JuceMixPlayer_deinit(_ptr);
   }
 }

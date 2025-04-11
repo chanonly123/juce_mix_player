@@ -38,6 +38,23 @@ class RecorderPageState extends State<RecorderPage> {
     // Check microphone permission
     _checkMicrophonePermission();
 
+    recorder.setRecLevelHandler((level) {
+      // log("Recorder level=========: $level");
+      setState(() {
+        reclevel = level;
+        if (isRecording) {
+          if (level > maxReclevel) {
+            maxReclevel = level;
+          }
+        }
+      });
+    });
+
+    recorder.setRecProgressHandler((progress) {
+      // log("Recorder progress: $progress");
+      setState(() => recordingDuration = progress);
+    });
+
     // Set up state update handler
     recorder.setRecStateUpdateHandler((state) {
       log("Recorder state: ${state.toString()}");
@@ -100,32 +117,12 @@ class RecorderPageState extends State<RecorderPage> {
       }
     });
 
-    recorder.setRecLevelHandler((level) {
-      // log("Recorder level: $level");
-      setState(() {
-        reclevel = level;
-        if (isRecording) {
-          if (level > maxReclevel) {
-            maxReclevel = level;
-          }
-        }
-      });
-    });
-
-    recorder.setRecProgressHandler((progress) {
-      log("Recorder progress: $progress");
-      setState(() => recordingDuration = progress);
-    });
-
     // Set up a timer to update recording duration
     // _setupDurationTimer();
   }
 
   @override
   void dispose() {
-    // if (isRecording) {
-    //   recorder.stopRecording();
-    // }
     recorder.stopRecording();
     recorder.dispose();
     super.dispose();
@@ -274,7 +271,6 @@ class RecorderPageState extends State<RecorderPage> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -343,18 +339,14 @@ class RecorderPageState extends State<RecorderPage> {
           child: Text(getName(dev)),
         );
       }).toList(),
-      onSelected: (selectedDevice) {
-        deviceList.devices.forEach((d) {
-          d.isSelected = false;
-        });
-        selectedDevice.isSelected = true;
-        // Ensure the first device is always selected
-        // if (deviceList.devices.isNotEmpty) {
-        // deviceList.devices[3].isSelected = true;
-        // }
-        recorder.setUpdatedDevices(deviceList);
-        print("Selected device: ${deviceList.devices.toString()}");
-      },
+      // onSelected: (selectedDevice) {
+      //   deviceList.devices.forEach((d) {
+      //     d.isSelected = false;
+      //   });
+      //   selectedDevice.isSelected = true;
+      //   recorder.setUpdatedDevices(deviceList);
+      //   print("Selected device: ${deviceList.devices.toString()}");
+      // },
     );
   }
 
@@ -363,26 +355,13 @@ class RecorderPageState extends State<RecorderPage> {
   }
 
   Widget _buildNoiseMeter() {
-    // Define the color gradient based on the level
     Color getColorForLevel(double level) {
-      // The level is a positive amplitude value (not in dB)
-      // Adding debug log to see the actual range of values
-      // log("Current amplitude level: $level, Max level: $maxReclevel");
-
-      // For amplitude values, a typical range might be 0.0 to 1.0
-      // Adjust the normalization for the actual range we're seeing (around 0.007)
-      // Using 0.02 as an upper bound for loud sounds based on the observed values
       double normalizedLevel = (level / 0.02).clamp(0.0, 1.0);
-
-      // Create a smoother gradient transition
       if (normalizedLevel < 0.3) {
-        // Green range (quieter sounds)
         return Color.lerp(Colors.green, Colors.green.shade300, normalizedLevel / 0.3) ?? Colors.green;
       } else if (normalizedLevel < 0.6) {
-        // Green to Yellow gradient (moderate sounds)
         return Color.lerp(Colors.green.shade300, Colors.yellow, (normalizedLevel - 0.3) / 0.3) ?? Colors.green;
       } else {
-        // Yellow to Red gradient (louder sounds)
         return Color.lerp(Colors.yellow, Colors.red, (normalizedLevel - 0.6) / 0.4) ?? Colors.yellow;
       }
     }

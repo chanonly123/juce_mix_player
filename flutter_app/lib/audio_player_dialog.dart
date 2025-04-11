@@ -26,8 +26,10 @@ class AudioPlayerDialogState extends State<AudioPlayerDialog> {
   @override
   void initState() {
     super.initState();
+    player.setFile(widget.filePath);
 
     player.setStateUpdateHandler((state) {
+      if (!mounted) return; // Check if widget is still mounted
       setState(() {
         playerState = state;
         switch (state) {
@@ -54,13 +56,12 @@ class AudioPlayerDialogState extends State<AudioPlayerDialog> {
     });
 
     player.setErrorHandler((error) {
+      if (!mounted) return; // Check if widget is still mounted
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Player error: $error'),
         backgroundColor: Colors.red,
       ));
     });
-
-    player.setFile(widget.filePath);
 
     player.setProgressHandler((progress) {
       if (!isSliderEditing) {
@@ -71,6 +72,7 @@ class AudioPlayerDialogState extends State<AudioPlayerDialog> {
 
   @override
   void dispose() {
+    player.stop();
     player.dispose();
     super.dispose();
   }
@@ -82,7 +84,7 @@ class AudioPlayerDialogState extends State<AudioPlayerDialog> {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('Progress: ${((progress * player.getDuration()) / 60).toStringAsFixed(2)} / ${(player.getDuration() / 60).toStringAsFixed(2)}'),
+          Text('Progress: ${((progress * player.getDuration()) / 60).toStringAsFixed(2)} / ${(player.getDuration() / 60).toStringAsFixed(2)} mins'),
           if (!isPlayerReady) const CircularProgressIndicator(),
           if (isPlayerReady)
             Slider(

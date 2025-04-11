@@ -90,13 +90,6 @@ class PlayerPageState extends State<PlayerPage> {
     super.dispose();
   }
 
-  // @override
-  // void deactivate() {
-  //   print('PlayerPage:deactivate');
-  //   player.stop();
-  //   super.deactivate();
-  // }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -106,7 +99,7 @@ class PlayerPageState extends State<PlayerPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Progress: ${((progress * player.getDuration()) / 60 ).toStringAsFixed(2)} / ${(player.getDuration() / 60).toStringAsFixed(2)}'),
+            Text('Progress: ${((progress * player.getDuration()) / 60 ).toStringAsFixed(2)} / ${(player.getDuration() / 60).toStringAsFixed(2)} mins'),
             Slider(
               value: progress,
               onChanged: (value) {
@@ -200,13 +193,13 @@ class PlayerPageState extends State<PlayerPage> {
           child: Text(getName(dev)),
         );
       }).toList(),
-      onSelected: (selectedDevice) {
-        deviceList.devices.forEach((d) {
-          d.isSelected = false;
-        });
-        selectedDevice.isSelected = true;
-        player.setUpdatedDevices(deviceList);
-      },
+      // onSelected: (selectedDevice) {
+      //   deviceList.devices.forEach((d) {
+      //     d.isSelected = false;
+      //   });
+      //   selectedDevice.isSelected = true;
+      //   player.setUpdatedDevices(deviceList);
+      // },
     );
   }
 
