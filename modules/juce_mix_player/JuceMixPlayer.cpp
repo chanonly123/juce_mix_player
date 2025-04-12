@@ -477,7 +477,7 @@ void JuceMixPlayer::createWriterForRecorder() {
     recordBuffer2.setSize(1, recordBufferDuration * 1.5 * deviceSampleRate);
 
     std::string format = "wav";
-    int targetSampleRate = deviceSampleRate;
+    int targetSampleRate = settings.sampleRate;
     juce::File outputFile(recordPath);
     outputFile.deleteFile();
     juce::FileOutputStream* outputStream = new juce::FileOutputStream(outputFile);
@@ -515,13 +515,57 @@ void JuceMixPlayer::flushRecordBufferToFile(juce::AudioBuffer<float>& buffer, fl
         _onRecStateUpdateNotify(JuceMixPlayerRecState::ERROR);
         return;
     }
-    if (sampleCount == 0) {
+    if (sampleCount <= 0) {
         return;
     }
-    PRINT("flushRecordBufferToFile: " << sampleCount / 48000);
+    PRINT("flushRecordBufferToFile: " << sampleCount / deviceSampleRate);
     bool success = false;
-    success = recWriter->writeFromAudioSampleBuffer(buffer, 0, sampleCount);
-    success = recWriter->flush();
+
+    const int targetSampleRate = 48000;
+    const int numInputSamples = static_cast<int>(sampleCount);
+    
+    if (deviceSampleRate != targetSampleRate) {
+        PRINT("flushRecordBufferToFile: UPSAMPLING =====");
+        const double ratio = static_cast<double>(targetSampleRate) / deviceSampleRate;
+        const double actualRatio = static_cast<double>(deviceSampleRate) / targetSampleRate;
+        const int numChannels = buffer.getNumChannels();
+        const int numOutputSamples = static_cast<int>(std::ceil(numInputSamples * ratio));
+
+        // Create upsampled buffer
+        juce::AudioBuffer<float> upsampledBuffer(numChannels, numOutputSamples);
+
+        // Resample each channel
+        for (int ch = 0; ch < numChannels; ++ch) {
+            const float* inputData = buffer.getReadPointer(ch);
+            float* outputData = upsampledBuffer.getWritePointer(ch);
+
+            juce::LagrangeInterpolator interpolator;
+            interpolator.reset();
+            interpolator.process(actualRatio,
+                                inputData,
+                                outputData,
+                                numOutputSamples,
+                                numInputSamples,
+                                0);
+        }
+        
+        const double expectedDuration = static_cast<double>(numInputSamples) / deviceSampleRate;
+        const double resultDuration = static_cast<double>(upsampledBuffer.getNumSamples()) / targetSampleRate;
+        const double durationDifference = std::abs(expectedDuration - resultDuration);
+
+        PRINT("- Original: " << numInputSamples << " samples @ " << deviceSampleRate << "Hz (" << expectedDuration << "s)");
+        PRINT("- Upsampled: " << upsampledBuffer.getNumSamples() << " samples @ 48000Hz ("<< resultDuration << "s)");
+        PRINT("- Duration difference: " << (durationDifference * 1000.0) << "ms");
+        jassert(durationDifference < (1.0 / targetSampleRate) &&
+               "Resampling duration mismatch exceeds 1 sample tolerance");
+        success = recWriter->writeFromAudioSampleBuffer(upsampledBuffer, 0, upsampledBuffer.getNumSamples());
+    } else {
+        success = recWriter->writeFromAudioSampleBuffer(buffer, 0, numInputSamples);
+    }
+
+    // Flush and handle errors
+    success = success && recWriter->flush();
+
     if (!success) {
         stopRecorder();
         _onRecStateUpdateNotify(JuceMixPlayerRecState::ERROR);
