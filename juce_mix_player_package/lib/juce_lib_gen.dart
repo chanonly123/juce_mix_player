@@ -316,11 +316,11 @@ class JuceLibGen {
 
   void JuceMixPlayer_startRecorder(
     ffi.Pointer<ffi.Void> ptr,
-    int play,
+    int startPlaying,
   ) {
     return _JuceMixPlayer_startRecorder(
       ptr,
-      play,
+      startPlaying,
     );
   }
 

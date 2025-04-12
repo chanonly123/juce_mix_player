@@ -585,35 +585,57 @@ void JuceMixPlayer::_onRecStateUpdateNotify(JuceMixPlayerRecState state) {
 
 // MARK: Device management
 void JuceMixPlayer::notifyDeviceUpdates() {
-//    MixerDeviceList list;
-//    juce::AudioIODeviceType* audioDeviceType = deviceManager->getCurrentDeviceTypeObject();
-//    juce::AudioDeviceManager::AudioDeviceSetup setup = deviceManager->getAudioDeviceSetup();
-//    if (audioDeviceType) {
-//        juce::StringArray inputDevices = audioDeviceType->getDeviceNames(true);
-//        juce::StringArray outputDevices = audioDeviceType->getDeviceNames(false);
-//        for (juce::String& name : inputDevices) {
-//            MixerDevice dev;
-//            dev.name = name.toStdString();
-//            dev.isInput = true;
-//            dev.isSelected = setup.inputDeviceName == name;
-//            list.devices.push_back(dev);
-//        }
-//        for (juce::String& name : outputDevices) {
-//            MixerDevice dev;
-//            dev.name = name.toStdString();
-//            dev.isInput = false;
-//            dev.isSelected = setup.outputDeviceName == name;
-//            list.devices.push_back(dev);
-//        }
-//    }
-//    taskQueue.async([&, list]{
-//        if (!(deviceList == list)) {
-//            deviceList = list;
-//            nlohmann::json j = list;
-//            if (onDeviceUpdateCallback)
-//                onDeviceUpdateCallback(this, returnCopyCharDelete(j.dump(4)));
-//        }
-//    });
+    MixerDeviceList list;
+
+    juce::AudioIODeviceType* audioDeviceType = deviceManager->getCurrentDeviceTypeObject();
+    juce::AudioDeviceManager::AudioDeviceSetup setup = deviceManager->getAudioDeviceSetup();
+
+    if (audioDeviceType) {
+        juce::AudioIODevice* currentDevice = deviceManager->getCurrentAudioDevice();
+        if (currentDevice != nullptr) {
+            // Current Input Device Info
+            MixerDevice inputDev;
+            inputDev.name = currentDevice->getName().toStdString();
+            inputDev.isInput = true;
+            inputDev.isSelected = (setup.inputDeviceName == currentDevice->getName());
+            
+            // Get input channels
+            juce::StringArray inputChannels = currentDevice->getInputChannelNames();
+            for (const auto& ch : inputChannels)
+                inputDev.inputChannelNames.push_back(ch.toStdString());
+            
+            inputDev.currentSampleRate = currentDevice->getCurrentSampleRate();
+            for (auto rate : currentDevice->getAvailableSampleRates())
+                inputDev.availableSampleRates.push_back(rate);
+            inputDev.deviceType = audioDeviceType->getTypeName().toStdString();
+            list.devices.push_back(inputDev);
+
+            // Current Output Device Info
+            MixerDevice outputDev;
+            outputDev.name = currentDevice->getName().toStdString();
+            outputDev.isInput = false;
+            outputDev.isSelected = (setup.outputDeviceName == currentDevice->getName());
+            
+            // Get output channels
+            juce::StringArray outputChannels = currentDevice->getOutputChannelNames();
+            for (const auto& ch : outputChannels)
+                outputDev.outputChannelNames.push_back(ch.toStdString());
+            
+            outputDev.currentSampleRate = currentDevice->getCurrentSampleRate();
+            outputDev.availableSampleRates = inputDev.availableSampleRates; // Same device
+            outputDev.deviceType = inputDev.deviceType;
+            list.devices.push_back(outputDev);
+        }
+    }
+
+    taskQueue.async([&, list]{
+        if (!(deviceList == list)) {
+            deviceList = list;
+            nlohmann::json j = list;
+            if (onDeviceUpdateCallback)
+                onDeviceUpdateCallback(this, returnCopyCharDelete(j.dump(4)));
+        }
+    });
 }
 
 void JuceMixPlayer::setUpdatedDevices(const char* json) {
@@ -776,5 +798,5 @@ void JuceMixPlayer::timerCallback() {
 
 void JuceMixPlayer::changeListenerCallback(juce::ChangeBroadcaster* source) {
     PRINT("changeListenerCallback");
-//    notifyDeviceUpdates();
+    notifyDeviceUpdates();
 }

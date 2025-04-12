@@ -3,6 +3,8 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_app/asset_helper.dart';
+import 'package:flutter_app/utils.dart';
+import 'package:flutter_app/widgets.dart';
 import 'package:juce_mix_player/juce_mix_player.dart';
 
 class PlayerPage extends StatefulWidget {
@@ -20,13 +22,6 @@ class PlayerPageState extends State<PlayerPage> {
   MixerDeviceList deviceList = MixerDeviceList(devices: []);
 
   JuceMixPlayerState state = JuceMixPlayerState.IDLE;
-
-    String _formatDuration(double seconds) {
-    final totalSeconds = seconds.round();
-    final minutes = (totalSeconds ~/ 60).toString().padLeft(2, '0');
-    final remainingSeconds = (totalSeconds % 60).toString().padLeft(2, '0');
-    return '$minutes:$remainingSeconds';
-  }
 
   @override
   void initState() {
@@ -53,7 +48,7 @@ class PlayerPageState extends State<PlayerPage> {
           break;
         case JuceMixPlayerState.STOPPED:
           // TODO: Handle this case.
-          setState(() =>isPlaying = false);
+          setState(() => isPlaying = false);
           break;
         case JuceMixPlayerState.COMPLETED:
           // TODO: Handle this case.
@@ -106,7 +101,7 @@ class PlayerPageState extends State<PlayerPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-          Text('${_formatDuration(progress * player.getDuration())} / ${_formatDuration(player.getDuration())}'),
+            Text('${TimeUtils.formatDuration(progress * player.getDuration())}'),
             Slider(
               value: progress,
               onChanged: (value) {
@@ -181,37 +176,30 @@ class PlayerPageState extends State<PlayerPage> {
                   },
                   child: const Text('Set mixed with metronome'),
                 ),
-                const SizedBox(width: 16),
-                popupMenu(),
+                const SizedBox(height: 30),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.speaker_group, size: 20),
+                  label: const Text('Audio Devices'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue[900],
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      side: BorderSide(color: Colors.blue.shade700, width: 1),
+                    ),
+                  ),
+                  onPressed: () => showDialog(
+                    context: context,
+                    builder: (context) => DeviceListDialog(devices: deviceList.devices),
+                  ),
+                ),
               ],
             ),
           ],
         ),
       ),
     );
-  }
-
-  PopupMenuButton popupMenu() {
-    return PopupMenuButton<MixerDevice>(
-      child: Text("DEVICES: ${deviceList.devices.length}"),
-      itemBuilder: (context) => deviceList.devices.map((dev) {
-        return PopupMenuItem<MixerDevice>(
-          value: dev,
-          child: Text(getName(dev)),
-        );
-      }).toList(),
-      // onSelected: (selectedDevice) {
-      //   deviceList.devices.forEach((d) {
-      //     d.isSelected = false;
-      //   });
-      //   selectedDevice.isSelected = true;
-      //   player.setUpdatedDevices(deviceList);
-      // },
-    );
-  }
-
-  String getName(MixerDevice device) {
-    return "${device.name} ${device.isSelected ? " ✅" : ""}";
   }
 
   Future<MixerComposeModel> createMetronomeTracks() async {
@@ -229,4 +217,5 @@ class PlayerPageState extends State<PlayerPage> {
       ],
     );
   }
+
 }

@@ -4,6 +4,8 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_app/asset_helper.dart';
+import 'package:flutter_app/utils.dart';
+import 'package:flutter_app/widgets.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:juce_mix_player/juce_mix_player.dart';
 import 'package:path_provider/path_provider.dart';
@@ -36,13 +38,6 @@ class RecorderPageState extends State<RecorderPage> {
   final double maxAllowedLevelDb = -3.5;
   bool isLevelTooHigh = false; // Track if level is too high to avoid repeated vibrations
   bool isMetronomeEnabled = false;
-
-  String _formatDuration(double seconds) {
-    final totalSeconds = seconds.round();
-    final minutes = (totalSeconds ~/ 60).toString().padLeft(2, '0');
-    final remainingSeconds = (totalSeconds % 60).toString().padLeft(2, '0');
-    return '$minutes:$remainingSeconds';
-  }
 
   @override
   void initState() {
@@ -174,6 +169,13 @@ class RecorderPageState extends State<RecorderPage> {
     recorder.stopRecording();
     recorder.dispose();
     super.dispose();
+  }
+
+  void showDeviceList() {
+    showDialog(
+      context: context,
+      builder: (context) => DeviceListDialog(devices: deviceList.devices),
+    );
   }
 
   // Reset min/max values when starting a new recording
@@ -356,7 +358,7 @@ class RecorderPageState extends State<RecorderPage> {
           children: [
             // Recording duration display
             Text(
-              _formatDuration(recordingDuration),
+              TimeUtils.formatDuration(recordingDuration),
               style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 20),
@@ -396,7 +398,23 @@ class RecorderPageState extends State<RecorderPage> {
               ),
             ),
             SizedBox(height: 40),
-            popupMenu(),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.speaker_group, size: 20),
+              label: const Text('Audio Devices'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue[900],
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(color: Colors.blue.shade700, width: 1),
+                ),
+              ),
+              onPressed: () => showDialog(
+                context: context,
+                builder: (context) => DeviceListDialog(devices: deviceList.devices),
+              ),
+            ),
             SizedBox(height: 40),
             // Recording level in Decibles display Component
             Column(
@@ -527,29 +545,5 @@ class RecorderPageState extends State<RecorderPage> {
     if (currReclevel > maxAllowedLevelDb) return Colors.white;
     if (currReclevel < minAllowedLevelDb) return Colors.black;
     return Colors.white;
-  }
-
-  PopupMenuButton popupMenu() {
-    return PopupMenuButton<MixerDevice>(
-      child: Text("DEVICES: ${deviceList.devices.length}"),
-      itemBuilder: (context) => deviceList.devices.map((dev) {
-        return PopupMenuItem<MixerDevice>(
-          value: dev,
-          child: Text(getName(dev)),
-        );
-      }).toList(),
-      // onSelected: (selectedDevice) {
-      //   deviceList.devices.forEach((d) {
-      //     d.isSelected = false;
-      //   });
-      //   selectedDevice.isSelected = true;
-      //   recorder.setUpdatedDevices(deviceList);
-      //   print("Selected device: ${deviceList.devices.toString()}");
-      // },
-    );
-  }
-
-  String getName(MixerDevice device) {
-    return "${device.name} ${device.isSelected ? " ✅" : ""}";
   }
 }

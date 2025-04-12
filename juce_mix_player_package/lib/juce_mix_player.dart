@@ -284,17 +284,32 @@ class MixerDevice {
   String name;
   bool isInput;
   bool isSelected;
+  List<String> inputChannelNames;
+  List<String> outputChannelNames;
+  double currentSampleRate;
+  List<double> availableSampleRates;
+  String deviceType;
 
   MixerDevice({
     required this.name,
     required this.isInput,
     required this.isSelected,
+    this.inputChannelNames = const [],
+    this.outputChannelNames = const [],
+    this.currentSampleRate = 0.0,
+    this.availableSampleRates = const [],
+    this.deviceType = '',
   });
 
   factory MixerDevice.fromJson(Map<String, dynamic> json) => MixerDevice(
         name: json['name'],
         isInput: json['isInput'],
         isSelected: json['isSelected'],
+        inputChannelNames: (json['inputChannelNames'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+        outputChannelNames: (json['outputChannelNames'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+        currentSampleRate: json['currentSampleRate']?.toDouble() ?? 0.0,
+        availableSampleRates: (json['availableSampleRates'] as List<dynamic>?)?.map((e) => e.toDouble()).toList().cast<double>() ?? [],
+        deviceType: json['deviceType'] ?? '',
       );
 
   Map<String, dynamic> toJson() {
@@ -302,6 +317,11 @@ class MixerDevice {
     json['name'] = name;
     json['isInput'] = isInput;
     json['isSelected'] = isSelected;
+    json['inputChannelNames'] = inputChannelNames;
+    json['outputChannelNames'] = outputChannelNames;
+    json['currentSampleRate'] = currentSampleRate;
+    json['availableSampleRates'] = availableSampleRates;
+    json['deviceType'] = deviceType;
     return json;
   }
 }
