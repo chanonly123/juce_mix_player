@@ -85,7 +85,7 @@ class AudioPlayerDialogState extends State<AudioPlayerDialog> {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('${TimeUtils.formatDuration(progress * player.getDuration())}'),
+          Text('${TimeUtils.formatDuration(progress * player.getDuration())} / ${TimeUtils.formatDuration(player.getDuration())}'),
           if (!isPlayerReady) const CircularProgressIndicator(),
           if (isPlayerReady)
             Slider(

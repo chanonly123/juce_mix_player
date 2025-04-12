@@ -101,7 +101,7 @@ class PlayerPageState extends State<PlayerPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('${TimeUtils.formatDuration(progress * player.getDuration())}'),
+            Text('${TimeUtils.formatDuration(progress * player.getDuration())} / ${TimeUtils.formatDuration(player.getDuration())}'),
             Slider(
               value: progress,
               onChanged: (value) {

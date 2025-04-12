@@ -38,6 +38,7 @@ class RecorderPageState extends State<RecorderPage> {
   final double maxAllowedLevelDb = -3.5;
   bool isLevelTooHigh = false; // Track if level is too high to avoid repeated vibrations
   bool isMetronomeEnabled = false;
+  bool isRecStoppedDueToDeviceChange = false;
 
   @override
   void initState() {
@@ -58,7 +59,6 @@ class RecorderPageState extends State<RecorderPage> {
 
           // Check if level exceeds maximum allowed and trigger haptic feedback
           if (level > maxAllowedLevelDb && !isLevelTooHigh) {
-            log("HapticFeedback");
             isLevelTooHigh = true;
             HapticFeedback.heavyImpact();
           } else if (level <= maxAllowedLevelDb) {
@@ -115,21 +115,54 @@ class RecorderPageState extends State<RecorderPage> {
             isLevelTooHigh = false;
           });
           // Show audio player dialog when recording stops
-          if (mounted) {
+
+          if (mounted && isRecStoppedDueToDeviceChange) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               showDialog(
                 context: context,
-                builder: (context) => AudioPlayerDialog(
-                  filePath: recordingPath,
-                  onOkPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text('Recording processing completed'),
-                      backgroundColor: Colors.green,
-                    ));
-                  },
+                builder: (context) => AlertDialog(
+                  title: const Text("Recording Stopped"),
+                  content: const Text("Device change detected during recording."),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        showDialog(
+                          context: context,
+                          builder: (context) => AudioPlayerDialog(
+                            filePath: recordingPath,
+                            onOkPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                                content: Text('Recording processing completed'),
+                                backgroundColor: Colors.green,
+                              ));
+                            },
+                          ),
+                        );
+                      },
+                      child: const Text("OK"),
+                    ),
+                  ],
                 ),
               );
             });
+          } else {
+            if (mounted) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                showDialog(
+                  context: context,
+                  builder: (context) => AudioPlayerDialog(
+                    filePath: recordingPath,
+                    onOkPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text('Recording processing completed'),
+                        backgroundColor: Colors.green,
+                      ));
+                    },
+                  ),
+                );
+              });
+            }
           }
           break;
         case JuceMixRecState.ERROR:
@@ -139,14 +172,17 @@ class RecorderPageState extends State<RecorderPage> {
     });
 
     recorder.setDeviceUpdateHandler((deviceList) {
+      // final wasRecording = isRecording;
       setState(() {
-        // Filter the deviceList to include only input devices and assign IDs
-        // this.deviceList = MixerDeviceList(
-        //   devices: deviceList.devices.where((device) => device.isInput).toList(),
-        // );
         this.deviceList = deviceList;
       });
       log('devices: ${JsonEncoder.withIndent('  ').convert(this.deviceList.toJson())}');
+      // if (wasRecording) {
+      //   recorder.stopRecording();
+      //   setState(() {
+      //     isRecStoppedDueToDeviceChange = true;
+      //   });
+      // }
     });
 
     // Set up error handler
