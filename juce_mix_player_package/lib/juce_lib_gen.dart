@@ -316,20 +316,17 @@ class JuceLibGen {
 
   void JuceMixPlayer_startRecorder(
     ffi.Pointer<ffi.Void> ptr,
-    int startPlaying,
   ) {
     return _JuceMixPlayer_startRecorder(
       ptr,
-      startPlaying,
     );
   }
 
-  late final _JuceMixPlayer_startRecorderPtr = _lookup<
-          ffi
-          .NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Int)>>(
-      'JuceMixPlayer_startRecorder');
+  late final _JuceMixPlayer_startRecorderPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'JuceMixPlayer_startRecorder');
   late final _JuceMixPlayer_startRecorder = _JuceMixPlayer_startRecorderPtr
-      .asFunction<void Function(ffi.Pointer<ffi.Void>, int)>();
+      .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void JuceMixPlayer_stopRecorder(
     ffi.Pointer<ffi.Void> ptr,

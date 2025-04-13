@@ -41,7 +41,7 @@ EXPORT_C_FUNC void JuceMixPlayer_seek(void* ptr, float value);
 
 EXPORT_C_FUNC void JuceMixPlayer_prepareRecorder(void* ptr, const char* file);
 
-EXPORT_C_FUNC void JuceMixPlayer_startRecorder(void* ptr, int startPlaying);
+EXPORT_C_FUNC void JuceMixPlayer_startRecorder(void* ptr);
 
 EXPORT_C_FUNC void JuceMixPlayer_stopRecorder(void* ptr);
 

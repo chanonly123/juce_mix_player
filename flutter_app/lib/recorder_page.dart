@@ -45,6 +45,8 @@ class RecorderPageState extends State<RecorderPage> {
     super.initState();
     print("RecorderPageState.initState");
 
+    recorder.setSettings(MixerSettings());
+
     // Check microphone permission
     _checkMicrophonePermission();
 
@@ -176,7 +178,7 @@ class RecorderPageState extends State<RecorderPage> {
       setState(() {
         this.deviceList = deviceList;
       });
-      log('devices: ${JsonEncoder.withIndent('  ').convert(this.deviceList.toJson())}');
+      // log('devices: ${JsonEncoder.withIndent('  ').convert(this.deviceList.toJson())}');
       // if (wasRecording) {
       //   recorder.stopRecording();
       //   setState(() {
@@ -195,9 +197,6 @@ class RecorderPageState extends State<RecorderPage> {
         ));
       }
     });
-
-    // Set up a timer to update recording duration
-    // _setupDurationTimer();
   }
 
   @override
@@ -361,7 +360,7 @@ class RecorderPageState extends State<RecorderPage> {
       // Start recording
       HapticFeedback.heavyImpact();
       _resetMinMaxLevels();
-      recorder.startRecording(true);
+      recorder.startRecording();
     }
   }
 
@@ -501,9 +500,9 @@ class RecorderPageState extends State<RecorderPage> {
   }
 
   Color _getProgressColor(double level) {
-    if (level < -30) return Colors.blue;
-    if (level < -15) return Colors.green;
-    if (level < 0) return Colors.orange;
+    if (level < -20) return Colors.blue;
+    if (level > -20 && level < -7.5) return Colors.green;
+    if (level > -7.5 && level < -3.5) return Colors.orange;
     return Colors.red;
   }
 

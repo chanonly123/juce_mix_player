@@ -96,11 +96,14 @@ struct MixerSettings {
     bool stopRecOnPlaybackComplete = false;
     // audio Playback loop
     bool loop = false;
+    // audio playback during rec
+    bool recBgPlayback = false;
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(MixerSettings,
                                                 progressUpdateInterval,
                                                 sampleRate,
                                                 loop,
+                                                recBgPlayback,
                                                 stopRecOnPlaybackComplete);
 };
 

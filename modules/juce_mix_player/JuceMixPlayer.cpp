@@ -431,7 +431,7 @@ void JuceMixPlayer::prepareRecorder(const char *file) {
     });
 }
 
-void JuceMixPlayer::startRecorder(int startPlaying) {
+void JuceMixPlayer::startRecorder() {
     if (_isRecording) return;
     juce::MessageManager::getInstanceWithoutCreating()->callAsync([&]{
         if (!_isRecorderPrepared) {
@@ -446,7 +446,7 @@ void JuceMixPlayer::startRecorder(int startPlaying) {
         _startProgressTimer();
         _onRecStateUpdateNotify(JuceMixPlayerRecState::RECORDING);
         _isRecording = true;
-        if (startPlaying == 1) {
+        if (settings.recBgPlayback) {
             play();
         }
     });

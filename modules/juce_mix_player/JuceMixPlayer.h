@@ -148,7 +148,7 @@ public:
     // MARK: Recorder
     void prepareRecorder(const char* file);
 
-    void startRecorder(int startPlaying);
+    void startRecorder();
 
     void stopRecorder();
 

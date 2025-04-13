@@ -148,8 +148,8 @@ class JuceMixPlayer {
     _juceLib.JuceMixPlayer_prepareRecorder(_ptr, path.toNativeUtf8());
   }
 
-  void startRecording(bool play) {
-    _juceLib.JuceMixPlayer_startRecorder(_ptr, play ? 1 : 0);
+  void startRecording() {
+    _juceLib.JuceMixPlayer_startRecorder(_ptr);
   }
 
   void stopRecording() {
@@ -358,12 +358,15 @@ class MixerSettings {
   bool stopRecOnPlaybackComplete;
   /// default is [false]
   bool loop;
+  /// Playback recording in background [true]
+  bool recBgPlayback;
 
   MixerSettings({
     this.progressUpdateInterval = 0.05,
     this.sampleRate =  48000,
     this.stopRecOnPlaybackComplete = true,
     this.loop = false,
+    this.recBgPlayback = true,
   });
 
   factory MixerSettings.fromJson(Map<String, dynamic> json) => MixerSettings(
@@ -371,6 +374,7 @@ class MixerSettings {
         sampleRate: json['sampleRate']?? 48000,
         stopRecOnPlaybackComplete: json['stopRecOnPlaybackComplete'] ?? true,
         loop: json['loop'] ?? true,
+        recBgPlayback: json['recBgPlayback']?? true,
       );
 
   Map<String, dynamic> toJson() {
@@ -379,6 +383,7 @@ class MixerSettings {
     json['sampleRate'] = sampleRate;
     json['stopRecOnPlaybackComplete'] = stopRecOnPlaybackComplete;
     json['loop'] = loop;
+    json['recBgPlayback'] = recBgPlayback;
     return json;
   }
 }
