@@ -203,6 +203,8 @@ void JuceMixPlayer::setJson(const char* json) {
 
 void JuceMixPlayer::setSettings(const char* json) {
     std::string json_(json);
+    PRINT("setSettings: " << json);
+    
     taskQueue.async([&, json_]{
         try {
             MixerSettings _settings = MixerModel::parseSettings(json_.c_str());
@@ -521,11 +523,11 @@ void JuceMixPlayer::flushRecordBufferToFile(juce::AudioBuffer<float>& buffer, fl
     PRINT("flushRecordBufferToFile: " << sampleCount / deviceSampleRate);
     bool success = false;
 
-    const int targetSampleRate = 48000;
+    const int targetSampleRate = settings.sampleRate;
     const int numInputSamples = static_cast<int>(sampleCount);
     
     if (deviceSampleRate != targetSampleRate) {
-        PRINT("flushRecordBufferToFile: UPSAMPLING =====");
+        PRINT("flushRecordBufferToFile: REPSAMPLING =====");
         const double ratio = static_cast<double>(targetSampleRate) / deviceSampleRate;
         const double actualRatio = static_cast<double>(deviceSampleRate) / targetSampleRate;
         const int numChannels = buffer.getNumChannels();
@@ -554,7 +556,7 @@ void JuceMixPlayer::flushRecordBufferToFile(juce::AudioBuffer<float>& buffer, fl
         const double durationDifference = std::abs(expectedDuration - resultDuration);
 
         PRINT("- Original: " << numInputSamples << " samples @ " << deviceSampleRate << "Hz (" << expectedDuration << "s)");
-        PRINT("- Upsampled: " << upsampledBuffer.getNumSamples() << " samples @ 48000Hz ("<< resultDuration << "s)");
+        PRINT("- Resampled: " << upsampledBuffer.getNumSamples() << " samples @ " << targetSampleRate << "Hz (" << resultDuration << "s)");
         PRINT("- Duration difference: " << (durationDifference * 1000.0) << "ms");
         jassert(durationDifference < (1.0 / targetSampleRate) &&
                "Resampling duration mismatch exceeds 1 sample tolerance");
@@ -744,8 +746,19 @@ void JuceMixPlayer::audioDeviceIOCallbackWithContext(const float *const *inputCh
             } else {
                 _onProgressNotify(1);
                 _onStateUpdateNotify(JuceMixPlayerState::COMPLETED);
+                
+                if (_isRecording && settings.stopRecOnPlaybackComplete) {
+                    stopRecorder();
+                }
             }
-            _pauseInternal(false);
+            
+            if (!_isRecording && settings.loop) {
+                _isPlaying = false;
+                playHeadIndex = 0;
+                play();
+            } else {
+                _pauseInternal(false);
+            }
             return;
         }
 

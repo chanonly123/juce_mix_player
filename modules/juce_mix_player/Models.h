@@ -88,16 +88,20 @@ struct MixerDeviceList {
 };
 
 struct MixerSettings {
-
     // seconds
     float progressUpdateInterval = 0.05;
-
     // player and recorder sample rate
     int sampleRate = 48000;
+    // stop record on playback ends
+    bool stopRecOnPlaybackComplete = false;
+    // audio Playback loop
+    bool loop = false;
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(MixerSettings,
                                                 progressUpdateInterval,
-                                                sampleRate);
+                                                sampleRate,
+                                                loop,
+                                                stopRecOnPlaybackComplete);
 };
 
 struct MixerTrack {

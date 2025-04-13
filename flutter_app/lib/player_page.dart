@@ -20,12 +20,17 @@ class PlayerPageState extends State<PlayerPage> {
   bool isSliderEditing = false;
   bool isPlaying = false;
   MixerDeviceList deviceList = MixerDeviceList(devices: []);
+  bool loopEnabled = false;  // Add loop state variable
 
   JuceMixPlayerState state = JuceMixPlayerState.IDLE;
 
   @override
   void initState() {
     super.initState();
+
+    player.setSettings(MixerSettings(
+      loop: loopEnabled,  // Changed from hardcoded false
+    ));
 
     player.setStateUpdateHandler((state) {
       setState(() => this.state = state);
@@ -92,6 +97,11 @@ class PlayerPageState extends State<PlayerPage> {
     super.dispose();
   }
 
+  void toggleLoop() {
+    setState(() => loopEnabled = !loopEnabled);
+    player.setSettings(MixerSettings(loop: loopEnabled));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -101,7 +111,21 @@ class PlayerPageState extends State<PlayerPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('${TimeUtils.formatDuration(progress * player.getDuration())} / ${TimeUtils.formatDuration(player.getDuration())}'),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '${TimeUtils.formatDuration(progress * player.getDuration())} / ${TimeUtils.formatDuration(player.getDuration())}',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.loop, color: loopEnabled ? Colors.blue : Colors.grey),
+                  onPressed: toggleLoop,
+                  tooltip: 'Toggle Loop',
+                ),
+              ],
+            ),
             Slider(
               value: progress,
               onChanged: (value) {
@@ -217,5 +241,4 @@ class PlayerPageState extends State<PlayerPage> {
       ],
     );
   }
-
 }

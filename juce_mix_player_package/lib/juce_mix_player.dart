@@ -101,6 +101,11 @@ class JuceMixPlayer {
     _juceLib.JuceMixPlayer_set(_ptr, jsonStr.toNativeUtf8());
   }
 
+  void setSettings(MixerSettings settings) {
+    final jsonStr = json.encode(settings.toJson());
+    _juceLib.JuceMixPlayer_setSettings(_ptr, jsonStr.toNativeUtf8());
+  }
+
   void play() {
     _juceLib.JuceMixPlayer_play(_ptr);
   }
@@ -340,6 +345,40 @@ class MixerDeviceList {
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
     json['devices'] = devices.map((e) => e.toJson()).toList();
+    return json;
+  }
+}
+
+class MixerSettings {
+  /// in seconds [0.05]
+  double progressUpdateInterval;
+  /// in Hz [48000]
+  int sampleRate;
+  /// default is [true]
+  bool stopRecOnPlaybackComplete;
+  /// default is [false]
+  bool loop;
+
+  MixerSettings({
+    this.progressUpdateInterval = 0.05,
+    this.sampleRate =  48000,
+    this.stopRecOnPlaybackComplete = true,
+    this.loop = false,
+  });
+
+  factory MixerSettings.fromJson(Map<String, dynamic> json) => MixerSettings(
+        progressUpdateInterval: json['progressUpdateInterval']?.toDouble() ?? 0.05,
+        sampleRate: json['sampleRate']?? 48000,
+        stopRecOnPlaybackComplete: json['stopRecOnPlaybackComplete'] ?? true,
+        loop: json['loop'] ?? true,
+      );
+
+  Map<String, dynamic> toJson() {
+    final json = <String, dynamic>{};
+    json['progressUpdateInterval'] = progressUpdateInterval;
+    json['sampleRate'] = sampleRate;
+    json['stopRecOnPlaybackComplete'] = stopRecOnPlaybackComplete;
+    json['loop'] = loop;
     return json;
   }
 }
