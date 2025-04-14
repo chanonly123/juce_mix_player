@@ -1,6 +1,5 @@
 import 'dart:developer';
 import 'dart:io';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_app/asset_helper.dart';
@@ -132,6 +131,7 @@ class RecorderPageState extends State<RecorderPage> {
                         showDialog(
                           context: context,
                           builder: (context) => AudioPlayerDialog(
+                            metronome: isMetronomeEnabled,
                             filePath: recordingPath,
                             onOkPressed: () {
                               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -154,6 +154,7 @@ class RecorderPageState extends State<RecorderPage> {
                 showDialog(
                   context: context,
                   builder: (context) => AudioPlayerDialog(
+                    metronome: isMetronomeEnabled,
                     filePath: recordingPath,
                     onOkPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -292,7 +293,7 @@ class RecorderPageState extends State<RecorderPage> {
         double metVol = 0.5;
         final mixComposeModel = MixerComposeModel(
           tracks: [
-            MixerTrack(id: "music", path: bgmPath),
+            MixerTrack(id: "music", path: bgmPath, volume: 0.6),
             MixerTrack(id: "met_1", path: pathH, offset: 0, repeat: true, repeatInterval: 2, volume: metVol),
             MixerTrack(id: "met_2", path: pathL, offset: 0.5, repeat: true, repeatInterval: 2, volume: metVol),
             MixerTrack(id: "met_3", path: pathL, offset: 1, repeat: true, repeatInterval: 2, volume: metVol),

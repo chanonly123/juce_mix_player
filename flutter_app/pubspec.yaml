@@ -40,6 +40,7 @@ dependencies:
     path: ../juce_mix_player_package
   permission_handler: ^11.3.1
   percent_indicator: ^4.2.2
+  just_audio: ^0.9.46
 
 dev_dependencies:
   flutter_test:

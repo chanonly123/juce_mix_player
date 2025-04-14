@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/asset_helper.dart';
 import 'package:flutter_app/utils.dart';
 import 'package:juce_mix_player/juce_mix_player.dart';
+import 'package:just_audio/just_audio.dart';
 
 class AudioPlayerDialog extends StatefulWidget {
   final String filePath;
+  final bool metronome;
   final VoidCallback onOkPressed;
 
   const AudioPlayerDialog({
     super.key,
     required this.filePath,
     required this.onOkPressed,
+    required this.metronome,
   });
 
   @override
@@ -27,7 +31,8 @@ class AudioPlayerDialogState extends State<AudioPlayerDialog> {
   @override
   void initState() {
     super.initState();
-    player.setFile(widget.filePath);
+    // player.setFile(widget.filePath);
+    _setMixedRecFile();
 
     player.setStateUpdateHandler((state) {
       if (!mounted) return; // Check if widget is still mounted
@@ -76,6 +81,37 @@ class AudioPlayerDialogState extends State<AudioPlayerDialog> {
     player.stop();
     player.dispose();
     super.dispose();
+  }
+
+  Future<double?> getAudioDuration(String url) async {
+    final player = AudioPlayer();
+    try {
+      await player.setUrl(url); // Can also be a local file path
+      return player.duration?.inSeconds.toDouble() ?? 0.0;
+    } finally {
+      await player.dispose();
+    }
+  }
+
+  Future<void> _setMixedRecFile() async {
+    final bgmPath = await AssetHelper.extractAsset('assets/media/tu_hi_re_92_D_sharp_bgm.mp3');
+    final pathH = await AssetHelper.extractAsset('assets/media/met_h.wav');
+    final pathL = await AssetHelper.extractAsset('assets/media/met_l.wav');
+    const metVol = 0.3;
+    final vocalDuration = await getAudioDuration(widget.filePath);
+
+    List<MixerTrack> tracks = [
+      MixerTrack(id: "vocal", path: widget.filePath),
+      MixerTrack(id: "music", path: bgmPath),
+    ];
+    if (widget.metronome) {
+      tracks.add(MixerTrack(id: "met_1", path: pathH, offset: 0, repeat: true, repeatInterval: 2, volume: metVol));
+      tracks.add(MixerTrack(id: "met_2", path: pathL, offset: 0.5, repeat: true, repeatInterval: 2, volume: metVol));
+      tracks.add(MixerTrack(id: "met_3", path: pathL, offset: 1, repeat: true, repeatInterval: 2, volume: metVol));
+      tracks.add(MixerTrack(id: "met_4", path: pathL, offset: 1.5, repeat: true, repeatInterval: 2, volume: metVol));
+    }
+
+    player.setMixData(MixerComposeModel(tracks: tracks, outputDuration: vocalDuration));
   }
 
   @override
