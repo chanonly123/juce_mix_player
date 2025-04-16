@@ -8,7 +8,7 @@
 - Supported sample rate is 48000
 
 ### Demo
-[![](https://markdown-videos-api.jorgenkh.no/youtube/3ZiBKfGdLjs)](https://youtu.be/3ZiBKfGdLjs)
+[![](https://markdown-videos-api.jorgenkh.no/youtube/M8MoH5kCExA.gif)](https://youtube.com/shorts/M8MoH5kCExA?feature=share)
 
 ### Requirements
 - Android Studio (for Android)
