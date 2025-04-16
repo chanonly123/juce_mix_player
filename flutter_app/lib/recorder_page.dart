@@ -1,6 +1,5 @@
 import 'dart:developer';
 import 'dart:io';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_app/asset_helper.dart';
@@ -31,7 +30,6 @@ class RecorderPageState extends State<RecorderPage> {
   double recordingDuration = 0.0;
   MixerDeviceList deviceList = MixerDeviceList(devices: []);
   JuceMixRecState state = JuceMixRecState.IDLE;
-  // in Db range -60 to 0
   double currReclevel = -200.0;
   double maxReclevel = -200.0;
   final double minAllowedLevelDb = -24.0;

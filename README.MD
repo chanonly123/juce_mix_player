@@ -5,7 +5,7 @@
 - Record audio simultaneously
 - Available device lising and selection
 - Platform independent code
-- Supported sample rate is 48000. (Variable rate is coming soon)
+- Supported sample rate is 48000
 
 ### Demo
 [![](https://markdown-videos-api.jorgenkh.no/youtube/3ZiBKfGdLjs)](https://youtu.be/3ZiBKfGdLjs)
@@ -23,7 +23,7 @@ or
 - run `sh setup_clean_projects.sh` or `win_setup_clean_projects.bat` (needs work)
 
 ### build flutter project
-- inside `flutter_app` run `dart run ffigen`
+- inside `juce_mix_player_package` run `dart run ffigen`
 - run flutter project normally
 
 ### Usage
