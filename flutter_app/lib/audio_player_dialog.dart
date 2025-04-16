@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/utils.dart';
 import 'package:juce_mix_player/juce_mix_player.dart';
 
 class AudioPlayerDialog extends StatefulWidget {
@@ -16,7 +17,7 @@ class AudioPlayerDialog extends StatefulWidget {
 }
 
 class AudioPlayerDialogState extends State<AudioPlayerDialog> {
-  final player = JuceMixPlayer(record: false, play: true);
+  final player = JuceMixPlayer();
   double progress = 0.0;
   bool isPlaying = false;
   bool isPlayerReady = false;
@@ -26,8 +27,10 @@ class AudioPlayerDialogState extends State<AudioPlayerDialog> {
   @override
   void initState() {
     super.initState();
+    player.setFile(widget.filePath);
 
     player.setStateUpdateHandler((state) {
+      if (!mounted) return; // Check if widget is still mounted
       setState(() {
         playerState = state;
         switch (state) {
@@ -54,13 +57,12 @@ class AudioPlayerDialogState extends State<AudioPlayerDialog> {
     });
 
     player.setErrorHandler((error) {
+      if (!mounted) return; // Check if widget is still mounted
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Player error: $error'),
         backgroundColor: Colors.red,
       ));
     });
-
-    player.setFile(widget.filePath);
 
     player.setProgressHandler((progress) {
       if (!isSliderEditing) {
@@ -71,6 +73,7 @@ class AudioPlayerDialogState extends State<AudioPlayerDialog> {
 
   @override
   void dispose() {
+    player.stop();
     player.dispose();
     super.dispose();
   }
@@ -82,7 +85,7 @@ class AudioPlayerDialogState extends State<AudioPlayerDialog> {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('Progress: ${(progress * player.getDuration()).toStringAsFixed(2)} / ${player.getDuration().toStringAsFixed(2)}'),
+          Text('${TimeUtils.formatDuration(progress * player.getDuration())} / ${TimeUtils.formatDuration(player.getDuration())}'),
           if (!isPlayerReady) const CircularProgressIndicator(),
           if (isPlayerReady)
             Slider(
@@ -103,7 +106,6 @@ class AudioPlayerDialogState extends State<AudioPlayerDialog> {
             IconButton(
               icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
               onPressed: () {
-                isPlaying ? player.pause() : player.play();
                 player.togglePlayPause();
               },
               iconSize: 36,

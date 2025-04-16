@@ -12,14 +12,14 @@ class JuceMixPlayer : private juce::Timer, public juce::AudioIODeviceCallback, p
 {
 private:
 
-    bool _record;
-    bool _play;
+    inline static juce::AudioDeviceManager* deviceManager;
 
     juce::CriticalSection lock;
     TaskQueue taskQueue;
     TaskQueue recWriteTaskQueue;
     int samplesPerBlockExpected = 0;
     float deviceSampleRate = 0;
+    std::unique_ptr<juce::XmlElement> deviceManagerSavedState;
 
     MixerDeviceList deviceList;
 
@@ -27,7 +27,6 @@ private:
 
     juce::AudioFormatManager formatManager;
     juce::LinearInterpolator interpolator[2];
-    juce::AudioDeviceManager* deviceManager;
 
     // MARK: Playing
     JuceMixPlayerState currentState = JuceMixPlayerState::IDLE;
@@ -100,6 +99,8 @@ private:
     
     void notifyDeviceUpdates();
 
+    void setDefaultSampleRate();
+
 public:
 
     JuceMixPlayerCallbackFloat onProgressCallback = nullptr;
@@ -113,7 +114,7 @@ public:
 
     JuceMixPlayerCallbackString onDeviceUpdateCallback = nullptr;
 
-    JuceMixPlayer(int record, int play);
+    JuceMixPlayer();
 
     ~JuceMixPlayer();
 

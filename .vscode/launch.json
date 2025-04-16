@@ -9,6 +9,13 @@
             "cwd": "flutter_app",
             "request": "launch",
             "type": "dart",
+        },
+        {
+            "name": "Flutter App (Release)",
+            "cwd": "flutter_app",
+            "request": "launch",
+            "type": "dart",
+            "args": ["--release"]
         }
     ]
 }

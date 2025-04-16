@@ -1,5 +1,37 @@
 #include "JuceMixPlayer.h"
 
+#if JUCE_IOS || JUCE_MAC
+
+#import <AVFoundation/AVFoundation.h>
+#define JUCE_NSERROR_CHECK(X)     { NSError* error = nil; X; logNSError (error); }
+
+// MARK: set audio session for iOS
+static void logNSError (NSError* e) {
+    if (e != nil) {
+        PRINT("iOS Audio error: " << [e.localizedDescription UTF8String]);
+//        jassertfalse;
+    }
+}
+
+void setAudioSessionPlay() {
+    NSUInteger options = AVAudioSessionCategoryOptionMixWithOthers;
+    JUCE_NSERROR_CHECK ([[AVAudioSession sharedInstance] setCategory: AVAudioSessionCategoryPlayback
+                                                         withOptions: options
+                                                               error: &error]);
+}
+
+void setAudioSessionRecord() {
+    NSUInteger options = AVAudioSessionCategoryOptionDefaultToSpeaker
+    | AVAudioSessionCategoryOptionAllowBluetoothA2DP;
+    JUCE_NSERROR_CHECK ([[AVAudioSession sharedInstance] setCategory: AVAudioSessionCategoryPlayAndRecord
+                                                         withOptions: options
+                                                               error: &error]);
+}
+#else
+void setAudioSessionPlay() {}
+void setAudioSessionRecord() {}
+#endif
+
 std::string JuceMixPlayerRecState_toString(JuceMixPlayerRecState state) {
     nlohmann::json j = state;
     return j;
@@ -10,11 +42,8 @@ std::string JuceMixPlayerState_toString(JuceMixPlayerState state) {
     return j;
 }
 
-JuceMixPlayer::JuceMixPlayer(int record, int play) {
-    PRINT("JuceMixPlayer() record: " << record << ", play: " << play);
-
-    this->_record = record;
-    this->_play = play;
+JuceMixPlayer::JuceMixPlayer() {
+    PRINT("JuceMixPlayer()");
 
     taskQueue.name = "taskQueue";
     recWriteTaskQueue.name = "recWriteTaskQueue";
@@ -23,39 +52,36 @@ JuceMixPlayer::JuceMixPlayer(int record, int play) {
 
     juce::WindowedSincInterpolator interpolator;
 
-    taskQueue.async([&, this, record, play]{
-        juce::MessageManager::getInstanceWithoutCreating()->callAsync([&, this, record, play]{
+    juce::MessageManager::getInstanceWithoutCreating()->callAsync([&, this]{
+        if (deviceManager == nullptr) {
             deviceManager = new juce::AudioDeviceManager();
-            deviceManager->addAudioCallback(this);
-            deviceManager->addChangeListener(this);
-            deviceManager->initialiseWithDefaultDevices(record == 1 ? 1 : 0, play == 1 ? 2 : 0);
+        }
+        deviceManager->addAudioCallback(this);
+        deviceManager->addChangeListener(this);
+        deviceManager->initialise(0, 2, nullptr, true, {}, nullptr);
 
-            juce::AudioDeviceManager::AudioDeviceSetup setup = deviceManager->getAudioDeviceSetup();
-            setup.sampleRate = settings.sampleRate;
-            bool treatAsChosenDevice = true;
-            deviceManager->setAudioDeviceSetup(setup, treatAsChosenDevice);
-            inputLevelMeter = deviceManager->getInputLevelGetter();
+//        setDefaultSampleRate();
 
-            PRINT("JuceMixPlayer initialized");
-        });
+        inputLevelMeter = deviceManager->getInputLevelGetter();
+
+        PRINT("JuceMixPlayer initialized");
     });
 }
 
 void JuceMixPlayer::dispose() {
-    taskQueue.async([&, this]{
+    juce::MessageManager::getInstanceWithoutCreating()->callAsync([&]{
         PRINT("JuceMixPlayer::dispose");
-
+        _stopProgressTimer();
+        deviceManager->removeAudioCallback(this);
+        deviceManager->removeChangeListener(this);
         stop();
         stopRecorder();
-
-        std::this_thread::sleep_for(std::chrono::seconds(2));
-        juce::MessageManager::getInstanceWithoutCreating()->callAsync([&] {
-            deviceManager->removeAudioCallback(this);
-            deviceManager->closeAudioDevice();
-            _stopProgressTimer();
-            delete deviceManager;
+        std::thread thread([&]{
+            taskQueue.stopQueue();
+            juce::Thread::sleep(5000);
             delete this;
         });
+        thread.detach();
     });
 }
 
@@ -78,7 +104,6 @@ void JuceMixPlayer::_stopProgressTimer() {
 }
 
 void JuceMixPlayer::_playInternal() {
-    if (!_play) return;
     if (!_isPlaying) {
         _isPlaying = true;
         _onStateUpdateNotify(JuceMixPlayerState::PLAYING);
@@ -87,7 +112,6 @@ void JuceMixPlayer::_playInternal() {
 }
 
 void JuceMixPlayer::_pauseInternal(bool stop) {
-    if (!_play) return;
     if (_isPlaying) {
         _isPlaying = false;
         _stopProgressTimer();
@@ -119,7 +143,6 @@ void JuceMixPlayer::stop() {
 }
 
 void JuceMixPlayer::seek(float value) {
-    if (!_play) return;
     float _value = std::min(1.0f, std::max(value, 0.0f));
     taskQueue.async([&, _value]{
         bool wasPlaying = _isPlaying;
@@ -160,7 +183,6 @@ void JuceMixPlayer::togglePlayPause() {
 }
 
 void JuceMixPlayer::setJson(const char* json) {
-    if (!_play) return;
     std::string json_(json);
     taskQueue.async([&, json_]{
         try {
@@ -181,6 +203,8 @@ void JuceMixPlayer::setJson(const char* json) {
 
 void JuceMixPlayer::setSettings(const char* json) {
     std::string json_(json);
+    PRINT("setSettings: " << json);
+    
     taskQueue.async([&, json_]{
         try {
             MixerSettings _settings = MixerModel::parseSettings(json_.c_str());
@@ -396,7 +420,6 @@ int JuceMixPlayer::isPlaying() {
 // MARK: Recorder
 
 void JuceMixPlayer::prepareRecorder(const char *file) {
-    if (!_record) return;
     std::string path(file);
     taskQueue.async([&, path]{
         if (_isRecording) {
@@ -409,26 +432,38 @@ void JuceMixPlayer::prepareRecorder(const char *file) {
 }
 
 void JuceMixPlayer::startRecorder() {
-    if (!_record) return;
-    taskQueue.async([&]{
+    if (_isRecording) return;
+    juce::MessageManager::getInstanceWithoutCreating()->callAsync([&]{
         if (!_isRecorderPrepared) {
             if (onRecErrorCallback) onRecErrorCallback(this, "Failed to start recording, prepare not called");
             _onRecStateUpdateNotify(JuceMixPlayerRecState::ERROR);
             return;
         }
-        _isRecording = true;
-        _onRecStateUpdateNotify(JuceMixPlayerRecState::RECORDING);
+        deviceManagerSavedState = deviceManager->createStateXml();
+        deviceManager->closeAudioDevice();
+        deviceManager->initialise(1, 2, deviceManagerSavedState.get(), true, {}, nullptr);
+        setAudioSessionRecord();
         _startProgressTimer();
+        _onRecStateUpdateNotify(JuceMixPlayerRecState::RECORDING);
+        _isRecording = true;
+        if (settings.recBgPlayback) {
+            play();
+        }
     });
 }
 
 void JuceMixPlayer::stopRecorder() {
-    if (!_record) return;
-    taskQueue.async([&]{
+    if (!_isRecording) return;
+    juce::MessageManager::getInstanceWithoutCreating()->callAsync([&]{
         if (_isRecording) {
-            _isRecording = false;
+            stop();
             _stopProgressTimer();
+            _isRecording = false;
             _finishRecording();
+            deviceManagerSavedState = deviceManager->createStateXml();
+            deviceManager->closeAudioDevice();
+            deviceManager->initialise(0, 2, deviceManagerSavedState.get(), true, {}, nullptr);
+            setAudioSessionPlay();
         }
     });
 }
@@ -444,7 +479,7 @@ void JuceMixPlayer::createWriterForRecorder() {
     recordBuffer2.setSize(1, recordBufferDuration * 1.5 * deviceSampleRate);
 
     std::string format = "wav";
-    int targetSampleRate = deviceSampleRate;
+    int targetSampleRate = settings.sampleRate;
     juce::File outputFile(recordPath);
     outputFile.deleteFile();
     juce::FileOutputStream* outputStream = new juce::FileOutputStream(outputFile);
@@ -482,12 +517,57 @@ void JuceMixPlayer::flushRecordBufferToFile(juce::AudioBuffer<float>& buffer, fl
         _onRecStateUpdateNotify(JuceMixPlayerRecState::ERROR);
         return;
     }
-    if (sampleCount == 0) {
+    if (sampleCount <= 0) {
         return;
     }
+    PRINT("flushRecordBufferToFile: " << sampleCount / deviceSampleRate);
     bool success = false;
-    success = recWriter->writeFromAudioSampleBuffer(buffer, 0, sampleCount);
-    success = recWriter->flush();
+
+    const int targetSampleRate = settings.sampleRate;
+    const int numInputSamples = static_cast<int>(sampleCount);
+    
+    if (deviceSampleRate != targetSampleRate) {
+        PRINT("flushRecordBufferToFile: REPSAMPLING =====");
+        const double ratio = static_cast<double>(targetSampleRate) / deviceSampleRate;
+        const double actualRatio = static_cast<double>(deviceSampleRate) / targetSampleRate;
+        const int numChannels = buffer.getNumChannels();
+        const int numOutputSamples = static_cast<int>(std::ceil(numInputSamples * ratio));
+
+        // Create upsampled buffer
+        juce::AudioBuffer<float> upsampledBuffer(numChannels, numOutputSamples);
+
+        // Resample each channel
+        for (int ch = 0; ch < numChannels; ++ch) {
+            const float* inputData = buffer.getReadPointer(ch);
+            float* outputData = upsampledBuffer.getWritePointer(ch);
+
+            juce::LagrangeInterpolator interpolator;
+            interpolator.reset();
+            interpolator.process(actualRatio,
+                                inputData,
+                                outputData,
+                                numOutputSamples,
+                                numInputSamples,
+                                0);
+        }
+        
+        const double expectedDuration = static_cast<double>(numInputSamples) / deviceSampleRate;
+        const double resultDuration = static_cast<double>(upsampledBuffer.getNumSamples()) / targetSampleRate;
+        const double durationDifference = std::abs(expectedDuration - resultDuration);
+
+        PRINT("- Original: " << numInputSamples << " samples @ " << deviceSampleRate << "Hz (" << expectedDuration << "s)");
+        PRINT("- Resampled: " << upsampledBuffer.getNumSamples() << " samples @ " << targetSampleRate << "Hz (" << resultDuration << "s)");
+        PRINT("- Duration difference: " << (durationDifference * 1000.0) << "ms");
+        jassert(durationDifference < (1.0 / targetSampleRate) &&
+               "Resampling duration mismatch exceeds 1 sample tolerance");
+        success = recWriter->writeFromAudioSampleBuffer(upsampledBuffer, 0, upsampledBuffer.getNumSamples());
+    } else {
+        success = recWriter->writeFromAudioSampleBuffer(buffer, 0, numInputSamples);
+    }
+
+    // Flush and handle errors
+    success = success && recWriter->flush();
+
     if (!success) {
         stopRecorder();
         _onRecStateUpdateNotify(JuceMixPlayerRecState::ERROR);
@@ -508,26 +588,48 @@ void JuceMixPlayer::_onRecStateUpdateNotify(JuceMixPlayerRecState state) {
 // MARK: Device management
 void JuceMixPlayer::notifyDeviceUpdates() {
     MixerDeviceList list;
+
     juce::AudioIODeviceType* audioDeviceType = deviceManager->getCurrentDeviceTypeObject();
     juce::AudioDeviceManager::AudioDeviceSetup setup = deviceManager->getAudioDeviceSetup();
+
     if (audioDeviceType) {
-        juce::StringArray inputDevices = audioDeviceType->getDeviceNames(true);
-        juce::StringArray outputDevices = audioDeviceType->getDeviceNames(false);
-        for (juce::String& name : inputDevices) {
-            MixerDevice dev;
-            dev.name = name.toStdString();
-            dev.isInput = true;
-            dev.isSelected = setup.inputDeviceName == name;
-            list.devices.push_back(dev);
-        }
-        for (juce::String& name : outputDevices) {
-            MixerDevice dev;
-            dev.name = name.toStdString();
-            dev.isInput = false;
-            dev.isSelected = setup.outputDeviceName == name;
-            list.devices.push_back(dev);
+        juce::AudioIODevice* currentDevice = deviceManager->getCurrentAudioDevice();
+        if (currentDevice != nullptr) {
+            // Current Input Device Info
+            MixerDevice inputDev;
+            inputDev.name = currentDevice->getName().toStdString();
+            inputDev.isInput = true;
+            inputDev.isSelected = (setup.inputDeviceName == currentDevice->getName());
+            
+            // Get input channels
+            juce::StringArray inputChannels = currentDevice->getInputChannelNames();
+            for (const auto& ch : inputChannels)
+                inputDev.inputChannelNames.push_back(ch.toStdString());
+            
+            inputDev.currentSampleRate = currentDevice->getCurrentSampleRate();
+            for (auto rate : currentDevice->getAvailableSampleRates())
+                inputDev.availableSampleRates.push_back(rate);
+            inputDev.deviceType = audioDeviceType->getTypeName().toStdString();
+            list.devices.push_back(inputDev);
+
+            // Current Output Device Info
+            MixerDevice outputDev;
+            outputDev.name = currentDevice->getName().toStdString();
+            outputDev.isInput = false;
+            outputDev.isSelected = (setup.outputDeviceName == currentDevice->getName());
+            
+            // Get output channels
+            juce::StringArray outputChannels = currentDevice->getOutputChannelNames();
+            for (const auto& ch : outputChannels)
+                outputDev.outputChannelNames.push_back(ch.toStdString());
+            
+            outputDev.currentSampleRate = currentDevice->getCurrentSampleRate();
+            outputDev.availableSampleRates = inputDev.availableSampleRates; // Same device
+            outputDev.deviceType = inputDev.deviceType;
+            list.devices.push_back(outputDev);
         }
     }
+
     taskQueue.async([&, list]{
         if (!(deviceList == list)) {
             deviceList = list;
@@ -539,58 +641,70 @@ void JuceMixPlayer::notifyDeviceUpdates() {
 }
 
 void JuceMixPlayer::setUpdatedDevices(const char* json) {
-    std::string json_(json);
-    taskQueue.async([&, json_]{
-        try {
-            MixerDeviceList list = MixerDeviceList::decode(json_);
-            if (!(deviceList == list)) {
-                deviceList = list;
+//    std::string json_(json);
+//    taskQueue.async([&, json_]{
+//        try {
+//            MixerDeviceList list = MixerDeviceList::decode(json_);
+//            if (!(deviceList == list)) {
+//                deviceList = list;
+//
+//                MixerDevice inp;
+//                MixerDevice out;
+//                for (auto& dev: list.devices) {
+//                    if (dev.isSelected && dev.isInput && inp.name == "") {
+//                        inp = dev;
+//                    }
+//                    if (dev.isSelected && !dev.isInput && out.name == "") {
+//                        out = dev;
+//                    }
+//                }
+//
+//                bool hasChanges = inp.name != "" || out.name != "";
+//
+//                if (!hasChanges) {
+//                    PRINT("setUpdatedDevices: No selected device found");
+//                    return;
+//                }
+//
+//                PRINT("setUpdatedDevices: selected inp: " << inp.name << ", out: " << out.name);
+//
+//                juce::MessageManager::getInstanceWithoutCreating()->callAsync([&, inp, out]{
+//                    juce::AudioDeviceManager::AudioDeviceSetup setup = deviceManager->getAudioDeviceSetup();
+//                    if (inp.name != "") setup.inputDeviceName = juce::String(inp.name);
+//                    if (out.name != "") setup.outputDeviceName = juce::String(out.name);
+//                    bool treatAsChosenDevice = true;
+//                    juce::String err = deviceManager->setAudioDeviceSetup(setup, treatAsChosenDevice);
+//                    if (err.isNotEmpty()) {
+//                        _onErrorNotify(err.toStdString());
+//                    }
+//                    notifyDeviceUpdates();
+//                });
+//            } else {
+//                PRINT("setUpdatedDevices: Same device data! ignoring");
+//            }
+//        } catch (const std::exception& e) {
+//            _onErrorNotify(std::string(e.what()));
+//            notifyDeviceUpdates();
+//        }
+//    });
+}
 
-                MixerDevice inp;
-                MixerDevice out;
-                for (auto& dev: list.devices) {
-                    if (dev.isSelected && dev.isInput && inp.name == "") {
-                        inp = dev;
-                    }
-                    if (dev.isSelected && !dev.isInput && out.name == "") {
-                        out = dev;
-                    }
-                }
-
-                bool hasChanges = inp.name != "" || out.name != "";
-
-                if (!hasChanges) {
-                    PRINT("setUpdatedDevices: No selected device found");
-                    return;
-                }
-
-                PRINT("setUpdatedDevices: selected inp: " << inp.name << ", out: " << out.name);
-
-                juce::MessageManager::getInstanceWithoutCreating()->callAsync([&, inp, out]{
-                    juce::AudioDeviceManager::AudioDeviceSetup setup = deviceManager->getAudioDeviceSetup();
-                    if (inp.name != "") setup.inputDeviceName = juce::String(inp.name);
-                    if (out.name != "") setup.outputDeviceName = juce::String(out.name);
-                    bool treatAsChosenDevice = true;
-                    juce::String err = deviceManager->setAudioDeviceSetup(setup, treatAsChosenDevice);
-                    if (err.isNotEmpty()) {
-                        _onErrorNotify(err.toStdString());
-                    }
-                    notifyDeviceUpdates();
-                });
-            } else {
-                PRINT("setUpdatedDevices: Same device data! ignoring");
-            }
-        } catch (const std::exception& e) {
-            _onErrorNotify(std::string(e.what()));
-            notifyDeviceUpdates();
-        }
-    });
+void JuceMixPlayer::setDefaultSampleRate() {
+//    juce::AudioDeviceManager::AudioDeviceSetup setup = deviceManager->getAudioDeviceSetup();
+//    setup.sampleRate = settings.sampleRate;
+//    bool treatAsChosenDevice = true;
+//    deviceManager->setAudioDeviceSetup(setup, treatAsChosenDevice);
 }
 
 // MARK: AudioIODeviceCallback
 void JuceMixPlayer::audioDeviceAboutToStart(juce::AudioIODevice *device) {
     this->deviceSampleRate = device->getCurrentSampleRate();
     this->samplesPerBlockExpected = device->getCurrentBufferSizeSamples();
+    PRINT("audioDeviceAboutToStart" <<
+          ", deviceSampleRate: " << deviceSampleRate <<
+          ", getInputLatencyInSamples: " << device->getInputLatencyInSamples() <<
+          ", getOutputLatencyInSamples: " << device->getOutputLatencyInSamples()
+          );
 }
 
 void JuceMixPlayer::audioDeviceIOCallbackWithContext(const float *const *inputChannelData,
@@ -632,8 +746,19 @@ void JuceMixPlayer::audioDeviceIOCallbackWithContext(const float *const *inputCh
             } else {
                 _onProgressNotify(1);
                 _onStateUpdateNotify(JuceMixPlayerState::COMPLETED);
+                
+                if (_isRecording && settings.stopRecOnPlaybackComplete) {
+                    stopRecorder();
+                }
             }
-            _pauseInternal(false);
+            
+            if (!_isRecording && settings.loop) {
+                _isPlaying = false;
+                playHeadIndex = 0;
+                play();
+            } else {
+                _pauseInternal(false);
+            }
             return;
         }
 
@@ -668,15 +793,17 @@ void JuceMixPlayer::audioDeviceStopped() {
 // MARK: juce::Timer
 void JuceMixPlayer::timerCallback() {
     taskQueue.async([&]{
-        if (_isPlaying && _play && playBuffer.getNumSamples() > 0) {
+        if (_isPlaying && playBuffer.getNumSamples() > 0) {
             _onProgressNotify((float)playHeadIndex / (float)playBuffer.getNumSamples());
         }
-        if (_isRecording && _record) {
+        if (_isRecording) {
             if (onRecProgressCallback) {
                 onRecProgressCallback(this, (float)recordTimerIndex / (float)deviceSampleRate);
             }
             if (onRecLevelCallback) {
-                onRecLevelCallback(this, (float)inputLevelMeter->getCurrentLevel());
+                const float level = inputLevelMeter->getCurrentLevel();
+                const float levelInDb = juce::Decibels::gainToDecibels(level);
+                onRecLevelCallback(this, levelInDb);          
             }
         }
     });

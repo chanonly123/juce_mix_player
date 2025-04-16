@@ -36,21 +36,36 @@ NLOHMANN_JSON_SERIALIZE_ENUM(JuceMixPlayerState,{
 std::string JuceMixPlayerState_toString(JuceMixPlayerState state);
 
 struct MixerDevice {
-
     std::string name = "";
     bool isInput = false;
     bool isSelected = false;
+    
+    // New fields for device details
+    std::vector<std::string> inputChannelNames;
+    std::vector<std::string> outputChannelNames;
+    double currentSampleRate = 0.0;
+    std::vector<double> availableSampleRates;
+    std::string deviceType;
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(MixerDevice,
                                                 name,
                                                 isInput,
-                                                isSelected);
+                                                isSelected,
+                                                inputChannelNames,
+                                                outputChannelNames,
+                                                currentSampleRate,
+                                                availableSampleRates,
+                                                deviceType);
 
     bool operator==(const MixerDevice& other) const {
-        return
-        name == other.name
-        && isInput == other.isInput
-        && isSelected == other.isSelected;
+        return name == other.name &&
+               isInput == other.isInput &&
+               isSelected == other.isSelected &&
+               inputChannelNames == other.inputChannelNames &&
+               outputChannelNames == other.outputChannelNames &&
+               currentSampleRate == other.currentSampleRate &&
+               availableSampleRates == other.availableSampleRates &&
+               deviceType == other.deviceType;
     }
 };
 
@@ -73,16 +88,23 @@ struct MixerDeviceList {
 };
 
 struct MixerSettings {
-
     // seconds
     float progressUpdateInterval = 0.05;
-
     // player and recorder sample rate
     int sampleRate = 48000;
+    // stop record on playback ends
+    bool stopRecOnPlaybackComplete = false;
+    // audio Playback loop
+    bool loop = false;
+    // audio playback during rec
+    bool recBgPlayback = false;
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(MixerSettings,
                                                 progressUpdateInterval,
-                                                sampleRate);
+                                                sampleRate,
+                                                loop,
+                                                recBgPlayback,
+                                                stopRecOnPlaybackComplete);
 };
 
 struct MixerTrack {

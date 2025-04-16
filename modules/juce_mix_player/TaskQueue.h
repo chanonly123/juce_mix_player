@@ -14,9 +14,11 @@ private:
     bool ended = true;
     std::deque<TaskQueueItem> taskList;
     void executeNext();
+    bool stop = false;
 public:
     std::string name;
     static TaskQueue shared;
     TaskQueue()=default;
     void async(TaskQueueItem task);
+    void stopQueue();
 };

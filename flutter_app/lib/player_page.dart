@@ -3,6 +3,8 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_app/asset_helper.dart';
+import 'package:flutter_app/utils.dart';
+import 'package:flutter_app/widgets.dart';
 import 'package:juce_mix_player/juce_mix_player.dart';
 
 class PlayerPage extends StatefulWidget {
@@ -13,11 +15,12 @@ class PlayerPage extends StatefulWidget {
 }
 
 class PlayerPageState extends State<PlayerPage> {
-  final player = JuceMixPlayer(record: false, play: true);
+  final player = JuceMixPlayer();
   double progress = 0.0;
   bool isSliderEditing = false;
   bool isPlaying = false;
   MixerDeviceList deviceList = MixerDeviceList(devices: []);
+  bool loopEnabled = false;  // Add loop state variable
 
   JuceMixPlayerState state = JuceMixPlayerState.IDLE;
 
@@ -25,36 +28,44 @@ class PlayerPageState extends State<PlayerPage> {
   void initState() {
     super.initState();
 
+    player.setSettings(MixerSettings(
+      loop: loopEnabled,  // Changed from hardcoded false
+    ));
+
     player.setStateUpdateHandler((state) {
       setState(() => this.state = state);
       print("setStateUpdateHandler:  ${state.toString()}");
       switch (state) {
         case JuceMixPlayerState.PAUSED:
           setState(() => isPlaying = false);
+          break;
         case JuceMixPlayerState.PLAYING:
           setState(() => isPlaying = true);
+          break;
         case JuceMixPlayerState.IDLE:
-        // TODO: Handle this case.
-        case JuceMixPlayerState.READY:
           // TODO: Handle this case.
+          break;
+        case JuceMixPlayerState.READY:
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text('Player is ready, You can can play now!'),
             backgroundColor: Colors.green,
           ));
+          break;
         case JuceMixPlayerState.STOPPED:
           // TODO: Handle this case.
-          setState(() {
-            isPlaying = false;
-            // progress = 0.0;
-          });
+          setState(() => isPlaying = false);
+          break;
         case JuceMixPlayerState.COMPLETED:
-        // TODO: Handle this case.
+          // TODO: Handle this case.
+          break;
         case JuceMixPlayerState.ERROR:
-        // TODO: Handle this case.
+          // TODO: Handle this case.
+          break;
       }
     });
 
     player.setProgressHandler((progress) {
+      // TODO: add 1 sec debounce
       if (!isSliderEditing) {
         setState(() => this.progress = progress);
       }
@@ -72,9 +83,6 @@ class PlayerPageState extends State<PlayerPage> {
 
     player.setDeviceUpdateHandler((deviceList) {
       setState(() {
-        // this.deviceList = MixerDeviceList(
-        //   devices: deviceList.devices.where((device) => device.isInput == false).toList(),
-        // );
         this.deviceList = deviceList;
       });
       log('devices: ${JsonEncoder.withIndent('  ').convert(deviceList.toJson())}');
@@ -89,23 +97,10 @@ class PlayerPageState extends State<PlayerPage> {
     super.dispose();
   }
 
-  @override
-  void deactivate() {
-    print('PlayerPage:deactivate');
-    player.stop();
-    super.deactivate();
+  void toggleLoop() {
+    setState(() => loopEnabled = !loopEnabled);
+    player.setSettings(MixerSettings(loop: loopEnabled));
   }
-
-  // @override
-  // void didChangeDependencies() {
-  //   print('PlayerPage:didChangeDependencies');
-  //   super.didChangeDependencies();
-  //   if (ModalRoute.of(context)?.isCurrent ?? false) {
-  //     if (!isPlaying) player.play();
-  //   } else {
-  //     player.pause();
-  //   }
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -116,7 +111,21 @@ class PlayerPageState extends State<PlayerPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Progress: ${(progress * player.getDuration()).toStringAsFixed(2)} / ${player.getDuration().toStringAsFixed(2)}'),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '${TimeUtils.formatDuration(progress * player.getDuration())} / ${TimeUtils.formatDuration(player.getDuration())}',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.loop, color: loopEnabled ? Colors.blue : Colors.grey),
+                  onPressed: toggleLoop,
+                  tooltip: 'Toggle Loop',
+                ),
+              ],
+            ),
             Slider(
               value: progress,
               onChanged: (value) {
@@ -191,37 +200,30 @@ class PlayerPageState extends State<PlayerPage> {
                   },
                   child: const Text('Set mixed with metronome'),
                 ),
-                const SizedBox(width: 16),
-                popupMenu(),
+                const SizedBox(height: 30),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.speaker_group, size: 20),
+                  label: const Text('Audio Devices'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue[900],
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      side: BorderSide(color: Colors.blue.shade700, width: 1),
+                    ),
+                  ),
+                  onPressed: () => showDialog(
+                    context: context,
+                    builder: (context) => DeviceListDialog(devices: deviceList.devices),
+                  ),
+                ),
               ],
             ),
           ],
         ),
       ),
     );
-  }
-
-  PopupMenuButton popupMenu() {
-    return PopupMenuButton<MixerDevice>(
-      child: Text("DEVICES: ${deviceList.devices.length}"),
-      itemBuilder: (context) => deviceList.devices.map((dev) {
-        return PopupMenuItem<MixerDevice>(
-          value: dev,
-          child: Text(getName(dev)),
-        );
-      }).toList(),
-      onSelected: (selectedDevice) {
-        deviceList.devices.forEach((d) {
-          d.isSelected = false;
-        });
-        selectedDevice.isSelected = true;
-        player.setUpdatedDevices(deviceList);
-      },
-    );
-  }
-
-  String getName(MixerDevice device) {
-    return "${device.name} ${device.isSelected ? " ✅" : ""}";
   }
 
   Future<MixerComposeModel> createMetronomeTracks() async {

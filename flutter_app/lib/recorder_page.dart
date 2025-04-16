@@ -1,12 +1,16 @@
 import 'dart:developer';
 import 'dart:io';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_app/asset_helper.dart';
+import 'package:flutter_app/utils.dart';
+import 'package:flutter_app/widgets.dart';
+import 'package:percent_indicator/percent_indicator.dart';
 import 'package:juce_mix_player/juce_mix_player.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'audio_player_dialog.dart';
+import 'package:flutter/services.dart';
 
 class RecorderPage extends StatefulWidget {
   const RecorderPage({super.key});
@@ -16,27 +20,58 @@ class RecorderPage extends StatefulWidget {
 }
 
 class RecorderPageState extends State<RecorderPage> {
-  final recorder = JuceMixPlayer(record: true, play: false);
+  final recorder = JuceMixPlayer();
   bool isRecording = false;
   bool isRecorderPrepared = false;
   bool isRecorderPreparing = false;
   bool isMicPermissionGranted = false;
   String recordingPath = '';
   DateTime? recordingStartTime;
-  Duration recordingDuration = Duration.zero;
+  double recordingDuration = 0.0;
   MixerDeviceList deviceList = MixerDeviceList(devices: []);
   JuceMixRecState state = JuceMixRecState.IDLE;
-  // positive amplitude values (not in dB)
-  double reclevel = 0.0;
-  double maxReclevel = 0.0;
+  double currReclevel = -200.0;
+  double maxReclevel = -200.0;
+  final double minAllowedLevelDb = -24.0;
+  final double maxAllowedLevelDb = -3.5;
+  bool isLevelTooHigh = false; // Track if level is too high to avoid repeated vibrations
+  bool isMetronomeEnabled = false;
+  bool isRecStoppedDueToDeviceChange = false;
 
   @override
   void initState() {
     super.initState();
     print("RecorderPageState.initState");
 
+    recorder.setSettings(MixerSettings());
+
     // Check microphone permission
     _checkMicrophonePermission();
+
+    recorder.setRecLevelHandler((level) {
+      // log("Recorder level: $level");
+      setState(() {
+        if (isRecording) {
+          currReclevel = level;
+          if (level > maxReclevel) {
+            maxReclevel = level;
+          }
+
+          // Check if level exceeds maximum allowed and trigger haptic feedback
+          if (level > maxAllowedLevelDb && !isLevelTooHigh) {
+            isLevelTooHigh = true;
+            HapticFeedback.heavyImpact();
+          } else if (level <= maxAllowedLevelDb) {
+            isLevelTooHigh = false;
+          }
+        }
+      });
+    });
+
+    recorder.setRecProgressHandler((progress) {
+      // log("Recorder progress: $progress");
+      setState(() => recordingDuration = progress);
+    });
 
     // Set up state update handler
     recorder.setRecStateUpdateHandler((state) {
@@ -47,6 +82,13 @@ class RecorderPageState extends State<RecorderPage> {
         case JuceMixRecState.IDLE:
           setState(() {
             isRecorderPrepared = false;
+            isRecorderPreparing = false;
+            isRecording = false;
+            recordingStartTime = null;
+            recordingDuration = 0.0;
+            currReclevel = -200.0;
+            maxReclevel = -200.0;
+            isLevelTooHigh = false;
           });
           break;
         case JuceMixRecState.READY:
@@ -69,8 +111,59 @@ class RecorderPageState extends State<RecorderPage> {
             isRecording = false;
             isRecorderPrepared = false;
             recordingStartTime = null;
-            recordingDuration = Duration.zero;
+            // recordingDuration = 0.0;
+            isLevelTooHigh = false;
           });
+          // Show audio player dialog when recording stops
+
+          if (mounted && isRecStoppedDueToDeviceChange) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text("Recording Stopped"),
+                  content: const Text("Device change detected during recording."),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        showDialog(
+                          context: context,
+                          builder: (context) => AudioPlayerDialog(
+                            filePath: recordingPath,
+                            onOkPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                                content: Text('Recording processing completed'),
+                                backgroundColor: Colors.green,
+                              ));
+                            },
+                          ),
+                        );
+                      },
+                      child: const Text("OK"),
+                    ),
+                  ],
+                ),
+              );
+            });
+          } else {
+            if (mounted) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                showDialog(
+                  context: context,
+                  builder: (context) => AudioPlayerDialog(
+                    filePath: recordingPath,
+                    onOkPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text('Recording processing completed'),
+                        backgroundColor: Colors.green,
+                      ));
+                    },
+                  ),
+                );
+              });
+            }
+          }
           break;
         case JuceMixRecState.ERROR:
           break;
@@ -79,14 +172,17 @@ class RecorderPageState extends State<RecorderPage> {
     });
 
     recorder.setDeviceUpdateHandler((deviceList) {
+      // final wasRecording = isRecording;
       setState(() {
-        // Filter the deviceList to include only input devices and assign IDs
-        // this.deviceList = MixerDeviceList(
-        //   devices: deviceList.devices.where((device) => device.isInput).toList(),
-        // );
         this.deviceList = deviceList;
       });
-      log('devices: ${JsonEncoder.withIndent('  ').convert(this.deviceList.toJson())}');
+      // log('devices: ${JsonEncoder.withIndent('  ').convert(this.deviceList.toJson())}');
+      // if (wasRecording) {
+      //   recorder.stopRecording();
+      //   setState(() {
+      //     isRecStoppedDueToDeviceChange = true;
+      //   });
+      // }
     });
 
     // Set up error handler
@@ -99,50 +195,27 @@ class RecorderPageState extends State<RecorderPage> {
         ));
       }
     });
-
-    recorder.setRecLevelHandler((level) {
-      setState(() {
-        reclevel = level;
-        if (isRecording) {
-          if (level > maxReclevel) {
-            maxReclevel = level;
-          }
-        }
-      });
-      log("Recorder level: $level");
-    });
-
-    // Set up a timer to update recording duration
-    _setupDurationTimer();
   }
 
   @override
   void dispose() {
-    // if (isRecording) {
-    //   recorder.stopRecording();
-    // }
+    recorder.stopRecording();
     recorder.dispose();
     super.dispose();
+  }
+
+  void showDeviceList() {
+    showDialog(
+      context: context,
+      builder: (context) => DeviceListDialog(devices: deviceList.devices),
+    );
   }
 
   // Reset min/max values when starting a new recording
   void _resetMinMaxLevels() {
     setState(() {
-      maxReclevel = 0.0;
-    });
-  }
-
-  void _setupDurationTimer() {
-    // Update recording duration every second
-    Future.delayed(Duration(seconds: 1), () {
-      if (mounted) {
-        if (isRecording && recordingStartTime != null) {
-          setState(() {
-            recordingDuration = DateTime.now().difference(recordingStartTime!);
-          });
-        }
-        _setupDurationTimer(); // Schedule next update
-      }
+      maxReclevel = -200.0;
+      isLevelTooHigh = false; // Reset the level tracking flag
     });
   }
 
@@ -209,6 +282,23 @@ class RecorderPageState extends State<RecorderPage> {
 
       log('Preparing recorder with path: $recordingPath');
       recorder.prepareRecording(recordingPath);
+      final bgmPath = await AssetHelper.extractAsset('assets/media/tu_hi_re_92_D_sharp_bgm.mp3');
+      recorder.setFile(bgmPath);
+      if (isMetronomeEnabled) {
+        final pathH = await AssetHelper.extractAsset('assets/media/met_h.wav');
+        final pathL = await AssetHelper.extractAsset('assets/media/met_l.wav');
+        double metVol = 0.5;
+        final mixComposeModel = MixerComposeModel(
+          tracks: [
+            MixerTrack(id: "music", path: bgmPath),
+            MixerTrack(id: "met_1", path: pathH, offset: 0, repeat: true, repeatInterval: 2, volume: metVol),
+            MixerTrack(id: "met_2", path: pathL, offset: 0.5, repeat: true, repeatInterval: 2, volume: metVol),
+            MixerTrack(id: "met_3", path: pathL, offset: 1, repeat: true, repeatInterval: 2, volume: metVol),
+            MixerTrack(id: "met_4", path: pathL, offset: 1.5, repeat: true, repeatInterval: 2, volume: metVol)
+          ],
+        );
+        recorder.setMixData(mixComposeModel);
+      }
       log('Recorder prepared successfully');
       setState(() {
         isRecorderPrepared = true;
@@ -262,44 +352,46 @@ class RecorderPageState extends State<RecorderPage> {
 
     if (isRecording) {
       // Stop recording
+      HapticFeedback.heavyImpact();
       recorder.stopRecording();
-      showDialog(
-        context: context,
-        builder: (context) => AudioPlayerDialog(
-          filePath: recordingPath,
-          onOkPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text('Recording processing completed'),
-              backgroundColor: Colors.green,
-            ));
-          },
-        ),
-      );
     } else {
       // Start recording
+      HapticFeedback.heavyImpact();
       _resetMinMaxLevels();
-      recorder.startRecording(recordingPath);
+      recorder.startRecording();
     }
-  }
-
-  String _formatDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    final minutes = twoDigits(duration.inMinutes.remainder(60));
-    final seconds = twoDigits(duration.inSeconds.remainder(60));
-    return "$minutes:$seconds";
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Audio Recorder")),
+      appBar: AppBar(
+        title: const Text("Audio Recorder"),
+        actions: [
+          Visibility(
+            visible: !isRecording,
+            child: IconButton(
+              icon: Icon(
+                Icons.music_note,
+                color: isMetronomeEnabled ? Colors.blue : Colors.grey,
+              ),
+              onPressed: () {
+                setState(() {
+                  isMetronomeEnabled = !isMetronomeEnabled;
+                });
+                _prepareRecorder();
+              },
+            ),
+          ),
+        ],
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Recording duration display
             Text(
-              _formatDuration(recordingDuration),
+              TimeUtils.formatDuration(recordingDuration),
               style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 20),
@@ -329,7 +421,7 @@ class RecorderPageState extends State<RecorderPage> {
                 height: 80,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: isRecording ? Colors.red.shade800 : Colors.red,
+                  color: isRecording ? Colors.red.shade900 : Colors.red,
                 ),
                 child: Icon(
                   isRecording ? Icons.stop : Icons.mic,
@@ -339,133 +431,152 @@ class RecorderPageState extends State<RecorderPage> {
               ),
             ),
             SizedBox(height: 40),
-            popupMenu(),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.speaker_group, size: 20),
+              label: const Text('Audio Devices'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue[900],
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(color: Colors.blue.shade700, width: 1),
+                ),
+              ),
+              onPressed: () => showDialog(
+                context: context,
+                builder: (context) => DeviceListDialog(devices: deviceList.devices),
+              ),
+            ),
             SizedBox(height: 40),
-            _buildNoiseMeter()
+            // Recording level in Decibles display Component
+            Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Current: ${currReclevel.toStringAsFixed(1)} dB', style: TextStyle(fontSize: 12)),
+                      Text('Max: ${maxReclevel.toStringAsFixed(1)} dB', style: TextStyle(fontSize: 12)),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 8),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    children: [
+                      LinearPercentIndicator(
+                        lineHeight: 4,
+                        percent: ((currReclevel + minAllowedLevelDb.abs()) / 65).clamp(0.0, 1.0),
+                        progressColor: _getProgressColor(currReclevel),
+                        backgroundColor: Colors.grey.withOpacity(0.1),
+                        barRadius: Radius.circular(2),
+                        animation: true,
+                        animateFromLastPercent: true,
+                      ),
+                      SizedBox(height: 4),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('$minAllowedLevelDb dB', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                          Text('$maxAllowedLevelDb dB', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 20),
+            _buildLevelWarning(),
           ],
         ),
       ),
     );
   }
 
-  PopupMenuButton popupMenu() {
-    return PopupMenuButton<MixerDevice>(
-      child: Text("DEVICES: ${deviceList.devices.length}"),
-      itemBuilder: (context) => deviceList.devices.map((dev) {
-        return PopupMenuItem<MixerDevice>(
-          value: dev,
-          child: Text(getName(dev)),
-        );
-      }).toList(),
-      onSelected: (selectedDevice) {
-        deviceList.devices.forEach((d) {
-          d.isSelected = false;
-        });
-        selectedDevice.isSelected = true;
-        // Ensure the first device is always selected
-        // if (deviceList.devices.isNotEmpty) {
-        // deviceList.devices[3].isSelected = true;
-        // }
-        recorder.setUpdatedDevices(deviceList);
-        print("Selected device: ${deviceList.devices.toString()}");
-      },
+  Color _getProgressColor(double level) {
+    if (level < -20) return Colors.blue;
+    if (level > -20 && level < -7.5) return Colors.green;
+    if (level > -7.5 && level < -3.5) return Colors.orange;
+    return Colors.red;
+  }
+
+  Widget _buildLevelWarning() {
+    return AnimatedSwitcher(
+      duration: Duration(milliseconds: 300),
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: child,
+      ),
+      child: isRecording ? _buildActualWarning() : Container(height: 40), // Maintain consistent height
     );
   }
 
-  String getName(MixerDevice device) {
-    return "${device.name} ${device.isSelected ? " ✅" : ""}";
-  }
-
-  Widget _buildNoiseMeter() {
-    // Define the color gradient based on the level
-    Color getColorForLevel(double level) {
-      // The level is a positive amplitude value (not in dB)
-      // Adding debug log to see the actual range of values
-      // log("Current amplitude level: $level, Max level: $maxReclevel");
-
-      // For amplitude values, a typical range might be 0.0 to 1.0
-      // Adjust the normalization for the actual range we're seeing (around 0.007)
-      // Using 0.02 as an upper bound for loud sounds based on the observed values
-      double normalizedLevel = (level / 0.02).clamp(0.0, 1.0);
-      
-      // Create a smoother gradient transition
-      if (normalizedLevel < 0.3) {
-        // Green range (quieter sounds)
-        return Color.lerp(Colors.green, Colors.green.shade300, normalizedLevel / 0.3) ?? Colors.green;
-      } else if (normalizedLevel < 0.6) {
-        // Green to Yellow gradient (moderate sounds)
-        return Color.lerp(Colors.green.shade300, Colors.yellow, (normalizedLevel - 0.3) / 0.3) ?? Colors.green;
-      } else {
-        // Yellow to Red gradient (louder sounds)
-        return Color.lerp(Colors.yellow, Colors.red, (normalizedLevel - 0.6) / 0.4) ?? Colors.yellow;
-      }
-    }
-
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              // Left side icon
-              Icon(Icons.volume_up, color: getColorForLevel(reclevel)),
-              SizedBox(width: 12),
-
-              // Progress bar
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Min/Max labels
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "Max: ${maxReclevel.toStringAsFixed(4)}",
-                          style: TextStyle(fontSize: 12),
-                        ),
-                        Text(
-                          "Current: ${reclevel.toStringAsFixed(4)}",
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 4),
-
-                    // Progress bar
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade200,
-                          borderRadius: BorderRadius.circular(8),
-                          
-                        ),
-                        child: Stack(
-                          children: [
-                            // Animated progress bar with gradient
-                            AnimatedContainer(
-                              duration: Duration(milliseconds: 200),
-                              height: 4,
-                              width: (reclevel / 0.02).clamp(0.0, 1.0) * MediaQuery.of(context).size.width * 1,
-                              decoration: BoxDecoration(
-                                color: getColorForLevel(reclevel),
-                                borderRadius: BorderRadius.circular(8),
-                                
-                              ),
-                            ),
-                          ],
-                        ),
+  Widget _buildActualWarning() {
+    return SizedBox(
+      width: 300,
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        padding: isRecording ? EdgeInsets.all(8) : EdgeInsets.zero,
+        decoration: _getWarningDecoration(),
+        child: isRecording
+            ? Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Flexible(
+                    child: Text(
+                      _getWarningText(),
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: TextStyle(
+                        color: _getTextColor(),
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               )
-            ],
-          ),
-        ],
+            : null,
       ),
     );
+  }
+
+  BoxDecoration _getWarningDecoration() {
+    if (currReclevel > maxAllowedLevelDb) {
+      return BoxDecoration(
+        color: Colors.red.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(4),
+      );
+    } else if (currReclevel < minAllowedLevelDb) {
+      return BoxDecoration(
+        color: Colors.amber.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(4),
+      );
+    }
+    return BoxDecoration(
+      color: Colors.green.withOpacity(0.8),
+      borderRadius: BorderRadius.circular(4),
+    );
+  }
+
+  String _getWarningText() {
+    if (currReclevel > maxAllowedLevelDb) {
+      return 'Voice is too loud! Audio may be clipped.';
+    }
+    if (currReclevel < minAllowedLevelDb) {
+      return 'Voice is too low! Speak louder.';
+    }
+    return 'Voice is in a good level.';
+  }
+
+  Color _getTextColor() {
+    if (currReclevel > maxAllowedLevelDb) return Colors.white;
+    if (currReclevel < minAllowedLevelDb) return Colors.black;
+    return Colors.white;
   }
 }
