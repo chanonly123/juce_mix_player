@@ -24,7 +24,13 @@ void TaskQueue::executeNext() {
             if (task != nullptr) {
                 task();
             }
+            if (self == nullptr || self->stop) {
+                return;
+            }
             taskList.pop_front();
+        }
+        if (self == nullptr || self->stop) {
+            return;
         }
         ended = true;
         mtx.unlock();
