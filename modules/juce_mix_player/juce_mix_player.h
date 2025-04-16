@@ -6,7 +6,7 @@
     vendor:         chanonly123
     version:        0.0.1
     name:           Juce Mix Player
-    description:    A player that plays audio coposition
+    description:    A player that plays audio coposition with recording
     website:        https://github.com/chanonly123/juce_mix_player
     license:        MIT
 
