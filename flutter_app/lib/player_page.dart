@@ -20,7 +20,8 @@ class PlayerPageState extends State<PlayerPage> {
   bool isSliderEditing = false;
   bool isPlaying = false;
   MixerDeviceList deviceList = MixerDeviceList(devices: []);
-  bool loopEnabled = false;  // Add loop state variable
+  bool loopEnabled = false; // Add loop state variable
+  double volume = 0.5; // Add volume state variable
 
   JuceMixPlayerState state = JuceMixPlayerState.IDLE;
 
@@ -29,7 +30,7 @@ class PlayerPageState extends State<PlayerPage> {
     super.initState();
 
     player.setSettings(MixerSettings(
-      loop: loopEnabled,  // Changed from hardcoded false
+      loop: loopEnabled, // Changed from hardcoded false
     ));
 
     player.setStateUpdateHandler((state) {
@@ -140,6 +141,34 @@ class PlayerPageState extends State<PlayerPage> {
                 player.seek(value.toDouble());
               },
             ),
+            // --- Volume Bar Start ---
+            Row(
+              children: [
+                const Icon(Icons.volume_up, color: Colors.orange),
+                SizedBox(width: 8),
+                Expanded(
+                  child: SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      activeTrackColor: Colors.orange,
+                      inactiveTrackColor: Colors.orange.shade100,
+                      trackHeight: 6.0,
+                      thumbShape: SliderComponentShape.noThumb,
+                      overlayShape: SliderComponentShape.noOverlay,
+                    ),
+                    child: Slider(
+                      value: volume,
+                      min: 0.0,
+                      max: 1.0,
+                      divisions: 100,
+                      onChanged: (value) {
+                        setState(() => volume = value);
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            // --- Volume Bar End ---
             // display the current state
             Padding(
               padding: const EdgeInsets.all(8.0),
@@ -175,7 +204,11 @@ class PlayerPageState extends State<PlayerPage> {
                 ElevatedButton(
                   onPressed: () async {
                     final path = await AssetHelper.extractAsset('assets/media/music_big.mp3');
-                    player.setFile(path);
+                    player.setMixData(MixerComposeModel(
+                      tracks: [
+                        MixerTrack(id: "0", path: path, volume: volume),
+                      ],
+                    ));
                   },
                   child: const Text('Set File'),
                 ),
@@ -186,8 +219,8 @@ class PlayerPageState extends State<PlayerPage> {
                     player.setMixData(MixerComposeModel(
                       outputDuration: 150,
                       tracks: [
-                        MixerTrack(id: "0", path: path),
-                        MixerTrack(id: "1", path: path, offset: 0.5),
+                        MixerTrack(id: "0", path: path, volume: volume),
+                        MixerTrack(id: "1", path: path, offset: 0.5, volume: volume),
                       ],
                     ));
                   },
@@ -230,10 +263,10 @@ class PlayerPageState extends State<PlayerPage> {
     final path = await AssetHelper.extractAsset('assets/media/music_big.mp3');
     final pathH = await AssetHelper.extractAsset('assets/media/met_h.wav');
     final pathL = await AssetHelper.extractAsset('assets/media/met_l.wav');
-    double metVol = 0.1;
+    double metVol = volume;
     return MixerComposeModel(
       tracks: [
-        MixerTrack(id: "music", path: path),
+        MixerTrack(id: "music", path: path, volume: volume),
         MixerTrack(id: "met_1", path: pathH, offset: 0, repeat: true, repeatInterval: 2, volume: metVol),
         MixerTrack(id: "met_2", path: pathL, offset: 0.5, repeat: true, repeatInterval: 2, volume: metVol),
         MixerTrack(id: "met_3", path: pathL, offset: 1, repeat: true, repeatInterval: 2, volume: metVol),
