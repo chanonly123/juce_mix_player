@@ -469,7 +469,7 @@ class RecorderPageState extends State<RecorderPage> {
                     children: [
                       LinearPercentIndicator(
                         lineHeight: 4,
-                        percent: ((currReclevel + minAllowedLevelDb.abs()) / 65).clamp(0.0, 1.0),
+                        percent: ((currReclevel + minAllowedLevelDb.abs()) / 25).clamp(0.0, 1.0),
                         progressColor: _getProgressColor(currReclevel),
                         backgroundColor: Colors.grey.withOpacity(0.1),
                         barRadius: Radius.circular(2),
