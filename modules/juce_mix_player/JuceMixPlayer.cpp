@@ -187,6 +187,7 @@ void JuceMixPlayer::setJson(const char* json) {
         try {
             MixerData data = MixerModel::parse(json_.c_str());
             if (!(mixerData == data)) {
+                PRINT("Replacing mix data!")
                 mixerData = data;
                 prepare();
             } else {
@@ -363,7 +364,11 @@ void JuceMixPlayer::_loadAudioBlock(int block) {
     tempBuffer.setSize(2, blockDuration * sampleRate);
 
     // clear the result block
-    playBuffer.clear(block * blockDuration * sampleRate, blockDuration * sampleRate);
+    int start = (int)(block * blockDuration * sampleRate);
+    int num = (int)(blockDuration * sampleRate);
+    if (start + num <= playBuffer.getNumSamples()) {
+        playBuffer.clear(start, num);
+    }
 
     for (MixerTrack& track: mixerData.tracks) {
         if (!track.enabled) {
@@ -608,6 +613,16 @@ void JuceMixPlayer::_onRecStateUpdateNotify(JuceMixPlayerRecState state) {
     }
 }
 
+// MARK: adding custom filters pass
+void JuceMixPlayer::setExternalFilterPass(std::function<void(const float* const *inputChannelData,
+                                                             int numInputChannels,
+                                                             float* const *outputChannelData,
+                                                             int numOutputChannels,
+                                                             int numSamples)> externalFilterClosure) {
+    this->externalFilterClosure = externalFilterClosure;
+}
+
+
 // MARK: Device management
 void JuceMixPlayer::notifyDeviceUpdates() {
     MixerDeviceList list;
@@ -799,9 +814,24 @@ void JuceMixPlayer::audioDeviceIOCallbackWithContext(const float *const *inputCh
         taskQueue.async([&]{
             _loadAudioBlock((getCurrentTime()/blockDuration)+1);
         });
+
+        if (externalFilterClosure.has_value()) {
+            externalFilterClosure.value()(inputChannelData,
+                                  numInputChannels,
+                                  outputChannelData,
+                                  numOutputChannels,
+                                  numSamples);
+        }
     } else {
         for (int ch=0; ch<numOutputChannels; ch++) {
             juce::zeromem(outputChannelData[ch], (size_t) numSamples * sizeof (float));
+        }
+    }
+
+    if (_isRecording && settings.enableMicMonitoring) {
+        juce::AudioBuffer<float> outData(outputChannelData, numOutputChannels, numSamples);
+        for (int ch=0; ch<std::min(numInputChannels, numOutputChannels); ch++) {
+            outData.addFrom(ch, 0, inputChannelData[ch], numSamples);
         }
     }
 }

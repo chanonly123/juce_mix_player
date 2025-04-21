@@ -98,13 +98,16 @@ struct MixerSettings {
     bool loop = false;
     // audio playback during rec
     bool recBgPlayback = false;
+    // recording feedback to earphone/output device
+    bool enableMicMonitoring = false;
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(MixerSettings,
                                                 progressUpdateInterval,
                                                 sampleRate,
                                                 loop,
                                                 recBgPlayback,
-                                                stopRecOnPlaybackComplete);
+                                                stopRecOnPlaybackComplete,
+                                                enableMicMonitoring);
 };
 
 struct MixerTrack {

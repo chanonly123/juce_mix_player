@@ -37,6 +37,11 @@ private:
     int playHeadIndex = 0;
     juce::AudioBuffer<float> playBuffer;
     std::unordered_map<std::string, std::shared_ptr<juce::AudioBuffer<float>>> repetedBufferCache;
+    std::optional<std::function<void(const float* const *inputChannelData,
+                       int numInputChannels,
+                       float* const *outputChannelData,
+                       int numOutputChannels,
+                       int numSamples)>> externalFilterClosure;
 
     // MARK: Recording
 
@@ -162,6 +167,13 @@ public:
     void startRecorder();
 
     void stopRecorder();
+
+    // MARK: adding custom filters pass
+    void setExternalFilterPass(std::function<void(const float* const *inputChannelData,
+                                                  int numInputChannels,
+                                                  float* const *outputChannelData,
+                                                  int numOutputChannels,
+                                                  int numSamples)> externalFilterClosure);
 
     // MARK: device management
 
