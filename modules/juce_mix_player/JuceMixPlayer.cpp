@@ -828,10 +828,10 @@ void JuceMixPlayer::audioDeviceIOCallbackWithContext(const float *const *inputCh
         }
     }
 
-    if (_isRecording && settings.enableMicMonitoring) {
+    if (_isRecording && numInputChannels > 0 && settings.enableMicMonitoring) {
         juce::AudioBuffer<float> outData(outputChannelData, numOutputChannels, numSamples);
-        for (int ch=0; ch<std::min(numInputChannels, numOutputChannels); ch++) {
-            outData.addFrom(ch, 0, inputChannelData[ch], numSamples);
+        for (int ch=0; ch<numOutputChannels; ch++) {
+            outData.addFrom(ch, 0, inputChannelData[0], numSamples);
         }
     }
 }
