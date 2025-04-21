@@ -37,6 +37,7 @@ class RecorderPageState extends State<RecorderPage> {
   bool isLevelTooHigh = false; // Track if level is too high to avoid repeated vibrations
   bool isMetronomeEnabled = false;
   bool isRecStoppedDueToDeviceChange = false;
+  bool isMicMonitoringEnabled = false; // Track mic monitoring state
 
   @override
   void initState() {
@@ -430,7 +431,28 @@ class RecorderPageState extends State<RecorderPage> {
                 ),
               ),
             ),
-            SizedBox(height: 40),
+            SizedBox(height: 20),
+            // Mic Monitoring Toggle Button
+            ElevatedButton.icon(
+              icon: Icon(isMicMonitoringEnabled ? Icons.hearing : Icons.hearing_disabled, size: 20),
+              label: Text(isMicMonitoringEnabled ? 'Mic Monitoring ON' : 'Mic Monitoring OFF'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isMicMonitoringEnabled ? Colors.green : Colors.grey,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(color: isMicMonitoringEnabled ? Colors.green.shade700 : Colors.grey.shade700, width: 1),
+                ),
+              ),
+              onPressed: () {
+                setState(() {
+                  isMicMonitoringEnabled = !isMicMonitoringEnabled;
+                });
+                recorder.setSettings(MixerSettings(enableMicMonitoring: isMicMonitoringEnabled));
+              },
+            ),
+            SizedBox(height: 20),
             ElevatedButton.icon(
               icon: const Icon(Icons.speaker_group, size: 20),
               label: const Text('Audio Devices'),

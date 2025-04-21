@@ -395,12 +395,16 @@ class MixerSettings {
   /// Playback recording in background [true]
   bool recBgPlayback;
 
+  /// enableMicMonitoring [false]
+  bool enableMicMonitoring;
+
   MixerSettings({
     this.progressUpdateInterval = 0.05,
     this.sampleRate = 48000,
     this.stopRecOnPlaybackComplete = true,
     this.loop = false,
     this.recBgPlayback = true,
+    this.enableMicMonitoring = false,
   });
 
   factory MixerSettings.fromJson(Map<String, dynamic> json) => MixerSettings(
@@ -409,6 +413,7 @@ class MixerSettings {
         stopRecOnPlaybackComplete: json['stopRecOnPlaybackComplete'] ?? true,
         loop: json['loop'] ?? true,
         recBgPlayback: json['recBgPlayback'] ?? true,
+        enableMicMonitoring: json['enableMicMonitoring']?? false,
       );
 
   Map<String, dynamic> toJson() {
@@ -418,6 +423,7 @@ class MixerSettings {
     json['stopRecOnPlaybackComplete'] = stopRecOnPlaybackComplete;
     json['loop'] = loop;
     json['recBgPlayback'] = recBgPlayback;
+    json['enableMicMonitoring'] = enableMicMonitoring;
     return json;
   }
 }
