@@ -33,8 +33,10 @@ private:
 
     MixerData mixerData;
     bool _isPlaying = false;
+    bool _isPlayingInternal = false;
     int playHeadIndex = 0;
     juce::AudioBuffer<float> playBuffer;
+    std::unordered_map<std::string, std::shared_ptr<juce::AudioBuffer<float>>> repetedBufferCache;
 
     // MARK: Recording
 
@@ -68,10 +70,15 @@ private:
     /// create reader for files
     void _createFileReadersAndTotalDuration();
 
+    void _loadRepeatedTrack(int block,
+                            int blockDuration,
+                            juce::AudioBuffer<float>& output,
+                            float offset,
+                            float repeatInterval,
+                            juce::AudioBuffer<float>* track);
+
     /// loads audio block for `blockDuration` and `block` number. Blocks are chunks of the audio file.
     void _loadAudioBlock(int block);
-
-    void _loadRepeatedTracks();
 
     void _onProgressNotify(float progress);
 
@@ -89,7 +96,7 @@ private:
 
     void _onRecStateUpdateNotify(JuceMixPlayerRecState state);
 
-    void _finishRecording();
+    void finishRecording();
 
     void _resetRecorder();
 
@@ -100,6 +107,10 @@ private:
     void notifyDeviceUpdates();
 
     void setDefaultSampleRate();
+
+    void _resetPlayBufferBlocks();
+
+    void copyReaders(const MixerData& from, MixerData& to);
 
 public:
 

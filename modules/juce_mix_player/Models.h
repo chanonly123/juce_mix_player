@@ -150,13 +150,14 @@ struct MixerTrack {
         return
         id_ == other.id_
         && path == other.path
-        && volume == other.volume
-        && offset == other.offset
-        && fromTime == other.fromTime
-        && duration == other.duration
-        && repeat == other.repeat
-        && repeatInterval == other.repeatInterval
-        && enabled == other.enabled;
+//        && volume == other.volume
+//        && offset == other.offset
+//        && fromTime == other.fromTime
+//        && duration == other.duration
+//        && enabled == other.enabled
+//        && repeat == other.repeat
+//        && repeatInterval == other.repeatInterval
+        ;
     }
 
     std::shared_ptr<juce::AudioFormatReader> reader;
