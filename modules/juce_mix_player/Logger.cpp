@@ -11,7 +11,7 @@ const char* returnCopyCharDelete(const char* string) {
     strcpy(copy, string);
 
     std::thread thread([copy]{
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        std::this_thread::sleep_for(std::chrono::seconds(5));
         free(copy);
     });
     thread.detach();

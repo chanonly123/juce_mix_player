@@ -18,18 +18,22 @@ class PlayerPageState extends State<PlayerPage> {
   final player = JuceMixPlayer();
   double progress = 0.0;
   bool isSliderEditing = false;
+  bool isVolSliderEditing = false;
   bool isPlaying = false;
   MixerDeviceList deviceList = MixerDeviceList(devices: []);
-  bool loopEnabled = false;  // Add loop state variable
+  bool loopEnabled = false; // Add loop state variable
+  double volume = 0.5; // Add volume state variable
 
   JuceMixPlayerState state = JuceMixPlayerState.IDLE;
+
+  MixerComposeModel? lastMixerComposeModel;
 
   @override
   void initState() {
     super.initState();
 
     player.setSettings(MixerSettings(
-      loop: loopEnabled,  // Changed from hardcoded false
+      loop: loopEnabled, // Changed from hardcoded false
     ));
 
     player.setStateUpdateHandler((state) {
@@ -65,7 +69,6 @@ class PlayerPageState extends State<PlayerPage> {
     });
 
     player.setProgressHandler((progress) {
-      // TODO: add 1 sec debounce
       if (!isSliderEditing) {
         setState(() => this.progress = progress);
       }
@@ -85,8 +88,13 @@ class PlayerPageState extends State<PlayerPage> {
       setState(() {
         this.deviceList = deviceList;
       });
-      log('devices: ${JsonEncoder.withIndent('  ').convert(deviceList.toJson())}');
+      // log('devices: ${JsonEncoder.withIndent('  ').convert(deviceList.toJson())}');
     });
+  }
+
+  void toggleLoop() {
+    setState(() => loopEnabled = !loopEnabled);
+    player.setSettings(MixerSettings(loop: loopEnabled));
   }
 
   @override
@@ -95,11 +103,6 @@ class PlayerPageState extends State<PlayerPage> {
     player.stop();
     player.dispose();
     super.dispose();
-  }
-
-  void toggleLoop() {
-    setState(() => loopEnabled = !loopEnabled);
-    player.setSettings(MixerSettings(loop: loopEnabled));
   }
 
   @override
@@ -130,7 +133,6 @@ class PlayerPageState extends State<PlayerPage> {
               value: progress,
               onChanged: (value) {
                 setState(() => progress = value);
-                player.seek(progress);
               },
               onChangeStart: (_) {
                 isSliderEditing = true;
@@ -140,6 +142,45 @@ class PlayerPageState extends State<PlayerPage> {
                 player.seek(value.toDouble());
               },
             ),
+            // --- Volume Bar Start ---
+            Row(
+              children: [
+                const Icon(Icons.volume_up, color: Colors.orange),
+                SizedBox(width: 8),
+                Expanded(
+                  child: SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      activeTrackColor: Colors.orange,
+                      inactiveTrackColor: Colors.orange.shade100,
+                      trackHeight: 6.0,
+                      thumbShape: SliderComponentShape.noThumb,
+                      overlayShape: SliderComponentShape.noOverlay,
+                    ),
+                    child: Slider(
+                      value: volume,
+                      min: 0.0,
+                      max: 1.0,
+                      divisions: 100,
+                      onChanged: (value) {
+                        setState(() => volume = value);
+                      },
+                      onChangeStart: (_) {
+                        isVolSliderEditing = true;
+                      },
+                      onChangeEnd: (value) {
+                        isVolSliderEditing = false;
+                        if (lastMixerComposeModel != null) {
+                          final updatedTracks = lastMixerComposeModel!.tracks?.map((track) => track.copyWith(volume: volume)).toList() ?? [];
+                          lastMixerComposeModel = lastMixerComposeModel!.copyWith(tracks: updatedTracks);
+                          player.setMixData(lastMixerComposeModel!);
+                        }
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            // --- Volume Bar End ---
             // display the current state
             Padding(
               padding: const EdgeInsets.all(8.0),
@@ -175,7 +216,12 @@ class PlayerPageState extends State<PlayerPage> {
                 ElevatedButton(
                   onPressed: () async {
                     final path = await AssetHelper.extractAsset('assets/media/music_big.mp3');
-                    player.setFile(path);
+                    lastMixerComposeModel = MixerComposeModel(
+                      tracks: [
+                        MixerTrack(id: "0", path: path, volume: volume),
+                      ],
+                    );
+                    player.setMixData(lastMixerComposeModel!);
                   },
                   child: const Text('Set File'),
                 ),
@@ -183,20 +229,22 @@ class PlayerPageState extends State<PlayerPage> {
                 ElevatedButton(
                   onPressed: () async {
                     final path = await AssetHelper.extractAsset('assets/media/music_big.mp3');
-                    player.setMixData(MixerComposeModel(
+                    lastMixerComposeModel = MixerComposeModel(
                       outputDuration: 150,
                       tracks: [
-                        MixerTrack(id: "0", path: path),
-                        MixerTrack(id: "1", path: path, offset: 0.5),
+                        MixerTrack(id: "0", path: path, volume: volume),
+                        MixerTrack(id: "1", path: path, offset: 0.5, volume: volume),
                       ],
-                    ));
+                    );
+                    player.setMixData(lastMixerComposeModel!);
                   },
                   child: const Text('Set mixed'),
                 ),
                 const SizedBox(width: 16),
                 ElevatedButton(
                   onPressed: () async {
-                    player.setMixData(await createMetronomeTracks());
+                    lastMixerComposeModel = await createMetronomeTracks();
+                    player.setMixData(lastMixerComposeModel!);
                   },
                   child: const Text('Set mixed with metronome'),
                 ),
@@ -230,15 +278,16 @@ class PlayerPageState extends State<PlayerPage> {
     final path = await AssetHelper.extractAsset('assets/media/music_big.mp3');
     final pathH = await AssetHelper.extractAsset('assets/media/met_h.wav');
     final pathL = await AssetHelper.extractAsset('assets/media/met_l.wav');
-    double metVol = 0.1;
-    return MixerComposeModel(
+    double metVol = volume;
+    lastMixerComposeModel = MixerComposeModel(
       tracks: [
-        MixerTrack(id: "music", path: path),
+        MixerTrack(id: "music", path: path, volume: volume),
         MixerTrack(id: "met_1", path: pathH, offset: 0, repeat: true, repeatInterval: 2, volume: metVol),
         MixerTrack(id: "met_2", path: pathL, offset: 0.5, repeat: true, repeatInterval: 2, volume: metVol),
         MixerTrack(id: "met_3", path: pathL, offset: 1, repeat: true, repeatInterval: 2, volume: metVol),
         MixerTrack(id: "met_4", path: pathL, offset: 1.5, repeat: true, repeatInterval: 2, volume: metVol)
       ],
     );
+    return lastMixerComposeModel!;
   }
 }

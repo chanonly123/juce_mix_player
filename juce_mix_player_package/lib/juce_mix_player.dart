@@ -220,6 +220,18 @@ class MixerComposeModel {
     this.outputDuration,
   });
 
+  MixerComposeModel copyWith({
+    List<MixerTrack>? tracks,
+    String? output,
+    double? outputDuration,
+  }) {
+    return MixerComposeModel(
+      tracks: tracks ?? this.tracks,
+      output: output ?? this.output,
+      outputDuration: outputDuration ?? this.outputDuration,
+    );
+  }
+
   factory MixerComposeModel.fromJson(Map<String, dynamic> json) => MixerComposeModel(
         tracks: (json['tracks'] as List<dynamic>?)?.map((e) => MixerTrack.fromJson(e as Map<String, dynamic>)).toList(),
         output: json['output'],
@@ -257,6 +269,24 @@ class MixerTrack {
     this.repeat,
     this.repeatInterval,
   });
+
+  MixerTrack copyWith({
+    String? id,
+    String? path,
+    double? volume,
+  }) {
+    return MixerTrack(
+      id: id ?? this.id,
+      path: path ?? this.path,
+      volume: volume ?? this.volume,
+      offset: offset,
+      fromTime: fromTime,
+      duration: duration,
+      enabled: enabled,
+      repeat: repeat,
+      repeatInterval: repeatInterval,
+    );
+  }
 
   factory MixerTrack.fromJson(Map<String, dynamic> json) => MixerTrack(
         id: json['id_'],
@@ -352,29 +382,38 @@ class MixerDeviceList {
 class MixerSettings {
   /// in seconds [0.05]
   double progressUpdateInterval;
+
   /// in Hz [48000]
   int sampleRate;
+
   /// default is [true]
   bool stopRecOnPlaybackComplete;
+
   /// default is [false]
   bool loop;
+
   /// Playback recording in background [true]
   bool recBgPlayback;
 
+  /// enableMicMonitoring [false]
+  bool enableMicMonitoring;
+
   MixerSettings({
     this.progressUpdateInterval = 0.05,
-    this.sampleRate =  48000,
+    this.sampleRate = 48000,
     this.stopRecOnPlaybackComplete = true,
     this.loop = false,
     this.recBgPlayback = true,
+    this.enableMicMonitoring = false,
   });
 
   factory MixerSettings.fromJson(Map<String, dynamic> json) => MixerSettings(
         progressUpdateInterval: json['progressUpdateInterval']?.toDouble() ?? 0.05,
-        sampleRate: json['sampleRate']?? 48000,
+        sampleRate: json['sampleRate'] ?? 48000,
         stopRecOnPlaybackComplete: json['stopRecOnPlaybackComplete'] ?? true,
         loop: json['loop'] ?? true,
-        recBgPlayback: json['recBgPlayback']?? true,
+        recBgPlayback: json['recBgPlayback'] ?? true,
+        enableMicMonitoring: json['enableMicMonitoring']?? false,
       );
 
   Map<String, dynamic> toJson() {
@@ -384,6 +423,7 @@ class MixerSettings {
     json['stopRecOnPlaybackComplete'] = stopRecOnPlaybackComplete;
     json['loop'] = loop;
     json['recBgPlayback'] = recBgPlayback;
+    json['enableMicMonitoring'] = enableMicMonitoring;
     return json;
   }
 }
