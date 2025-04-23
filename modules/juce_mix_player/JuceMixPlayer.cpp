@@ -8,7 +8,7 @@
 // MARK: set audio session for iOS
 static void logNSError (NSError* e) {
     if (e != nil) {
-        PRINT("iOS Audio error: " << [e.localizedDescription UTF8String]);
+        PRINT("iOS Audio setCategory error: " << [e.localizedDescription UTF8String]);
 //        jassertfalse;
     }
 }
@@ -22,7 +22,8 @@ void setAudioSessionPlay() {
 
 void setAudioSessionRecord() {
     NSUInteger options = AVAudioSessionCategoryOptionDefaultToSpeaker
-    | AVAudioSessionCategoryOptionAllowBluetoothA2DP;
+    | AVAudioSessionCategoryOptionAllowBluetoothA2DP
+    | AVAudioSessionCategoryOptionMixWithOthers;
     JUCE_NSERROR_CHECK ([[AVAudioSession sharedInstance] setCategory: AVAudioSessionCategoryPlayAndRecord
                                                          withOptions: options
                                                                error: &error]);
@@ -327,8 +328,6 @@ void JuceMixPlayer::_loadRepeatedTrack(int block,
 
     const int offsetSamples = static_cast<int>(offset * sampleRate);
     const int intervalSamples = static_cast<int>(repeatInterval * sampleRate);
-
-    const int blockStartSample = static_cast<int>(block * blockDuration * sampleRate);
 
     for (int repeatIndex = 0;; ++repeatIndex) {
         int repeatStartSample = offsetSamples + repeatIndex * intervalSamples;
