@@ -41,6 +41,10 @@ class JuceMixPlayer {
     _juceLib.juce_init();
   }
 
+  Pointer<Void> getPtr() {
+    return _ptr;
+  }
+
   static void enableLogs(bool enable) {
     _juceLib.juce_enableLogs(enable ? 1 : 0);
   }

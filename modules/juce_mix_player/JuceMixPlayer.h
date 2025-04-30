@@ -41,7 +41,11 @@ private:
                        int numInputChannels,
                        float* const *outputChannelData,
                        int numOutputChannels,
-                       int numSamples)>> externalFilterClosure;
+                       int numSamples)>> finalInputOutpuPassClosure;
+
+    std::optional<std::function<void(std::string trackId,
+                                     juce::AudioBuffer<float>& buffer,
+                                     int sampleRate)>> outputPassForTrackClosure;
 
     // MARK: Recording
 
@@ -169,11 +173,17 @@ public:
     void stopRecorder();
 
     // MARK: adding custom filters pass
-    void setExternalFilterPass(std::function<void(const float* const *inputChannelData,
+    void setFinalInputOutpuPass(std::function<void(const float* const *inputChannelData,
                                                   int numInputChannels,
                                                   float* const *outputChannelData,
                                                   int numOutputChannels,
-                                                  int numSamples)> externalFilterClosure);
+                                                  int numSamples)> closure);
+
+    void setOutputPassForTrack(std::function<void(std::string trackId,
+                                                  juce::AudioBuffer<float>& buffer,
+                                                  int sampleRate)> closure);
+
+    void resetPlayBuffer();
 
     // MARK: device management
 
@@ -182,7 +192,12 @@ public:
     // MARK: juce::AudioIODeviceCallback
     void audioDeviceAboutToStart(juce::AudioIODevice *device) override;
 
-    void audioDeviceIOCallbackWithContext(const float *const *inputChannelData, int numInputChannels, float *const *outputChannelData, int numOutputChannels, int numSamples, const juce::AudioIODeviceCallbackContext &context) override;
+    void audioDeviceIOCallbackWithContext(const float* const* inputChannelData,
+                                          int numInputChannels,
+                                          float* const* outputChannelData,
+                                          int numOutputChannels,
+                                          int numSamples,
+                                          const juce::AudioIODeviceCallbackContext &context) override;
 
     void audioDeviceStopped() override;
 
