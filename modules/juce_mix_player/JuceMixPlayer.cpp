@@ -1,6 +1,6 @@
 #include "JuceMixPlayer.h"
 
-#if JUCE_IOS || JUCE_MAC
+#if JUCE_IOS
 
 #import <AVFoundation/AVFoundation.h>
 #define JUCE_NSERROR_CHECK(X)     { NSError* error = nil; X; logNSError (error); }
@@ -28,6 +28,9 @@ void setAudioSessionRecord() {
                                                          withOptions: options
                                                                error: &error]);
 }
+#elif JUCE_MAC
+void setAudioSessionPlay() {}
+void setAudioSessionRecord() {}
 #else
 void setAudioSessionPlay() {}
 void setAudioSessionRecord() {}
@@ -315,30 +318,40 @@ std::optional<std::tuple<float, float, float>> JuceMixPlayer::_calculateBlockToR
     return std::tuple(dstStart, numSamples, readStart);
 }
 
-void JuceMixPlayer::_loadRepeatedTrack(int block,
-                                       int blockDuration,
-                                       juce::AudioBuffer<float>& output,
-                                       float offset,
-                                       float repeatInterval,
-                                       juce::AudioBuffer<float>* track)
+void JuceMixPlayer::_loadRepeatedTrack(int block, // int 0, 1, 3
+                                       int blockDuration, // 10 sec
+                                       juce::AudioBuffer<float>& output, // blockDuration * sampleRate
+                                       float offset,                        // track offset seconds
+                                       float repeatInterval,                // track interval
+                                       juce::AudioBuffer<float>* track)     // audio track buffer
 {
-    const int numChannels = output.getNumChannels();
-    const int outputLength = output.getNumSamples(); // should be blockDuration * sampleRate
-    const int trackLength = track->getNumSamples();
+//    const int numChannels = output.getNumChannels();
+//    const int outputLength = output.getNumSamples(); // should be blockDuration * sampleRate
+//    const int trackLength = track->getNumSamples();
+//
+//    const int offsetSamples = static_cast<int>(offset * sampleRate);
+//    const int intervalSamples = static_cast<int>(repeatInterval * sampleRate);
+//
+//    for (int repeatIndex = 0;; ++repeatIndex) {
+//        int repeatStartSample = offsetSamples + repeatIndex * intervalSamples;
+//        if (repeatStartSample >= outputLength)
+//            break;
+//
+//        int samplesToCopy = std::min(trackLength, outputLength - repeatStartSample);
+//        for (int channel = 0; channel < numChannels; ++channel) {
+//            int trackChannel = channel < track->getNumChannels() ? channel : 0;
+//            output.addFrom(channel, repeatStartSample, *track, trackChannel, 0, samplesToCopy, 1.0f);
+//        }
+//    }
 
-    const int offsetSamples = static_cast<int>(offset * sampleRate);
-    const int intervalSamples = static_cast<int>(repeatInterval * sampleRate);
-
-    for (int repeatIndex = 0;; ++repeatIndex) {
-        int repeatStartSample = offsetSamples + repeatIndex * intervalSamples;
-        if (repeatStartSample >= outputLength)
-            break;
-
-        int samplesToCopy = std::min(trackLength, outputLength - repeatStartSample);
-        for (int channel = 0; channel < numChannels; ++channel) {
-            int trackChannel = channel < track->getNumChannels() ? channel : 0;
-            output.addFrom(channel, repeatStartSample, *track, trackChannel, 0, samplesToCopy, 1.0f);
-        }
+    for (int i = 0; i < 2; i++) {
+        int channel = 0;
+        int destStartSample = i * 5 * 48000;
+        juce::AudioBuffer<float>* source = track;
+        int sourceChannel = 0;
+        int sourceStartSample = 0;
+        int samplesToCopy = track->getNumSamples();
+        output.addFrom(channel, destStartSample, *source, sourceChannel, sourceStartSample, samplesToCopy);
     }
 }
 
