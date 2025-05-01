@@ -208,6 +208,12 @@ void JuceMixPlayer::setJson(const char* json) {
     });
 }
 
+void JuceMixPlayer::resetPlayBuffer() {
+    taskQueue.async([&]{
+        _resetPlayBufferBlocks();
+    });
+}
+
 void JuceMixPlayer::setSettings(const char* json) {
     std::string json_(json);
     PRINT("setSettings: " << json);
@@ -427,6 +433,11 @@ void JuceMixPlayer::_loadAudioBlock(int block) {
                 std::string err = "Read operation was not success for: " + track.path;
                 _onErrorNotify(err);
             }
+            if (outputPassForTrackClosure.has_value()) {
+                outputPassForTrackClosure.value()(track.id_,
+                                                  tempBuffer,
+                                                  sampleRate);
+            }
         }
 
         for (int i=0; i<2; i++) {
@@ -626,12 +637,18 @@ void JuceMixPlayer::_onRecStateUpdateNotify(JuceMixPlayerRecState state) {
 }
 
 // MARK: adding custom filters pass
-void JuceMixPlayer::setExternalFilterPass(std::function<void(const float* const *inputChannelData,
+void JuceMixPlayer::setFinalInputOutpuPass(std::function<void(const float* const *inputChannelData,
                                                              int numInputChannels,
                                                              float* const *outputChannelData,
                                                              int numOutputChannels,
-                                                             int numSamples)> externalFilterClosure) {
-    this->externalFilterClosure = externalFilterClosure;
+                                                             int numSamples)> closure) {
+    this->finalInputOutpuPassClosure = closure;
+}
+
+void JuceMixPlayer::setOutputPassForTrack(std::function<void(std::string trackId,
+                                                             juce::AudioBuffer<float>& buffer,
+                                                             int sampleRate)> closure) {
+    this->outputPassForTrackClosure = closure;
 }
 
 
@@ -827,8 +844,8 @@ void JuceMixPlayer::audioDeviceIOCallbackWithContext(const float *const *inputCh
             _loadAudioBlock((getCurrentTime()/blockDuration)+1);
         });
 
-        if (externalFilterClosure.has_value()) {
-            externalFilterClosure.value()(inputChannelData,
+        if (finalInputOutpuPassClosure.has_value()) {
+            finalInputOutpuPassClosure.value()(inputChannelData,
                                   numInputChannels,
                                   outputChannelData,
                                   numOutputChannels,

@@ -41,6 +41,10 @@ class JuceMixPlayer {
     _juceLib.juce_init();
   }
 
+  Pointer<Void> getPtr() {
+    return _ptr;
+  }
+
   static void enableLogs(bool enable) {
     _juceLib.juce_enableLogs(enable ? 1 : 0);
   }
@@ -274,17 +278,23 @@ class MixerTrack {
     String? id,
     String? path,
     double? volume,
+    double? duration,
+    double? fromTime,
+    bool? enabled,
+    double? offset,
+    bool? repeat,
+    double? repeatInterval,
   }) {
     return MixerTrack(
       id: id ?? this.id,
       path: path ?? this.path,
       volume: volume ?? this.volume,
-      offset: offset,
-      fromTime: fromTime,
-      duration: duration,
-      enabled: enabled,
-      repeat: repeat,
-      repeatInterval: repeatInterval,
+      offset: offset ?? this.offset,
+      fromTime: fromTime ?? this.fromTime,
+      duration: duration ?? this.duration,
+      enabled: enabled ?? this.enabled,
+      repeat: repeat ?? this.repeat,
+      repeatInterval: repeatInterval ?? this.repeatInterval,
     );
   }
 
@@ -413,7 +423,7 @@ class MixerSettings {
         stopRecOnPlaybackComplete: json['stopRecOnPlaybackComplete'] ?? true,
         loop: json['loop'] ?? true,
         recBgPlayback: json['recBgPlayback'] ?? true,
-        enableMicMonitoring: json['enableMicMonitoring']?? false,
+        enableMicMonitoring: json['enableMicMonitoring'] ?? false,
       );
 
   Map<String, dynamic> toJson() {
