@@ -1,6 +1,6 @@
 #include "JuceMixPlayer.h"
 
-#if JUCE_IOS || JUCE_MAC
+#if JUCE_IOS
 
 #import <AVFoundation/AVFoundation.h>
 #define JUCE_NSERROR_CHECK(X)     { NSError* error = nil; X; logNSError (error); }
@@ -28,6 +28,9 @@ void setAudioSessionRecord() {
                                                          withOptions: options
                                                                error: &error]);
 }
+#elif JUCE_MAC
+void setAudioSessionPlay() {}
+void setAudioSessionRecord() {}
 #else
 void setAudioSessionPlay() {}
 void setAudioSessionRecord() {}
@@ -329,24 +332,39 @@ void JuceMixPlayer::_loadRepeatedTrack(int block,
                                        juce::AudioBuffer<float>* track)
 {
     const int numChannels = output.getNumChannels();
-    const int outputLength = output.getNumSamples(); // should be blockDuration * sampleRate
+    const int outputLength = output.getNumSamples();              // blockDuration * sampleRate
     const int trackLength = track->getNumSamples();
+    const int blockStart = block * blockDuration * sampleRate;  // first sample of this block in the full timeline
 
-    const int offsetSamples = static_cast<int>(offset * sampleRate);
+    const int offsetSamples   = static_cast<int>(offset * sampleRate);
     const int intervalSamples = static_cast<int>(repeatInterval * sampleRate);
 
-    for (int repeatIndex = 0;; ++repeatIndex) {
-        int repeatStartSample = offsetSamples + repeatIndex * intervalSamples;
-        if (repeatStartSample >= outputLength)
+    for (int repeatIndex = 0; ; ++repeatIndex)
+    {
+        // absolute sample where this repeat begins
+        int repeatStartAbs = offsetSamples + repeatIndex * intervalSamples;
+        // if the start is beyond the end of this block, we're done
+        if (repeatStartAbs >= blockStart + outputLength)
             break;
 
-        int samplesToCopy = std::min(trackLength, outputLength - repeatStartSample);
+        // if the end of this track-play occurs before this block starts, skip it
+        if (repeatStartAbs + trackLength <= blockStart)
+            continue;
+
+        // local position in the block buffer
+        int writePos = repeatStartAbs - blockStart;
+        // if it's negative, we'll start reading from inside the track
+        int trackReadPos = writePos < 0 ? -writePos : 0;
+        // clamp to the block
+        int samplesToCopy = std::min(trackLength - trackReadPos, outputLength - std::max(writePos, 0));
+
         for (int channel = 0; channel < numChannels; ++channel) {
-            int trackChannel = channel < track->getNumChannels() ? channel : 0;
-            output.addFrom(channel, repeatStartSample, *track, trackChannel, 0, samplesToCopy, 1.0f);
+            int trackChannel = (channel < track->getNumChannels() ? channel : 0);
+            output.addFrom(channel, std::max(writePos, 0) /*destStartSample*/, *track, trackChannel,/*srcStartSample=*/ trackReadPos, samplesToCopy, 1.0f);
         }
     }
 }
+
 
 void JuceMixPlayer::_loadAudioBlock(int block) {
     if (setContains(loadedBlocks, block)) {
