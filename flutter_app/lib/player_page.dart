@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
@@ -275,19 +274,16 @@ class PlayerPageState extends State<PlayerPage> {
   }
 
   Future<MixerComposeModel> createMetronomeTracks() async {
-    final path = await AssetHelper.extractAsset('assets/media/music_big.mp3');
+    final bgmPath = await AssetHelper.extractAsset('assets/media/75_C.mp3');
     final pathH = await AssetHelper.extractAsset('assets/media/met_h.wav');
     final pathL = await AssetHelper.extractAsset('assets/media/met_l.wav');
-    double metVol = volume;
-    lastMixerComposeModel = MixerComposeModel(
-      tracks: [
-        MixerTrack(id: "music", path: path, volume: volume),
-        MixerTrack(id: "met_1", path: pathH, offset: 0, repeat: true, repeatInterval: 2, volume: metVol),
-        // MixerTrack(id: "met_2", path: pathL, offset: 0.5, repeat: true, repeatInterval: 2, volume: metVol),
-        // MixerTrack(id: "met_3", path: pathL, offset: 1, repeat: true, repeatInterval: 2, volume: metVol),
-        // MixerTrack(id: "met_4", path: pathL, offset: 1.5, repeat: true, repeatInterval: 2, volume: metVol)
-      ],
-    );
+    lastMixerComposeModel = MixerComposeModel(tracks: [
+      MixerTrack(id: "bgm", path: bgmPath, volume: volume, enabled: true),
+      MixerTrack(id: "metronome_track_0", path: pathH, offset: 0, volume: volume, enabled: true, repeat: true, repeatInterval: 3.2),
+      MixerTrack(id: "metronome_track_1", path: pathL, offset: 0.8, volume: 1, enabled: true, repeat: true, repeatInterval: 3.2),
+      MixerTrack(id: "metronome_track_2", path: pathL, offset: 1.6, volume: 1, enabled: true, repeat: true, repeatInterval: 3.2),
+      MixerTrack(id: "metronome_track_3", path: pathL, offset: 2.4, volume: 1, enabled: true, repeat: true, repeatInterval: 3.2)
+    ]);
     return lastMixerComposeModel!;
   }
 }
