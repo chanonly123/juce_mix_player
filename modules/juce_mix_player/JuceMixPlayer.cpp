@@ -9,7 +9,7 @@
 static void logNSError (NSError* e) {
     if (e != nil) {
         PRINT("iOS Audio setCategory error: " << [e.localizedDescription UTF8String]);
-//        jassertfalse;
+        //        jassertfalse;
     }
 }
 
@@ -64,7 +64,7 @@ JuceMixPlayer::JuceMixPlayer() {
         deviceManager->addChangeListener(this);
         deviceManager->initialise(0, 2, nullptr, true, {}, nullptr);
 
-//        setDefaultSampleRate();
+        //        setDefaultSampleRate();
 
         inputLevelMeter = deviceManager->getInputLevelGetter();
 
@@ -217,7 +217,7 @@ void JuceMixPlayer::resetPlayBuffer() {
 void JuceMixPlayer::setSettings(const char* json) {
     std::string json_(json);
     PRINT("setSettings: " << json);
-    
+
     taskQueue.async([&, json_]{
         try {
             MixerSettings _settings = MixerModel::parseSettings(json_.c_str());
@@ -393,6 +393,9 @@ void JuceMixPlayer::_loadAudioBlock(int block) {
         playBuffer.clear(start, num);
     }
 
+    const float destStartSample = block * blockDuration * sampleRate;
+    int sampleCount = blockDuration * sampleRate;
+
     for (MixerTrack& track: mixerData.tracks) {
         if (!track.enabled) {
             continue;
@@ -404,9 +407,8 @@ void JuceMixPlayer::_loadAudioBlock(int block) {
 
         // clear block buffer
         tempBuffer.clear();
+
         // mix audio from block buffer
-        const float destStartSample = block * blockDuration * sampleRate;
-        int sampleCount = blockDuration * sampleRate;
         if (destStartSample + sampleCount > playBuffer.getNumSamples()) {
             sampleCount = playBuffer.getNumSamples() - destStartSample;
         }
@@ -438,15 +440,27 @@ void JuceMixPlayer::_loadAudioBlock(int block) {
                 std::string err = "Read operation was not success for: " + track.path;
                 _onErrorNotify(err);
             }
-            if (outputPassForTrackClosure.has_value()) {
-                outputPassForTrackClosure.value()(track.id_,
-                                                  tempBuffer,
-                                                  sampleRate);
+            if (trackLoadListener) {
+                trackLoadListener(track.id_,
+                                  tempBuffer,
+                                  sampleRate);
             }
         }
 
         for (int i=0; i<2; i++) {
             playBuffer.addFrom(i, destStartSample, tempBuffer, i, 0, sampleCount, track.volume);
+        }
+    }
+
+    if (mergeReadyListener) {
+        for (int i=0; i<2; i++) {
+            tempBuffer.copyFrom(i, 0, playBuffer, i, destStartSample, sampleCount);
+        }
+        bool shouldMerge = mergeReadyListener(tempBuffer, sampleRate);
+        if (shouldMerge) {
+            for (int i=0; i<2; i++) {
+                playBuffer.addFrom(i, destStartSample, tempBuffer, i, 0, sampleCount, 1.0f);
+            }
         }
     }
 
@@ -581,7 +595,7 @@ void JuceMixPlayer::flushRecordBufferToFile(juce::AudioBuffer<float>& buffer, fl
 
     const int targetSampleRate = settings.sampleRate;
     const int numInputSamples = static_cast<int>(sampleCount);
-    
+
     if (deviceSampleRate != targetSampleRate) {
         PRINT("flushRecordBufferToFile: REPSAMPLING =====");
         const double ratio = static_cast<double>(targetSampleRate) / deviceSampleRate;
@@ -600,13 +614,13 @@ void JuceMixPlayer::flushRecordBufferToFile(juce::AudioBuffer<float>& buffer, fl
             juce::LagrangeInterpolator interpolator;
             interpolator.reset();
             interpolator.process(actualRatio,
-                                inputData,
-                                outputData,
-                                numOutputSamples,
-                                numInputSamples,
-                                0);
+                                 inputData,
+                                 outputData,
+                                 numOutputSamples,
+                                 numInputSamples,
+                                 0);
         }
-        
+
         const double expectedDuration = static_cast<double>(numInputSamples) / deviceSampleRate;
         const double resultDuration = static_cast<double>(upsampledBuffer.getNumSamples()) / targetSampleRate;
         const double durationDifference = std::abs(expectedDuration - resultDuration);
@@ -615,7 +629,7 @@ void JuceMixPlayer::flushRecordBufferToFile(juce::AudioBuffer<float>& buffer, fl
         PRINT("- Resampled: " << upsampledBuffer.getNumSamples() << " samples @ " << targetSampleRate << "Hz (" << resultDuration << "s)");
         PRINT("- Duration difference: " << (durationDifference * 1000.0) << "ms");
         jassert(durationDifference < (1.0 / targetSampleRate) &&
-               "Resampling duration mismatch exceeds 1 sample tolerance");
+                "Resampling duration mismatch exceeds 1 sample tolerance");
         success = recWriter->writeFromAudioSampleBuffer(upsampledBuffer, 0, upsampledBuffer.getNumSamples());
     } else {
         success = recWriter->writeFromAudioSampleBuffer(buffer, 0, numInputSamples);
@@ -642,20 +656,16 @@ void JuceMixPlayer::_onRecStateUpdateNotify(JuceMixPlayerRecState state) {
 }
 
 // MARK: adding custom filters pass
-void JuceMixPlayer::setFinalInputOutpuPass(std::function<void(const float* const *inputChannelData,
-                                                             int numInputChannels,
-                                                             float* const *outputChannelData,
-                                                             int numOutputChannels,
-                                                             int numSamples)> closure) {
-    this->finalInputOutpuPassClosure = closure;
+void JuceMixPlayer::setTrackLoadListener(std::function<bool(std::string trackId,
+                                                            juce::AudioBuffer<float>& buffer,
+                                                            int sampleRate)> closure) {
+    this->trackLoadListener = closure;
 }
 
-void JuceMixPlayer::setOutputPassForTrack(std::function<void(std::string trackId,
-                                                             juce::AudioBuffer<float>& buffer,
+void JuceMixPlayer::setMergeReadyListener(std::function<bool(juce::AudioBuffer<float>& buffer,
                                                              int sampleRate)> closure) {
-    this->outputPassForTrackClosure = closure;
+    this->mergeReadyListener = closure;
 }
-
 
 // MARK: Device management
 void JuceMixPlayer::notifyDeviceUpdates() {
@@ -672,12 +682,12 @@ void JuceMixPlayer::notifyDeviceUpdates() {
             inputDev.name = currentDevice->getName().toStdString();
             inputDev.isInput = true;
             inputDev.isSelected = (setup.inputDeviceName == currentDevice->getName());
-            
+
             // Get input channels
             juce::StringArray inputChannels = currentDevice->getInputChannelNames();
             for (const auto& ch : inputChannels)
                 inputDev.inputChannelNames.push_back(ch.toStdString());
-            
+
             inputDev.currentSampleRate = currentDevice->getCurrentSampleRate();
             for (auto rate : currentDevice->getAvailableSampleRates())
                 inputDev.availableSampleRates.push_back(rate);
@@ -689,12 +699,12 @@ void JuceMixPlayer::notifyDeviceUpdates() {
             outputDev.name = currentDevice->getName().toStdString();
             outputDev.isInput = false;
             outputDev.isSelected = (setup.outputDeviceName == currentDevice->getName());
-            
+
             // Get output channels
             juce::StringArray outputChannels = currentDevice->getOutputChannelNames();
             for (const auto& ch : outputChannels)
                 outputDev.outputChannelNames.push_back(ch.toStdString());
-            
+
             outputDev.currentSampleRate = currentDevice->getCurrentSampleRate();
             outputDev.availableSampleRates = inputDev.availableSampleRates; // Same device
             outputDev.deviceType = inputDev.deviceType;
@@ -713,59 +723,59 @@ void JuceMixPlayer::notifyDeviceUpdates() {
 }
 
 void JuceMixPlayer::setUpdatedDevices(const char* json) {
-//    std::string json_(json);
-//    taskQueue.async([&, json_]{
-//        try {
-//            MixerDeviceList list = MixerDeviceList::decode(json_);
-//            if (!(deviceList == list)) {
-//                deviceList = list;
-//
-//                MixerDevice inp;
-//                MixerDevice out;
-//                for (auto& dev: list.devices) {
-//                    if (dev.isSelected && dev.isInput && inp.name == "") {
-//                        inp = dev;
-//                    }
-//                    if (dev.isSelected && !dev.isInput && out.name == "") {
-//                        out = dev;
-//                    }
-//                }
-//
-//                bool hasChanges = inp.name != "" || out.name != "";
-//
-//                if (!hasChanges) {
-//                    PRINT("setUpdatedDevices: No selected device found");
-//                    return;
-//                }
-//
-//                PRINT("setUpdatedDevices: selected inp: " << inp.name << ", out: " << out.name);
-//
-//                juce::MessageManager::getInstanceWithoutCreating()->callAsync([&, inp, out]{
-//                    juce::AudioDeviceManager::AudioDeviceSetup setup = deviceManager->getAudioDeviceSetup();
-//                    if (inp.name != "") setup.inputDeviceName = juce::String(inp.name);
-//                    if (out.name != "") setup.outputDeviceName = juce::String(out.name);
-//                    bool treatAsChosenDevice = true;
-//                    juce::String err = deviceManager->setAudioDeviceSetup(setup, treatAsChosenDevice);
-//                    if (err.isNotEmpty()) {
-//                        _onErrorNotify(err.toStdString());
-//                    }
-//                    notifyDeviceUpdates();
-//                });
-//            } else {
-//                PRINT("setUpdatedDevices: Same device data! ignoring");
-//            }
-//        } catch (const std::exception& e) {
-//            _onErrorNotify(std::string(e.what()));
-//            notifyDeviceUpdates();
-//        }
-//    });
+    //    std::string json_(json);
+    //    taskQueue.async([&, json_]{
+    //        try {
+    //            MixerDeviceList list = MixerDeviceList::decode(json_);
+    //            if (!(deviceList == list)) {
+    //                deviceList = list;
+    //
+    //                MixerDevice inp;
+    //                MixerDevice out;
+    //                for (auto& dev: list.devices) {
+    //                    if (dev.isSelected && dev.isInput && inp.name == "") {
+    //                        inp = dev;
+    //                    }
+    //                    if (dev.isSelected && !dev.isInput && out.name == "") {
+    //                        out = dev;
+    //                    }
+    //                }
+    //
+    //                bool hasChanges = inp.name != "" || out.name != "";
+    //
+    //                if (!hasChanges) {
+    //                    PRINT("setUpdatedDevices: No selected device found");
+    //                    return;
+    //                }
+    //
+    //                PRINT("setUpdatedDevices: selected inp: " << inp.name << ", out: " << out.name);
+    //
+    //                juce::MessageManager::getInstanceWithoutCreating()->callAsync([&, inp, out]{
+    //                    juce::AudioDeviceManager::AudioDeviceSetup setup = deviceManager->getAudioDeviceSetup();
+    //                    if (inp.name != "") setup.inputDeviceName = juce::String(inp.name);
+    //                    if (out.name != "") setup.outputDeviceName = juce::String(out.name);
+    //                    bool treatAsChosenDevice = true;
+    //                    juce::String err = deviceManager->setAudioDeviceSetup(setup, treatAsChosenDevice);
+    //                    if (err.isNotEmpty()) {
+    //                        _onErrorNotify(err.toStdString());
+    //                    }
+    //                    notifyDeviceUpdates();
+    //                });
+    //            } else {
+    //                PRINT("setUpdatedDevices: Same device data! ignoring");
+    //            }
+    //        } catch (const std::exception& e) {
+    //            _onErrorNotify(std::string(e.what()));
+    //            notifyDeviceUpdates();
+    //        }
+    //    });
 }
 
 void JuceMixPlayer::setDefaultSampleRate() {
-//    juce::AudioDeviceManager::AudioDeviceSetup setup = deviceManager->getAudioDeviceSetup();
-//    setup.sampleRate = settings.sampleRate;
-//    bool treatAsChosenDevice = true;
-//    deviceManager->setAudioDeviceSetup(setup, treatAsChosenDevice);
+    //    juce::AudioDeviceManager::AudioDeviceSetup setup = deviceManager->getAudioDeviceSetup();
+    //    setup.sampleRate = settings.sampleRate;
+    //    bool treatAsChosenDevice = true;
+    //    deviceManager->setAudioDeviceSetup(setup, treatAsChosenDevice);
 }
 
 // MARK: AudioIODeviceCallback
@@ -818,12 +828,12 @@ void JuceMixPlayer::audioDeviceIOCallbackWithContext(const float *const *inputCh
             } else {
                 _onProgressNotify(1);
                 _onStateUpdateNotify(JuceMixPlayerState::COMPLETED);
-                
+
                 if (_isRecording && settings.stopRecOnPlaybackComplete) {
                     stopRecorder();
                 }
             }
-            
+
             if (!_isRecording && settings.loop) {
                 _isPlaying = false;
                 _isPlayingInternal = false;
@@ -849,13 +859,6 @@ void JuceMixPlayer::audioDeviceIOCallbackWithContext(const float *const *inputCh
             _loadAudioBlock((getCurrentTime()/blockDuration)+1);
         });
 
-        if (finalInputOutpuPassClosure.has_value()) {
-            finalInputOutpuPassClosure.value()(inputChannelData,
-                                  numInputChannels,
-                                  outputChannelData,
-                                  numOutputChannels,
-                                  numSamples);
-        }
     } else {
         for (int ch=0; ch<numOutputChannels; ch++) {
             juce::zeromem(outputChannelData[ch], (size_t) numSamples * sizeof (float));
@@ -891,7 +894,7 @@ void JuceMixPlayer::timerCallback() {
             if (onRecLevelCallback) {
                 const float level = inputLevelMeter->getCurrentLevel();
                 const float levelInDb = juce::Decibels::gainToDecibels(level);
-                onRecLevelCallback(this, levelInDb);          
+                onRecLevelCallback(this, levelInDb);
             }
         }
     });

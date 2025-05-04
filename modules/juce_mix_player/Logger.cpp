@@ -18,6 +18,11 @@ const char* returnCopyCharDelete(const char* string) {
     return copy;
 }
 
+std::string toLower(std::string str) {
+    for (auto& e: str) e = std::tolower(e);
+    return str;
+}
+
 bool setContains(std::unordered_set<int>& set, int val) {
     return set.find(val) != set.end();
 }

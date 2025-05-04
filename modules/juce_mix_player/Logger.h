@@ -10,6 +10,8 @@ const char* returnCopyCharDelete(const char* string);
 
 bool setContains(std::unordered_set<int>& set, int val);
 
+std::string toLower(std::string str);
+
 // enabled logging to release builds as well
 #define PRINT(textToWrite) \
     if (enableLogsValue) { \

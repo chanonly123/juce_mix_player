@@ -37,15 +37,14 @@ private:
     int playHeadIndex = 0;
     juce::AudioBuffer<float> playBuffer;
     std::unordered_map<std::string, std::shared_ptr<juce::AudioBuffer<float>>> repetedBufferCache;
-    std::optional<std::function<void(const float* const *inputChannelData,
-                       int numInputChannels,
-                       float* const *outputChannelData,
-                       int numOutputChannels,
-                       int numSamples)>> finalInputOutpuPassClosure;
 
-    std::optional<std::function<void(std::string trackId,
-                                     juce::AudioBuffer<float>& buffer,
-                                     int sampleRate)>> outputPassForTrackClosure;
+    // external audio filter callbacks
+    std::function<bool(std::string trackId,
+                       juce::AudioBuffer<float>& buffer,
+                       int sampleRate)> trackLoadListener;
+
+    std::function<bool(juce::AudioBuffer<float>& buffer,
+                       int sampleRate)> mergeReadyListener;
 
     // MARK: Recording
 
@@ -112,7 +111,7 @@ private:
     void _startProgressTimer();
 
     void _stopProgressTimer();
-    
+
     void notifyDeviceUpdates();
 
     void setDefaultSampleRate();
@@ -173,22 +172,18 @@ public:
     void stopRecorder();
 
     // MARK: adding custom filters pass
-    void setFinalInputOutpuPass(std::function<void(const float* const *inputChannelData,
-                                                  int numInputChannels,
-                                                  float* const *outputChannelData,
-                                                  int numOutputChannels,
-                                                  int numSamples)> closure);
+    void setTrackLoadListener(std::function<bool(std::string trackId,
+                                                 juce::AudioBuffer<float>& buffer,
+                                                 int sampleRate)> closure);
 
-    void setOutputPassForTrack(std::function<void(std::string trackId,
-                                                  juce::AudioBuffer<float>& buffer,
+    void setMergeReadyListener(std::function<bool(juce::AudioBuffer<float>& buffer,
                                                   int sampleRate)> closure);
 
     void resetPlayBuffer();
 
     // MARK: device management
-
     void setUpdatedDevices(const char* json);
-
+    
     // MARK: juce::AudioIODeviceCallback
     void audioDeviceAboutToStart(juce::AudioIODevice *device) override;
 
