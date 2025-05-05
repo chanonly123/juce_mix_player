@@ -50,6 +50,7 @@ JuceMixPlayer::JuceMixPlayer() {
     PRINT("JuceMixPlayer()");
 
     taskQueue.name = "taskQueue";
+    heavyTaskQueue.name = "heavyTaskQueue";
     recWriteTaskQueue.name = "recWriteTaskQueue";
 
     formatManager.registerBasicFormats();
@@ -82,6 +83,7 @@ void JuceMixPlayer::dispose() {
         stopRecorder();
         std::thread thread([&]{
             taskQueue.stopQueue();
+            heavyTaskQueue.stopQueue();
             juce::Thread::sleep(5000);
             delete this;
         });
@@ -151,10 +153,11 @@ void JuceMixPlayer::stop() {
 void JuceMixPlayer::seek(float value) {
     float _value = std::min(1.0f, std::max(value, 0.0f));
     taskQueue.async([&, _value] {
-        _isPlayingInternal = false;
-        _loadAudioBlock(getDuration() * _value / blockDuration);
+        _isSeeking = true;
         playHeadIndex = playBuffer.getNumSamples() * _value;
-        _isPlayingInternal = true;
+        loadAudioBlockSafe(getDuration() * _value / blockDuration, false, [&] {
+            _isSeeking = false;
+        });
     });
 }
 
@@ -239,18 +242,16 @@ void JuceMixPlayer::prepare() {
     taskQueue.async([&]{
         _isPlayingInternal = false;
         _pauseInternal(false);
-        loadingBlocks.clear();
-        loadedBlocks.clear();
         playHeadIndex = 0;
-        playBuffer.clear();
         _createFileReadersAndTotalDuration();
         if (playBuffer.getNumSamples() > 0) {
-            _loadAudioBlock(0);
-            _onStateUpdateNotify(JuceMixPlayerState::READY);
-            _isPlayingInternal = true;
-            if (_isPlaying) {
-                _playInternal();
-            }
+            loadAudioBlockSafe(0, true, [&]{
+                _onStateUpdateNotify(JuceMixPlayerState::READY);
+                _isPlayingInternal = true;
+                if (_isPlaying) {
+                    _playInternal();
+                }
+            });
         } else {
             _onStateUpdateNotify(JuceMixPlayerState::ERROR);
         }
@@ -258,9 +259,10 @@ void JuceMixPlayer::prepare() {
 }
 
 void JuceMixPlayer::_resetPlayBufferBlocks() {
-    loadingBlocks.clear();
-    loadedBlocks.clear();
-    _loadAudioBlock((getCurrentTime()/blockDuration));
+    _isPlayingInternal = false;
+    loadAudioBlockSafe((getCurrentTime()/blockDuration), true, [&] {
+        _isPlayingInternal = true;
+    });
 }
 
 void JuceMixPlayer::copyReaders(const MixerData& from, MixerData& to) {
@@ -365,8 +367,26 @@ void JuceMixPlayer::_loadRepeatedTrack(int block,
     }
 }
 
+void JuceMixPlayer::loadAudioBlockSafe(int block, bool reset, std::function<void()> completion) {
+    int taskQueueIndex = reset ? ++this->taskQueueIndex : this->taskQueueIndex;
+    heavyTaskQueue.async([&, taskQueueIndex, block, reset, completion] {
+        if (reset) {
+            loadingBlocks.clear();
+            loadedBlocks.clear();
+            playBuffer.clear();
+        }
+        _loadAudioBlock(block, taskQueueIndex);
+        taskQueue.async([&, completion, taskQueueIndex] {
+            if (taskQueueIndex == this->taskQueueIndex) {
+                completion();
+            }
+        });
+    });
+}
 
-void JuceMixPlayer::_loadAudioBlock(int block) {
+void JuceMixPlayer::_loadAudioBlock(int block, int taskQueueIndex) {
+    if (taskQueueIndex != this->taskQueueIndex) return;
+
     if (setContains(loadedBlocks, block)) {
         // block is already loaded
         return;
@@ -397,6 +417,8 @@ void JuceMixPlayer::_loadAudioBlock(int block) {
     int sampleCount = blockDuration * sampleRate;
 
     for (MixerTrack& track: mixerData.tracks) {
+        if (taskQueueIndex != this->taskQueueIndex) return;
+
         if (!track.enabled) {
             continue;
         }
@@ -419,6 +441,7 @@ void JuceMixPlayer::_loadAudioBlock(int block) {
             if (repetedBufferCache.find(track.path) == repetedBufferCache.end()) {
                 buff.reset(new juce::AudioBuffer<float>(2, sampleCount));
                 track.reader->read(buff.get(), 0, sampleCount, 0, true, true);
+                if (taskQueueIndex != this->taskQueueIndex) return;
                 repetedBufferCache[track.path] = buff;
             } else {
                 buff = repetedBufferCache.at(track.path);
@@ -436,12 +459,14 @@ void JuceMixPlayer::_loadAudioBlock(int block) {
 
             // read data into block buffer
             const bool success = track.reader->read(&tempBuffer, dstStart, numSamples, readStart, true, true);
+            if (taskQueueIndex != this->taskQueueIndex) return;
             if (!success) {
                 std::string err = "Read operation was not success for: " + track.path;
                 _onErrorNotify(err);
             }
-            if (trackLoadListener) {
-                trackLoadListener(track.id_,
+            auto listener = trackLoadListener;
+            if (listener) {
+                listener(track.id_,
                                   tempBuffer,
                                   sampleRate);
             }
@@ -452,11 +477,13 @@ void JuceMixPlayer::_loadAudioBlock(int block) {
         }
     }
 
-    if (mergeReadyListener) {
+    if (taskQueueIndex != this->taskQueueIndex) return;
+    auto listener = mergeReadyListener;
+    if (listener) {
         for (int i=0; i<2; i++) {
             tempBuffer.copyFrom(i, 0, playBuffer, i, destStartSample, sampleCount);
         }
-        bool shouldMerge = mergeReadyListener(tempBuffer, sampleRate);
+        bool shouldMerge = listener(tempBuffer, sampleRate);
         if (shouldMerge) {
             for (int i=0; i<2; i++) {
                 playBuffer.addFrom(i, destStartSample, tempBuffer, i, 0, sampleCount, 1.0f);
@@ -818,7 +845,7 @@ void JuceMixPlayer::audioDeviceIOCallbackWithContext(const float *const *inputCh
         }
     }
 
-    if (_isPlayingInternal && _isPlaying && numOutputChannels > 0) {
+    if (!_isSeeking && _isPlayingInternal && _isPlaying && numOutputChannels > 0) {
         float speedRatio = sampleRate/deviceSampleRate;
         float readCount = (float)numSamples * speedRatio;
 
@@ -836,7 +863,6 @@ void JuceMixPlayer::audioDeviceIOCallbackWithContext(const float *const *inputCh
 
             if (!_isRecording && settings.loop) {
                 _isPlaying = false;
-                _isPlayingInternal = false;
                 playHeadIndex = 0;
                 play();
             } else {
@@ -855,10 +881,7 @@ void JuceMixPlayer::audioDeviceIOCallbackWithContext(const float *const *inputCh
         playHeadIndex += readCount;
 
         // load next block in advance
-        taskQueue.async([&]{
-            _loadAudioBlock((getCurrentTime()/blockDuration)+1);
-        });
-
+        loadAudioBlockSafe((getCurrentTime()/blockDuration)+1, false, []{});
     } else {
         for (int ch=0; ch<numOutputChannels; ch++) {
             juce::zeromem(outputChannelData[ch], (size_t) numSamples * sizeof (float));
@@ -884,7 +907,7 @@ void JuceMixPlayer::audioDeviceStopped() {
 // MARK: juce::Timer
 void JuceMixPlayer::timerCallback() {
     taskQueue.async([&]{
-        if (_isPlaying && playBuffer.getNumSamples() > 0) {
+        if (!_isSeeking && _isPlayingInternal && _isPlaying && playBuffer.getNumSamples() > 0) {
             _onProgressNotify((float)playHeadIndex / (float)playBuffer.getNumSamples());
         }
         if (_isRecording) {

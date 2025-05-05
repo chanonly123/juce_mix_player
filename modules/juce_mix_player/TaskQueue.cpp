@@ -2,53 +2,51 @@
 
 TaskQueue TaskQueue::shared;
 
-void TaskQueue::executeNext() {
-    if (stop) {
-        return;
+TaskQueue::TaskQueue() {
+    workerThread = std::thread([this] { this->worker(); });
+}
+
+TaskQueue::~TaskQueue() {
+    stopQueue();
+    if (workerThread.joinable()) {
+        workerThread.join();
     }
-    TaskQueue* self = this;
-    std::thread thread([&, self]{
-        if (self == nullptr || self->stop) {
-            return;
-        }
-        mtx.lock();
-        if (self == nullptr || self->stop) {
-            return;
-        }
-        ended = false;
-        while (!taskList.empty()) {
-            if (self == nullptr || self->stop) {
-                return;
-            }
-            TaskQueueItem& task = taskList.front();
-            if (task != nullptr) {
-                task();
-            }
-            if (self == nullptr || self->stop) {
-                return;
-            }
-            taskList.pop_front();
-        }
-        if (self == nullptr || self->stop) {
-            return;
-        }
-        ended = true;
-        mtx.unlock();
-    });
-    thread.detach();
 }
 
 void TaskQueue::async(TaskQueueItem task) {
-    if (stop) {
-        return;
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        taskList.push_back(std::move(task));
     }
-    taskList.push_back(task);
-    if (ended) {
-        executeNext();
-    }
+    cv.notify_one();
 }
 
 void TaskQueue::stopQueue() {
-    taskList.clear();
-    stop = true;
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        stop = true;
+        taskList.clear();
+    }
+    cv.notify_one(); // wake up worker so it can exit
+}
+
+void TaskQueue::worker() {
+    while (true) {
+        TaskQueueItem task;
+        {
+            std::unique_lock<std::mutex> lock(mtx);
+            cv.wait(lock, [this] { return stop || !taskList.empty(); });
+
+            if (stop && taskList.empty()) {
+                break;
+            }
+
+            task = std::move(taskList.front());
+            taskList.pop_front();
+        }
+
+        if (task) {
+            task(); // execute outside lock
+        }
+    }
 }

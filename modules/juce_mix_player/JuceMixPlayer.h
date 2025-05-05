@@ -15,6 +15,8 @@ private:
     inline static juce::AudioDeviceManager* deviceManager;
 
     juce::CriticalSection lock;
+    TaskQueue heavyTaskQueue;
+    int taskQueueIndex = 0;
     TaskQueue taskQueue;
     TaskQueue recWriteTaskQueue;
     int samplesPerBlockExpected = 0;
@@ -34,6 +36,7 @@ private:
     MixerData mixerData;
     bool _isPlaying = false;
     bool _isPlayingInternal = false;
+    bool _isSeeking = false;
     int playHeadIndex = 0;
     juce::AudioBuffer<float> playBuffer;
     std::unordered_map<std::string, std::shared_ptr<juce::AudioBuffer<float>>> repetedBufferCache;
@@ -57,7 +60,7 @@ private:
     int recordBufferSelect = 0;
     juce::AudioBuffer<float> recordBuffer1;
     juce::AudioBuffer<float> recordBuffer2;
-    int recordBufferDuration = 5; // seconds
+    int recordBufferDuration = 10; // seconds
     std::shared_ptr<juce::AudioFormat> recAudioFormat;
     std::shared_ptr<juce::AudioFormatWriter> recWriter;
     std::string recordPath;
@@ -66,7 +69,7 @@ private:
     // loading buffer into chunks
     std::unordered_set<int> loadingBlocks;
     std::unordered_set<int> loadedBlocks;
-    const float blockDuration = 10; // second
+    const float blockDuration = 5; // second
     const float sampleRate = 48000;
 
     void prepare();
@@ -85,8 +88,10 @@ private:
                             float repeatInterval,
                             juce::AudioBuffer<float>* track);
 
+    void loadAudioBlockSafe(int block, bool reset, std::function<void()> completion);
+
     /// loads audio block for `blockDuration` and `block` number. Blocks are chunks of the audio file.
-    void _loadAudioBlock(int block);
+    void _loadAudioBlock(int block, int taskQueueIndex);
 
     void _onProgressNotify(float progress);
 
