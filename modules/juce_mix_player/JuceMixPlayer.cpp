@@ -3,37 +3,33 @@
 #if JUCE_IOS
 
 #import <AVFoundation/AVFoundation.h>
-#define JUCE_NSERROR_CHECK(X)     { NSError* error = nil; X; logNSError (error); }
 
 // MARK: set audio session for iOS
-static void logNSError (NSError* e) {
-    if (e != nil) {
-        PRINT("iOS Audio setCategory error: " << [e.localizedDescription UTF8String]);
-        //        jassertfalse;
-    }
-}
-
-void setAudioSessionPlay() {
+bool setAudioSessionPlay() {
     NSUInteger options = AVAudioSessionCategoryOptionMixWithOthers;
-    JUCE_NSERROR_CHECK ([[AVAudioSession sharedInstance] setCategory: AVAudioSessionCategoryPlayback
-                                                         withOptions: options
-                                                               error: &error]);
+    NSError* error = nil;
+    [[AVAudioSession sharedInstance] setCategory: AVAudioSessionCategoryPlayback
+                                     withOptions: options
+                                           error: &error];
+    return error == nil;
 }
 
-void setAudioSessionRecord() {
+bool setAudioSessionRecord() {
     NSUInteger options = AVAudioSessionCategoryOptionDefaultToSpeaker
     | AVAudioSessionCategoryOptionAllowBluetoothA2DP
     | AVAudioSessionCategoryOptionMixWithOthers;
-    JUCE_NSERROR_CHECK ([[AVAudioSession sharedInstance] setCategory: AVAudioSessionCategoryPlayAndRecord
-                                                         withOptions: options
-                                                               error: &error]);
+    NSError* error = nil;
+    [[AVAudioSession sharedInstance] setCategory: AVAudioSessionCategoryPlayAndRecord
+                                     withOptions: options
+                                           error: &error];
+    return error == nil;
 }
 #elif JUCE_MAC
-void setAudioSessionPlay() {}
-void setAudioSessionRecord() {}
+bool setAudioSessionPlay() { return true; }
+bool setAudioSessionRecord() { return true; }
 #else
-void setAudioSessionPlay() {}
-void setAudioSessionRecord() {}
+bool setAudioSessionPlay() { return true; }
+bool setAudioSessionRecord() { return true; }
 #endif
 
 std::string JuceMixPlayerRecState_toString(JuceMixPlayerRecState state) {
@@ -467,8 +463,8 @@ void JuceMixPlayer::_loadAudioBlock(int block, int taskQueueIndex) {
             auto listener = trackLoadListener;
             if (listener) {
                 listener(track.id_,
-                                  tempBuffer,
-                                  sampleRate);
+                         tempBuffer,
+                         sampleRate);
             }
         }
 
@@ -536,15 +532,33 @@ void JuceMixPlayer::startRecorder() {
             _onRecStateUpdateNotify(JuceMixPlayerRecState::ERROR);
             return;
         }
+
+        bool success = setAudioSessionRecord();
+        if (!success) {
+            if (onRecErrorCallback) onRecErrorCallback(this, "Failed to start system audio session");
+            _onRecStateUpdateNotify(JuceMixPlayerRecState::ERROR);
+            return;
+        }
+
         deviceManagerSavedState = deviceManager->createStateXml();
         deviceManager->closeAudioDevice();
         deviceManager->initialise(1, 2, deviceManagerSavedState.get(), true, {}, nullptr);
-        setAudioSessionRecord();
+
+        success = setAudioSessionRecord();
+        if (!success) {
+            if (onRecErrorCallback) onRecErrorCallback(this, "Failed to start system audio session");
+            _onRecStateUpdateNotify(JuceMixPlayerRecState::ERROR);
+            return;
+        }
+
         _startProgressTimer();
         _onRecStateUpdateNotify(JuceMixPlayerRecState::RECORDING);
-        _isRecording = true;
+
         if (settings.recBgPlayback) {
-            play();
+            taskQueue.async([&]{
+                _isRecording = true;
+                _playInternal();
+            });
         }
     });
 }
