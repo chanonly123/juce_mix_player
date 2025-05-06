@@ -284,22 +284,21 @@ class RecorderPageState extends State<RecorderPage> {
       log('Preparing recorder with path: $recordingPath');
       recorder.prepareRecording(recordingPath);
       final bgmPath = await AssetHelper.extractAsset('assets/media/tu_hi_re_92_D_sharp_bgm.mp3');
-      recorder.setFile(bgmPath);
-      if (isMetronomeEnabled) {
+      // if (isMetronomeEnabled) {
         final pathH = await AssetHelper.extractAsset('assets/media/met_h.wav');
         final pathL = await AssetHelper.extractAsset('assets/media/met_l.wav');
         double metVol = 0.5;
         final mixComposeModel = MixerComposeModel(
           tracks: [
-            MixerTrack(id: "music", path: bgmPath),
-            MixerTrack(id: "met_1", path: pathH, offset: 0, repeat: true, repeatInterval: 2, volume: metVol),
-            MixerTrack(id: "met_2", path: pathL, offset: 0.5, repeat: true, repeatInterval: 2, volume: metVol),
-            MixerTrack(id: "met_3", path: pathL, offset: 1, repeat: true, repeatInterval: 2, volume: metVol),
-            MixerTrack(id: "met_4", path: pathL, offset: 1.5, repeat: true, repeatInterval: 2, volume: metVol)
+          MixerTrack(id: "music", path: bgmPath, volume: 0.2),
+          MixerTrack(id: "met_1", path: pathH, offset: 0, repeat: true, repeatInterval: 2, volume: metVol),
+          MixerTrack(id: "met_2", path: pathL, offset: 0.5, repeat: true, repeatInterval: 2, volume: metVol),
+          MixerTrack(id: "met_3", path: pathL, offset: 1, repeat: true, repeatInterval: 2, volume: metVol),
+          MixerTrack(id: "met_4", path: pathL, offset: 1.5, repeat: true, repeatInterval: 2, volume: metVol),
           ],
         );
         recorder.setMixData(mixComposeModel);
-      }
+      // }
       log('Recorder prepared successfully');
       setState(() {
         isRecorderPrepared = true;

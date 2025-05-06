@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/asset_helper.dart';
 import 'package:flutter_app/utils.dart';
 import 'package:juce_mix_player/juce_mix_player.dart';
 
@@ -27,7 +28,8 @@ class AudioPlayerDialogState extends State<AudioPlayerDialog> {
   @override
   void initState() {
     super.initState();
-    player.setFile(widget.filePath);
+
+    setupPlayer();
 
     player.setStateUpdateHandler((state) {
       if (!mounted) return; // Check if widget is still mounted
@@ -69,6 +71,22 @@ class AudioPlayerDialogState extends State<AudioPlayerDialog> {
         setState(() => this.progress = progress);
       }
     });
+  }
+
+  void setupPlayer() async {
+    final pathH = await AssetHelper.extractAsset('assets/media/met_h.wav');
+    final pathL = await AssetHelper.extractAsset('assets/media/met_l.wav');
+    double metVol = 0.5;
+    final mixComposeModel = MixerComposeModel(
+      tracks: [
+        MixerTrack(id: "music", path: widget.filePath, volume: metVol),
+        MixerTrack(id: "met_1", path: pathH, offset: 0, repeat: true, repeatInterval: 2, volume: metVol),
+        MixerTrack(id: "met_2", path: pathL, offset: 0.5, repeat: true, repeatInterval: 2, volume: metVol),
+        MixerTrack(id: "met_3", path: pathL, offset: 1, repeat: true, repeatInterval: 2, volume: metVol),
+        MixerTrack(id: "met_4", path: pathL, offset: 1.5, repeat: true, repeatInterval: 2, volume: metVol)
+      ],
+    );
+    player.setMixData(mixComposeModel);
   }
 
   @override

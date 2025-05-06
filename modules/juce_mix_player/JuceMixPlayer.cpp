@@ -383,6 +383,11 @@ void JuceMixPlayer::loadAudioBlockSafe(int block, bool reset, std::function<void
 void JuceMixPlayer::_loadAudioBlock(int block, int taskQueueIndex) {
     if (taskQueueIndex != this->taskQueueIndex) return;
 
+    const float destStartSample = block * blockDuration * sampleRate;
+    if (destStartSample >= playBuffer.getNumSamples()) {
+        return;
+    }
+
     if (setContains(loadedBlocks, block)) {
         // block is already loaded
         return;
@@ -409,7 +414,6 @@ void JuceMixPlayer::_loadAudioBlock(int block, int taskQueueIndex) {
         playBuffer.clear(start, num);
     }
 
-    const float destStartSample = block * blockDuration * sampleRate;
     int sampleCount = blockDuration * sampleRate;
 
     for (MixerTrack& track: mixerData.tracks) {
@@ -520,7 +524,7 @@ void JuceMixPlayer::prepareRecorder(const char *file) {
             return;
         }
         recordPath = path;
-        createWriterForRecorder();
+        _createWriterForRecorder();
     });
 }
 
@@ -554,12 +558,12 @@ void JuceMixPlayer::startRecorder() {
         _startProgressTimer();
         _onRecStateUpdateNotify(JuceMixPlayerRecState::RECORDING);
 
-        if (settings.recBgPlayback) {
-            taskQueue.async([&]{
-                _isRecording = true;
+        taskQueue.async([&]{
+            if (settings.recBgPlayback) {
                 _playInternal();
-            });
-        }
+            }
+            _isRecording = true;
+        });
     });
 }
 
@@ -579,7 +583,8 @@ void JuceMixPlayer::stopRecorder() {
     });
 }
 
-void JuceMixPlayer::createWriterForRecorder() {
+void JuceMixPlayer::_createWriterForRecorder() {
+    _resetRecorder();
     if (deviceSampleRate == 0) {
         if (onRecErrorCallback) onRecErrorCallback(this, "deviceSampleRate is 0");
         _onRecStateUpdateNotify(JuceMixPlayerRecState::ERROR);
@@ -608,6 +613,7 @@ void JuceMixPlayer::_resetRecorder() {
     _isRecorderPrepared = false;
     recordTimerIndex = 0;
     recordHeadIndex = 0;
+    shouldTrimRecording = true;
     _onRecStateUpdateNotify(JuceMixPlayerRecState::IDLE);
 }
 
@@ -621,27 +627,34 @@ void JuceMixPlayer::finishRecording() {
     });
 }
 
-void JuceMixPlayer::flushRecordBufferToFile(juce::AudioBuffer<float>& buffer, float sampleCount) {
+void JuceMixPlayer::flushRecordBufferToFile(juce::AudioBuffer<float>& buffer, int sampleCount) {
+    int latencyInSamples = shouldTrimRecording ? outputLatencyInSamples : 0;
+    shouldTrimRecording = false;
+    int sampleCountTrimmed = sampleCount - latencyInSamples;
+    juce::AudioBuffer<float> bufferTrimmed(buffer.getNumChannels(), sampleCount - latencyInSamples);
+    for (int ch = 0; ch < bufferTrimmed.getNumChannels(); ++ch) {
+        bufferTrimmed.copyFrom(ch, 0, buffer, ch, latencyInSamples, bufferTrimmed.getNumSamples());
+    }
     if (!recWriter) {
         if (onRecErrorCallback)
             onRecErrorCallback(this, "Failed to write file, writer not created");
         _onRecStateUpdateNotify(JuceMixPlayerRecState::ERROR);
         return;
     }
-    if (sampleCount <= 0) {
+    if (sampleCountTrimmed <= 0) {
         return;
     }
-    PRINT("flushRecordBufferToFile: " << sampleCount / deviceSampleRate);
+    PRINT("flushRecordBufferToFile: " << sampleCountTrimmed / deviceSampleRate);
     bool success = false;
 
     const int targetSampleRate = settings.sampleRate;
-    const int numInputSamples = static_cast<int>(sampleCount);
+    const int numInputSamples = sampleCountTrimmed;
 
     if (deviceSampleRate != targetSampleRate) {
         PRINT("flushRecordBufferToFile: REPSAMPLING =====");
         const double ratio = static_cast<double>(targetSampleRate) / deviceSampleRate;
         const double actualRatio = static_cast<double>(deviceSampleRate) / targetSampleRate;
-        const int numChannels = buffer.getNumChannels();
+        const int numChannels = bufferTrimmed.getNumChannels();
         const int numOutputSamples = static_cast<int>(std::ceil(numInputSamples * ratio));
 
         // Create upsampled buffer
@@ -649,7 +662,7 @@ void JuceMixPlayer::flushRecordBufferToFile(juce::AudioBuffer<float>& buffer, fl
 
         // Resample each channel
         for (int ch = 0; ch < numChannels; ++ch) {
-            const float* inputData = buffer.getReadPointer(ch);
+            const float* inputData = bufferTrimmed.getReadPointer(ch);
             float* outputData = upsampledBuffer.getWritePointer(ch);
 
             juce::LagrangeInterpolator interpolator;
@@ -673,7 +686,7 @@ void JuceMixPlayer::flushRecordBufferToFile(juce::AudioBuffer<float>& buffer, fl
                 "Resampling duration mismatch exceeds 1 sample tolerance");
         success = recWriter->writeFromAudioSampleBuffer(upsampledBuffer, 0, upsampledBuffer.getNumSamples());
     } else {
-        success = recWriter->writeFromAudioSampleBuffer(buffer, 0, numInputSamples);
+        success = recWriter->writeFromAudioSampleBuffer(bufferTrimmed, 0, numInputSamples);
     }
 
     // Flush and handle errors
@@ -821,9 +834,12 @@ void JuceMixPlayer::setDefaultSampleRate() {
 
 // MARK: AudioIODeviceCallback
 void JuceMixPlayer::audioDeviceAboutToStart(juce::AudioIODevice *device) {
+    this->outputLatencyInSamples = device->getOutputLatencyInSamples() + device->getCurrentBufferSizeSamples();
     this->deviceSampleRate = device->getCurrentSampleRate();
     this->samplesPerBlockExpected = device->getCurrentBufferSizeSamples();
+
     PRINT("audioDeviceAboutToStart" <<
+          ", bufferSizeSamples: " << device->getCurrentBufferSizeSamples() <<
           ", deviceSampleRate: " << deviceSampleRate <<
           ", getInputLatencyInSamples: " << device->getInputLatencyInSamples() <<
           ", getOutputLatencyInSamples: " << device->getOutputLatencyInSamples()

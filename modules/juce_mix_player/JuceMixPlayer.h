@@ -21,6 +21,8 @@ private:
     TaskQueue recWriteTaskQueue;
     int samplesPerBlockExpected = 0;
     float deviceSampleRate = 0;
+    int outputLatencyInSamples = 0;
+    int shouldTrimRecording = false;
     std::unique_ptr<juce::XmlElement> deviceManagerSavedState;
 
     MixerDeviceList deviceList;
@@ -103,9 +105,9 @@ private:
 
     void loadCompleteBuffer(juce::AudioBuffer<float>& buffer, bool takeRepeteTracks, bool takeNonRepeteTracks);
 
-    void createWriterForRecorder();
+    void _createWriterForRecorder();
 
-    void flushRecordBufferToFile(juce::AudioBuffer<float>& buffer, float sampleCount);
+    void flushRecordBufferToFile(juce::AudioBuffer<float>& buffer, int sampleCount);
 
     void _onRecStateUpdateNotify(JuceMixPlayerRecState state);
 
