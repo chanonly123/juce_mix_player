@@ -584,6 +584,7 @@ void JuceMixPlayer::stopRecorder() {
 }
 
 void JuceMixPlayer::_createWriterForRecorder() {
+    PRINT("recordPath: " << recordPath);
     _resetRecorder();
     if (deviceSampleRate == 0) {
         if (onRecErrorCallback) onRecErrorCallback(this, "deviceSampleRate is 0");
@@ -628,7 +629,20 @@ void JuceMixPlayer::finishRecording() {
 }
 
 void JuceMixPlayer::flushRecordBufferToFile(juce::AudioBuffer<float>& buffer, int sampleCount) {
-    int latencyInSamples = shouldTrimRecording ? outputLatencyInSamples : 0;
+    int latencyInSamples = 0;
+    if (shouldTrimRecording) {
+#if JUCE_ANDROID
+        latencyInSamples = (deviceManager->getCurrentAudioDevice()->getOutputLatencyInSamples() / 3) + samplesPerBlockExpected;
+#elif JUCE_IOS
+        latencyInSamples = (deviceManager->getCurrentAudioDevice()->getOutputLatencyInSamples() + samplesPerBlockExpected) * 2;
+#endif
+        PRINT(
+              "flushRecordBufferToFile: "
+              << "\ngetOutputLatencyInSamples: " << deviceManager->getCurrentAudioDevice()->getOutputLatencyInSamples()
+              << "\ngetCurrentBufferSizeSamples: " << samplesPerBlockExpected
+              << "\ntotal: " << latencyInSamples
+              );
+    }
     shouldTrimRecording = false;
     int sampleCountTrimmed = sampleCount - latencyInSamples;
     juce::AudioBuffer<float> bufferTrimmed(buffer.getNumChannels(), sampleCount - latencyInSamples);
@@ -834,15 +848,12 @@ void JuceMixPlayer::setDefaultSampleRate() {
 
 // MARK: AudioIODeviceCallback
 void JuceMixPlayer::audioDeviceAboutToStart(juce::AudioIODevice *device) {
-    this->outputLatencyInSamples = device->getOutputLatencyInSamples() + device->getCurrentBufferSizeSamples();
     this->deviceSampleRate = device->getCurrentSampleRate();
     this->samplesPerBlockExpected = device->getCurrentBufferSizeSamples();
 
     PRINT("audioDeviceAboutToStart" <<
           ", bufferSizeSamples: " << device->getCurrentBufferSizeSamples() <<
-          ", deviceSampleRate: " << deviceSampleRate <<
-          ", getInputLatencyInSamples: " << device->getInputLatencyInSamples() <<
-          ", getOutputLatencyInSamples: " << device->getOutputLatencyInSamples()
+          ", deviceSampleRate: " << deviceSampleRate
           );
 }
 

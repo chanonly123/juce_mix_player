@@ -21,7 +21,6 @@ private:
     TaskQueue recWriteTaskQueue;
     int samplesPerBlockExpected = 0;
     float deviceSampleRate = 0;
-    int outputLatencyInSamples = 0;
     int shouldTrimRecording = false;
     std::unique_ptr<juce::XmlElement> deviceManagerSavedState;
 
