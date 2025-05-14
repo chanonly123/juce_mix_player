@@ -203,3 +203,21 @@ public:
     /// Returns total duration in seconds. Requires reader for each track.
     static float getTotalDuration(MixerData& mixerData);
 };
+
+struct DeviceLaencyInfo {
+
+    // millis
+    long inputLatency = -1;
+
+    // millis
+    long outputLatency = -1;
+
+    long bufferLatency = -1;
+    long sampleRate = -1;
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(DeviceLaencyInfo,
+                                                inputLatency,
+                                                outputLatency,
+                                                bufferLatency,
+                                                sampleRate);
+};

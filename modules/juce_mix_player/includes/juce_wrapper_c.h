@@ -56,3 +56,5 @@ EXPORT_C_FUNC void JuceMixPlayer_onRecLevel(void* ptr, void (*onLevel)(void* ptr
 EXPORT_C_FUNC void JuceMixPlayer_onDeviceUpdate(void* ptr, void (*onDeviceUpdate)(void* ptr, const char*));
 
 EXPORT_C_FUNC void JuceMixPlayer_setUpdatedDevices(void* ptr, const char* json);
+
+EXPORT_C_FUNC const char* JuceMixPlayer_getDeviceLatencyInfo(void *ptr);

@@ -108,6 +108,7 @@ class RecorderPageState extends State<RecorderPage> {
           });
           break;
         case JuceMixRecState.STOPPED:
+          print("latencyinfo: ${recorder.getDeviceLatencyInfo()}");
           setState(() {
             isRecording = false;
             isRecorderPrepared = false;

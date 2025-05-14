@@ -19,9 +19,7 @@ private:
     int taskQueueIndex = 0;
     TaskQueue taskQueue;
     TaskQueue recWriteTaskQueue;
-    int samplesPerBlockExpected = 0;
-    float deviceSampleRate = 0;
-    int shouldTrimRecording = false;
+
     std::unique_ptr<juce::XmlElement> deviceManagerSavedState;
 
     MixerDeviceList deviceList;
@@ -72,6 +70,12 @@ private:
     std::unordered_set<int> loadedBlocks;
     const float blockDuration = 5; // second
     const float sampleRate = 48000;
+
+    // latency related
+    float deviceSampleRate = -1;
+    int samplesPerBlockExpected = -1;
+    int outputLatencyInSamples = -1;
+    int inputLatencyInSamples = -1;
 
     void prepare();
 
@@ -125,6 +129,8 @@ private:
     void _resetPlayBufferBlocks();
 
     void copyReaders(const MixerData& from, MixerData& to);
+
+    long getEpochTime();
 
 public:
 
@@ -189,7 +195,9 @@ public:
 
     // MARK: device management
     void setUpdatedDevices(const char* json);
-    
+
+    const char* getDeviceLatencyInfo();
+
     // MARK: juce::AudioIODeviceCallback
     void audioDeviceAboutToStart(juce::AudioIODevice *device) override;
 

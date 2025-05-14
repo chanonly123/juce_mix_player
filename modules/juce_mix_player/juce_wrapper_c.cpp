@@ -105,3 +105,7 @@ void JuceMixPlayer_onDeviceUpdate(void* ptr, void (*onDeviceUpdate)(void* ptr, c
 void JuceMixPlayer_setUpdatedDevices(void* ptr, const char* json) {
     static_cast<JuceMixPlayer *>(ptr)->setUpdatedDevices(json);
 }
+
+const char* JuceMixPlayer_getDeviceLatencyInfo(void *ptr) {
+    return static_cast<JuceMixPlayer *>(ptr)->getDeviceLatencyInfo();
+}

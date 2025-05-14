@@ -196,6 +196,10 @@ class JuceMixPlayer {
     _juceLib.JuceMixPlayer_onRecLevel(_ptr, _recInputlevelCallbackNativeCallable!.nativeFunction);
   }
 
+  String getDeviceLatencyInfo() {
+    return _juceLib.JuceMixPlayer_getDeviceLatencyInfo(_ptr).toDartString();
+  }
+
   void dispose() {
     // Clear callbacks
     _progressCallbackNativeCallable?.close();
