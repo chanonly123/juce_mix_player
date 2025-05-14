@@ -196,6 +196,12 @@ class JuceMixPlayer {
     _juceLib.JuceMixPlayer_onRecLevel(_ptr, _recInputlevelCallbackNativeCallable!.nativeFunction);
   }
 
+  /**
+    - inputLatency in millis
+    - outputLatency in millis
+    - bufferLatency in millis
+    - sampleRate -> sample rate per second
+  */
   String getDeviceLatencyInfo() {
     return _juceLib.JuceMixPlayer_getDeviceLatencyInfo(_ptr).toDartString();
   }
