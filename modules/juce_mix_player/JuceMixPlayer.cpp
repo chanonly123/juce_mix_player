@@ -559,6 +559,7 @@ void JuceMixPlayer::startRecorder() {
         _onRecStateUpdateNotify(JuceMixPlayerRecState::RECORDING);
 
         taskQueue.async([&]{
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
             if (settings.recBgPlayback) {
                 _playInternal();
             }
