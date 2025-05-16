@@ -226,7 +226,11 @@ void JuceMixPlayer::setSettings(const char* json) {
                 juce::AudioDeviceManager::AudioDeviceSetup setup = deviceManager->getAudioDeviceSetup();
                 setup.sampleRate = settings.sampleRate;
                 bool treatAsChosenDevice = true;
-                deviceManager->setAudioDeviceSetup(setup, treatAsChosenDevice);
+                juce::String error = deviceManager->setAudioDeviceSetup(setup, treatAsChosenDevice);
+                if (error.isNotEmpty()) {
+                    PRINT("setSettings: " << error);
+                    _onErrorNotify(error.toStdString());
+                }
             });
         } catch (const std::exception& e) {
             _onErrorNotify(std::string(e.what()));
@@ -555,11 +559,12 @@ void JuceMixPlayer::startRecorder() {
             return;
         }
 
-        _startProgressTimer();
-        _onRecStateUpdateNotify(JuceMixPlayerRecState::RECORDING);
-
         taskQueue.async([&]{
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+            _startProgressTimer();
+            _onRecStateUpdateNotify(JuceMixPlayerRecState::RECORDING);
+
             playStartTime = -1;
             playStartBufferWriteFinishTime = -1;
             if (settings.recBgPlayback) {
@@ -857,7 +862,7 @@ void JuceMixPlayer::audioDeviceAboutToStart(juce::AudioIODevice *device) {
     this->samplesPerBlockExpected = device->getCurrentBufferSizeSamples();
 
     PRINT("audioDeviceAboutToStart" <<
-          ", bufferSizeSamples: " << device->getCurrentBufferSizeSamples() <<
+          ", bufferSizeSamples: " << samplesPerBlockExpected <<
           ", deviceSampleRate: " << deviceSampleRate
           );
 }
