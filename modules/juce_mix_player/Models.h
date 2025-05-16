@@ -212,6 +212,9 @@ struct DeviceLaencyInfo {
     // millis
     long outputLatency = -1;
 
+    // millis
+    long playerStartLatency = -1;
+
     long bufferLatency = -1;
     long sampleRate = -1;
 
@@ -219,5 +222,6 @@ struct DeviceLaencyInfo {
                                                 inputLatency,
                                                 outputLatency,
                                                 bufferLatency,
+                                                playerStartLatency,
                                                 sampleRate);
 };

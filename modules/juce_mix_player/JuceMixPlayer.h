@@ -76,6 +76,8 @@ private:
     int samplesPerBlockExpected = -1;
     int outputLatencyInSamples = -1;
     int inputLatencyInSamples = -1;
+    long playStartTime = -1;
+    long playStartBufferWriteFinishTime = -1;
 
     void prepare();
 
@@ -130,6 +132,7 @@ private:
 
     void copyReaders(const MixerData& from, MixerData& to);
 
+    // returns epoch time in millis
     long getEpochTime();
 
 public:

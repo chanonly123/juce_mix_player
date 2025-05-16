@@ -559,9 +559,12 @@ void JuceMixPlayer::startRecorder() {
         _onRecStateUpdateNotify(JuceMixPlayerRecState::RECORDING);
 
         taskQueue.async([&]{
-            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
             if (settings.recBgPlayback) {
                 _playInternal();
+                if (playStartTime < 0) {
+                    playStartTime = getEpochTime();
+                }
             }
             _isRecording = true;
         });
@@ -573,6 +576,7 @@ void JuceMixPlayer::stopRecorder() {
     juce::MessageManager::getInstanceWithoutCreating()->callAsync([&]{
         if (_isRecording) {
             this->outputLatencyInSamples = deviceManager->getCurrentAudioDevice()->getOutputLatencyInSamples();
+            PRINT("getDeviceLatencyInfo: " << getDeviceLatencyInfo());
             stop();
             _stopProgressTimer();
             _isRecording = false;
@@ -616,6 +620,8 @@ void JuceMixPlayer::_resetRecorder() {
     _isRecorderPrepared = false;
     recordTimerIndex = 0;
     recordHeadIndex = 0;
+    playStartTime = -1;
+    playStartBufferWriteFinishTime = -1;
     _onRecStateUpdateNotify(JuceMixPlayerRecState::IDLE);
 }
 
@@ -839,6 +845,7 @@ const char* JuceMixPlayer::getDeviceLatencyInfo() {
     info.bufferLatency = samplesPerBlockExpected * 1000 / deviceSampleRate;
     info.outputLatency = outputLatencyInSamples * 1000 / deviceSampleRate;
     info.inputLatency = inputLatencyInSamples * 1000 / deviceSampleRate;
+    info.playerStartLatency = playStartBufferWriteFinishTime;
 
     nlohmann::json j = info;
     return returnCopyCharDelete(j.dump(4));
@@ -861,6 +868,9 @@ void JuceMixPlayer::audioDeviceIOCallbackWithContext(const float *const *inputCh
                                                      int numOutputChannels,
                                                      int numSamples,
                                                      const juce::AudioIODeviceCallbackContext &context) {
+
+    bool enterPlayerBlock = !_isSeeking && _isPlayingInternal && _isPlaying && numOutputChannels > 0;
+
     if (deviceSampleRate <= 0) {
         return;
     }
@@ -884,7 +894,7 @@ void JuceMixPlayer::audioDeviceIOCallbackWithContext(const float *const *inputCh
         }
     }
 
-    if (!_isSeeking && _isPlayingInternal && _isPlaying && numOutputChannels > 0) {
+    if (enterPlayerBlock) {
         float speedRatio = sampleRate/deviceSampleRate;
         float readCount = (float)numSamples * speedRatio;
 
@@ -932,6 +942,11 @@ void JuceMixPlayer::audioDeviceIOCallbackWithContext(const float *const *inputCh
         for (int ch=0; ch<numOutputChannels; ch++) {
             outData.addFrom(ch, 0, inputChannelData[0], numSamples);
         }
+    }
+
+    if (enterPlayerBlock && playStartBufferWriteFinishTime < 0) {
+        playStartBufferWriteFinishTime = getEpochTime() - playStartTime;
+        PRINT("playStartDelay: " << playStartBufferWriteFinishTime);
     }
 }
 
