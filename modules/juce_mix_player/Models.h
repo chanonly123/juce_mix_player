@@ -207,16 +207,17 @@ public:
 struct DeviceLaencyInfo {
 
     // millis
-    long inputLatency = -1;
+    float inputLatency = -1;
 
     // millis
-    long outputLatency = -1;
+    float outputLatency = -1;
 
     // millis
-    long playerStartLatency = -1;
+    float playerStartLatency = -1;
 
-    long bufferLatency = -1;
-    long sampleRate = -1;
+    float bufferLatency = -1;
+
+    int sampleRate = -1;
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(DeviceLaencyInfo,
                                                 inputLatency,
