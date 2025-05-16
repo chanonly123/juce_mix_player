@@ -560,6 +560,8 @@ void JuceMixPlayer::startRecorder() {
 
         taskQueue.async([&]{
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            playStartTime = -1;
+            playStartBufferWriteFinishTime = -1;
             if (settings.recBgPlayback) {
                 _playInternal();
                 if (playStartTime < 0) {
@@ -620,8 +622,6 @@ void JuceMixPlayer::_resetRecorder() {
     _isRecorderPrepared = false;
     recordTimerIndex = 0;
     recordHeadIndex = 0;
-    playStartTime = -1;
-    playStartBufferWriteFinishTime = -1;
     _onRecStateUpdateNotify(JuceMixPlayerRecState::IDLE);
 }
 
