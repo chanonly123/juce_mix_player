@@ -571,6 +571,7 @@ void JuceMixPlayer::stopRecorder() {
     if (!_isRecording) return;
     juce::MessageManager::getInstanceWithoutCreating()->callAsync([&]{
         if (_isRecording) {
+            this->outputLatencyInSamples = deviceManager->getCurrentAudioDevice()->getOutputLatencyInSamples();
             stop();
             _stopProgressTimer();
             _isRecording = false;
@@ -628,7 +629,6 @@ void JuceMixPlayer::finishRecording() {
 }
 
 void JuceMixPlayer::flushRecordBufferToFile(juce::AudioBuffer<float>& buffer, int sampleCount) {
-    outputLatencyInSamples = deviceManager->getCurrentAudioDevice()->getOutputLatencyInSamples();
     if (!recWriter) {
         if (onRecErrorCallback)
             onRecErrorCallback(this, "Failed to write file, writer not created");
