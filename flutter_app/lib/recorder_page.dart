@@ -22,6 +22,7 @@ class RecorderPage extends StatefulWidget {
 class RecorderPageState extends State<RecorderPage> {
   final recorder = JuceMixPlayer();
   bool isRecording = false;
+  String latencyInfo = "";
   bool isRecorderPrepared = false;
   bool isRecorderPreparing = false;
   bool isMicPermissionGranted = false;
@@ -108,8 +109,9 @@ class RecorderPageState extends State<RecorderPage> {
           });
           break;
         case JuceMixRecState.STOPPED:
-          log("latencyinfo: ${recorder.getDeviceLatencyInfo()}");
           setState(() {
+            latencyInfo = recorder.getDeviceLatencyInfo();
+            log("latencyinfo: $latencyInfo");
             isRecording = false;
             isRecorderPrepared = false;
             recordingStartTime = null;
@@ -133,6 +135,7 @@ class RecorderPageState extends State<RecorderPage> {
                           context: context,
                           builder: (context) => AudioPlayerDialog(
                             filePath: recordingPath,
+                            latencyInfo: latencyInfo,
                             onOkPressed: () {
                               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                                 content: Text('Recording processing completed'),
@@ -155,6 +158,7 @@ class RecorderPageState extends State<RecorderPage> {
                   context: context,
                   builder: (context) => AudioPlayerDialog(
                     filePath: recordingPath,
+                    latencyInfo: latencyInfo,
                     onOkPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                         content: Text('Recording processing completed'),
@@ -281,6 +285,7 @@ class RecorderPageState extends State<RecorderPage> {
 
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       recordingPath = '${recordingsDir.path}/rec.wav';
+      // recordingPath = "/sdcard/Documents/rec.wav";
 
       log('Preparing recorder with path: $recordingPath');
       recorder.prepareRecording(recordingPath);
