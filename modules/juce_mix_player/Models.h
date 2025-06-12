@@ -184,7 +184,7 @@ struct MixerData {
     bool operator==(const MixerData& other) const {
         return
         outputDuration == other.outputDuration
-        && output == other.output
+//        && output == other.output
         && tracks == other.tracks;
     }
 
