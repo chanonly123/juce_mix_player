@@ -8,11 +8,13 @@ import 'juce_lib_gen.dart';
 
 // Native function typedefs
 typedef StringUpdateCallback = Void Function(Pointer<Void>, Pointer<Utf8>);
+typedef StringUpdateCallback2 = Void Function(Pointer<Utf8>);
 typedef FloatCallback = Void Function(Pointer<Void>, Float);
 
 // Dart function typedefs
 typedef FloatCallbackDart = void Function(Pointer<Void> ptr, double progress);
 typedef NativeStringCallbackDart = void Function(Pointer<Void> ptr, Pointer<Utf8> state);
+typedef NativeStringCallbackDart2 = void Function(Pointer<Utf8> state);
 
 enum JuceMixPlayerState { IDLE, READY, PLAYING, PAUSED, STOPPED, COMPLETED, ERROR }
 
@@ -27,6 +29,7 @@ class JuceMixPlayer {
   NativeCallable<StringUpdateCallback>? _stateUpdateNativeCallable;
   NativeCallable<StringUpdateCallback>? _errorUpdateNativeCallable;
   NativeCallable<StringUpdateCallback>? _deviceUpdateNativeCallable;
+  NativeCallable<StringUpdateCallback2>? _exportUpdateNativeCallable;
 
   //Rec
   NativeCallable<FloatCallback>? _recInputlevelCallbackNativeCallable;
@@ -206,12 +209,23 @@ class JuceMixPlayer {
     return _juceLib.JuceMixPlayer_getDeviceLatencyInfo(_ptr).toDartString();
   }
 
+  void export(String outputFile, void Function(String error) callback) {
+    NativeStringCallbackDart2 closure = (cstring) {
+      String error = cstring.toDartString();
+      callback(error);
+    };
+    _exportUpdateNativeCallable?.close();
+    _exportUpdateNativeCallable = NativeCallable<StringUpdateCallback2>.listener(closure);
+    _juceLib.JuceMixPlayer_export(_ptr, outputFile.toNativeUtf8(), _exportUpdateNativeCallable!.nativeFunction);
+  }
+
   void dispose() {
     // Clear callbacks
     _progressCallbackNativeCallable?.close();
     _stateUpdateNativeCallable?.close();
     _errorUpdateNativeCallable?.close();
     _deviceUpdateNativeCallable?.close();
+    _exportUpdateNativeCallable?.close();
 
     //Rec
     _recInputlevelCallbackNativeCallable?.close();

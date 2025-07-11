@@ -129,6 +129,10 @@ void JuceMixPlayer::_pauseInternal(bool stop) {
 }
 
 void JuceMixPlayer::play() {
+    if (_isExporting) {
+        _onErrorNotify("Playing is not supported while exporting");
+        return;
+    }
     taskQueue.async([&]{
         _playInternal();
     });
@@ -147,11 +151,15 @@ void JuceMixPlayer::stop() {
 }
 
 void JuceMixPlayer::seek(float value) {
+    if (_isExporting) {
+        _onErrorNotify("Seeking is not supported while exporting");
+        return;
+    }
     float _value = std::min(1.0f, std::max(value, 0.0f));
     taskQueue.async([&, _value] {
         _isSeeking = true;
         playHeadIndex = playBuffer.getNumSamples() * _value;
-        loadAudioBlockSafe(getDuration() * _value / blockDuration, false, [&] {
+        _loadAudioBlockSafe(getDuration() * _value / blockDuration, false, [&] {
             _isSeeking = false;
         });
     });
@@ -185,6 +193,10 @@ void JuceMixPlayer::togglePlayPause() {
 }
 
 void JuceMixPlayer::setJson(const char* json) {
+    if (_isExporting) {
+        _onErrorNotify("setJson is not supported while exporting");
+        return;
+    }
     std::string json_(json);
     taskQueue.async([&, json_]{
         try {
@@ -192,16 +204,16 @@ void JuceMixPlayer::setJson(const char* json) {
             if (!(mixerData == data)) {
                 PRINT("Replacing mix data!")
                 mixerData = data;
-                prepare();
+                _prepare();
             } else {
                 PRINT("Same mix data! updating volume/offset/fromTime" << json_);
-                copyReaders(mixerData, data);
+                _copyReaders(mixerData, data);
                 mixerData = data;
                 _resetPlayBufferBlocks();
             }
         } catch (const std::exception& e) {
             mixerData = MixerData();
-            prepare();
+            _prepare();
             _onErrorNotify(std::string(e.what()));
         }
     });
@@ -214,6 +226,10 @@ void JuceMixPlayer::resetPlayBuffer() {
 }
 
 void JuceMixPlayer::setSettings(const char* json) {
+    if (_isExporting) {
+        _onErrorNotify("setSettings is not supported while exporting");
+        return;
+    }
     std::string json_(json);
     PRINT("setSettings: " << json);
 
@@ -238,14 +254,14 @@ void JuceMixPlayer::setSettings(const char* json) {
     });
 }
 
-void JuceMixPlayer::prepare() {
+void JuceMixPlayer::_prepare() {
     taskQueue.async([&]{
         _isPlayingInternal = false;
         _pauseInternal(false);
         playHeadIndex = 0;
         _createFileReadersAndTotalDuration();
         if (playBuffer.getNumSamples() > 0) {
-            loadAudioBlockSafe(0, true, [&]{
+            _loadAudioBlockSafe(0, true, [&]{
                 _onStateUpdateNotify(JuceMixPlayerState::READY);
                 _isPlayingInternal = true;
                 if (_isPlaying) {
@@ -260,12 +276,12 @@ void JuceMixPlayer::prepare() {
 
 void JuceMixPlayer::_resetPlayBufferBlocks() {
     _isPlayingInternal = false;
-    loadAudioBlockSafe((getCurrentTime()/blockDuration), true, [&] {
+    _loadAudioBlockSafe((getCurrentTime()/blockDuration), true, [&] {
         _isPlayingInternal = true;
     });
 }
 
-void JuceMixPlayer::copyReaders(const MixerData& from, MixerData& to) {
+void JuceMixPlayer::_copyReaders(const MixerData& from, MixerData& to) {
     for (const MixerTrack& fromTrack: from.tracks) {
         for (MixerTrack& toTrack: to.tracks) {
             if (toTrack.id_ == fromTrack.id_) {
@@ -367,7 +383,7 @@ void JuceMixPlayer::_loadRepeatedTrack(int block,
     }
 }
 
-void JuceMixPlayer::loadAudioBlockSafe(int block, bool reset, std::function<void()> completion) {
+void JuceMixPlayer::_loadAudioBlockSafe(int block, bool reset, std::function<void()> completion) {
     int taskQueueIndex = reset ? ++this->taskQueueIndex : this->taskQueueIndex;
     heavyTaskQueue.async([&, taskQueueIndex, block, reset, completion] {
         if (reset) {
@@ -518,6 +534,42 @@ int JuceMixPlayer::isPlaying() {
     return _isPlaying ? 1 : 0;
 }
 
+void JuceMixPlayer::exportToFile(const char* outputFile, std::function<void(const char*)> completion) {
+    float duration = getDuration();
+    if (duration <= 0) {
+        completion("Duration is 0");
+        return;
+    }
+    if (_isPlaying || _isRecording) {
+        completion("Export not supported while playing/recording");
+        return;
+    }
+    heavyTaskQueue.async([&, outputFile, completion]{
+        _isExporting = true;
+        int total = getDuration() / blockDuration;
+        for (int i=0; i<total; i++) {
+            _loadAudioBlock(i, taskQueueIndex);
+        }
+        _isExporting = false;
+
+        std::string format = "wav";
+        int targetSampleRate = settings.sampleRate;
+        juce::File file(outputFile);
+        file.deleteFile();
+        juce::FileOutputStream* outputStream = new juce::FileOutputStream(file);
+        std::shared_ptr<juce::AudioFormat> audioFormat;
+        std::shared_ptr<juce::AudioFormatWriter> writer;
+        if (format == "wav") {
+            audioFormat.reset(new juce::WavAudioFormat());
+        } else if (format == "flac") {
+            audioFormat.reset(new juce::FlacAudioFormat());
+        }
+        writer.reset(audioFormat->createWriterFor(outputStream, targetSampleRate, 1, 16, {}, 0));
+        bool success = writer->writeFromAudioSampleBuffer(playBuffer, 0, playBuffer.getNumSamples());
+        completion(success ? "" : "Failed to export");
+    });
+}
+
 // MARK: Recorder
 
 void JuceMixPlayer::prepareRecorder(const char *file) {
@@ -570,7 +622,7 @@ void JuceMixPlayer::startRecorder() {
             if (settings.recBgPlayback) {
                 _playInternal();
                 if (playStartTime < 0) {
-                    playStartTime = getEpochTime();
+                    playStartTime = _getEpochTime();
                 }
             }
             _isRecording = true;
@@ -587,7 +639,7 @@ void JuceMixPlayer::stopRecorder() {
             stop();
             _stopProgressTimer();
             _isRecording = false;
-            finishRecording();
+            _finishRecording();
             deviceManagerSavedState = deviceManager->createStateXml();
             deviceManager->closeAudioDevice();
             deviceManager->initialise(0, 2, deviceManagerSavedState.get(), true, {}, nullptr);
@@ -630,7 +682,7 @@ void JuceMixPlayer::_resetRecorder() {
     _onRecStateUpdateNotify(JuceMixPlayerRecState::IDLE);
 }
 
-void JuceMixPlayer::finishRecording() {
+void JuceMixPlayer::_finishRecording() {
     recWriteTaskQueue.async([&]{
         juce::AudioBuffer<float>& buff = recordBufferSelect == 0 ? recordBuffer1 : recordBuffer2;
         flushRecordBufferToFile(buff, recordHeadIndex);
@@ -838,7 +890,7 @@ void JuceMixPlayer::setDefaultSampleRate() {
     //    deviceManager->setAudioDeviceSetup(setup, treatAsChosenDevice);
 }
 
-long JuceMixPlayer::getEpochTime() {
+long JuceMixPlayer::_getEpochTime() {
     auto now = std::chrono::system_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch());
     return duration.count();
@@ -935,7 +987,7 @@ void JuceMixPlayer::audioDeviceIOCallbackWithContext(const float *const *inputCh
         playHeadIndex += readCount;
 
         // load next block in advance
-        loadAudioBlockSafe((getCurrentTime()/blockDuration)+1, false, []{});
+        _loadAudioBlockSafe((getCurrentTime()/blockDuration)+1, false, []{});
     } else {
         for (int ch=0; ch<numOutputChannels; ch++) {
             juce::zeromem(outputChannelData[ch], (size_t) numSamples * sizeof (float));
@@ -950,7 +1002,7 @@ void JuceMixPlayer::audioDeviceIOCallbackWithContext(const float *const *inputCh
     }
 
     if (enterPlayerBlock && playStartBufferWriteFinishTime < 0) {
-        playStartBufferWriteFinishTime = getEpochTime() - playStartTime;
+        playStartBufferWriteFinishTime = _getEpochTime() - playStartTime;
         PRINT("playStartDelay: " << playStartBufferWriteFinishTime);
     }
 }

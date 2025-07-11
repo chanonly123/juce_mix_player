@@ -169,7 +169,9 @@ class PlayerPageState extends State<PlayerPage> {
                       onChangeEnd: (value) {
                         isVolSliderEditing = false;
                         if (lastMixerComposeModel != null) {
-                          final updatedTracks = lastMixerComposeModel!.tracks?.map((track) => track.copyWith(volume: volume)).toList() ?? [];
+                          final updatedTracks =
+                              lastMixerComposeModel!.tracks?.map((track) => track.copyWith(volume: volume)).toList() ??
+                                  [];
                           lastMixerComposeModel = lastMixerComposeModel!.copyWith(tracks: updatedTracks);
                           player.setMixData(lastMixerComposeModel!);
                         }
@@ -188,56 +190,66 @@ class PlayerPageState extends State<PlayerPage> {
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ElevatedButton(
-                  onPressed: () {
-                    if (state == JuceMixPlayerState.IDLE) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text('Player is not ready, Set file first!'),
-                        backgroundColor: Colors.brown,
-                      ));
-                      return;
-                    }
-                    player.togglePlayPause();
-                  },
-                  child: Text(isPlaying ? 'Pause' : 'Play'),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        if (state == JuceMixPlayerState.IDLE) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text('Player is not ready, Set file first!'),
+                            backgroundColor: Colors.brown,
+                          ));
+                          return;
+                        }
+                        player.togglePlayPause();
+                      },
+                      child: Text(isPlaying ? 'Pause' : 'Play'),
+                    ),
+                    const SizedBox(width: 16),
+                    ElevatedButton(
+                      onPressed: () {
+                        player.stop();
+                      },
+                      child: Text(
+                        "Stop",
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(width: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    player.stop();
-                  },
-                  child: Text(
-                    "Stop",
-                    style: TextStyle(color: Colors.red),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                ElevatedButton(
-                  onPressed: () async {
-                    final path = await AssetHelper.extractAsset('assets/media/music_big.mp3');
-                    lastMixerComposeModel = MixerComposeModel(
-                      tracks: [
-                        MixerTrack(id: "0", path: path, volume: volume),
-                      ],
-                    );
-                    player.setMixData(lastMixerComposeModel!);
-                  },
-                  child: const Text('Set File'),
-                ),
-                const SizedBox(width: 16),
-                ElevatedButton(
-                  onPressed: () async {
-                    final path = await AssetHelper.extractAsset('assets/media/music_big.mp3');
-                    lastMixerComposeModel = MixerComposeModel(
-                      outputDuration: 150,
-                      tracks: [
-                        MixerTrack(id: "0", path: path, volume: volume),
-                        MixerTrack(id: "1", path: path, offset: 0.5, volume: volume),
-                      ],
-                    );
-                    player.setMixData(lastMixerComposeModel!);
-                  },
-                  child: const Text('Set mixed'),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () async {
+                        final path = await AssetHelper.extractAsset('assets/media/music_big.mp3');
+                        lastMixerComposeModel = MixerComposeModel(
+                          tracks: [
+                            MixerTrack(id: "0", path: path, volume: volume),
+                          ],
+                        );
+                        player.setMixData(lastMixerComposeModel!);
+                      },
+                      child: const Text('Set File'),
+                    ),
+                    const SizedBox(width: 16),
+                    ElevatedButton(
+                      onPressed: () async {
+                        final path = await AssetHelper.extractAsset('assets/media/music_big.mp3');
+                        lastMixerComposeModel = MixerComposeModel(
+                          outputDuration: 150,
+                          tracks: [
+                            MixerTrack(id: "0", path: path, volume: volume),
+                            MixerTrack(id: "1", path: path, offset: 0.5, volume: volume),
+                          ],
+                        );
+                        player.setMixData(lastMixerComposeModel!);
+                      },
+                      child: const Text('Set mixed'),
+                    ),
+                  ],
                 ),
                 const SizedBox(width: 16),
                 ElevatedButton(
@@ -246,6 +258,27 @@ class PlayerPageState extends State<PlayerPage> {
                     player.setMixData(lastMixerComposeModel!);
                   },
                   child: const Text('Set mixed with metronome'),
+                ),
+                const SizedBox(width: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () async {
+                        player.export(await extractOutput, (error) {
+                          print("export completion $error");
+                        });
+                      },
+                      child: const Text('Export'),
+                    ),
+                    const SizedBox(width: 16),
+                    ElevatedButton(
+                      onPressed: () async {
+                        player.setFile(await extractOutput);
+                      },
+                      child: const Text('Play Exported file'),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 30),
                 ElevatedButton.icon(
@@ -279,11 +312,45 @@ class PlayerPageState extends State<PlayerPage> {
     final pathL = await AssetHelper.extractAsset('assets/media/met_l.wav');
     lastMixerComposeModel = MixerComposeModel(tracks: [
       MixerTrack(id: "bgm", path: bgmPath, volume: volume, enabled: true),
-      MixerTrack(id: "metronome_track_0", path: pathH, offset: 0, volume: volume, enabled: true, repeat: true, repeatInterval: 3.2),
-      MixerTrack(id: "metronome_track_1", path: pathL, offset: 0.8, volume: 1, enabled: true, repeat: true, repeatInterval: 3.2),
-      MixerTrack(id: "metronome_track_2", path: pathL, offset: 1.6, volume: 1, enabled: true, repeat: true, repeatInterval: 3.2),
-      MixerTrack(id: "metronome_track_3", path: pathL, offset: 2.4, volume: 1, enabled: true, repeat: true, repeatInterval: 3.2)
+      MixerTrack(
+          id: "metronome_track_0",
+          path: pathH,
+          offset: 0,
+          volume: volume,
+          enabled: true,
+          repeat: true,
+          repeatInterval: 3.2),
+      MixerTrack(
+          id: "metronome_track_1",
+          path: pathL,
+          offset: 0.8,
+          volume: 1,
+          enabled: true,
+          repeat: true,
+          repeatInterval: 3.2),
+      MixerTrack(
+          id: "metronome_track_2",
+          path: pathL,
+          offset: 1.6,
+          volume: 1,
+          enabled: true,
+          repeat: true,
+          repeatInterval: 3.2),
+      MixerTrack(
+          id: "metronome_track_3",
+          path: pathL,
+          offset: 2.4,
+          volume: 1,
+          enabled: true,
+          repeat: true,
+          repeatInterval: 3.2)
     ]);
     return lastMixerComposeModel!;
   }
+
+  Future<String> get extractOutput async {
+    final dirPath = await AssetHelper.getApplicationDocumentsDirectoryPath();
+    return "$dirPath/out.wav";
+  }
+
 }

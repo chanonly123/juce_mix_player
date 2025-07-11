@@ -529,4 +529,35 @@ class JuceLibGen {
   late final _JuceMixPlayer_getDeviceLatencyInfo =
       _JuceMixPlayer_getDeviceLatencyInfoPtr.asFunction<
           ffi.Pointer<pkg_ffi.Utf8> Function(ffi.Pointer<ffi.Void>)>();
+
+  void JuceMixPlayer_export(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<pkg_ffi.Utf8> outputPath,
+    ffi.Pointer<
+            ffi.NativeFunction<ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>
+        completion,
+  ) {
+    return _JuceMixPlayer_export(
+      ptr,
+      outputPath,
+      completion,
+    );
+  }
+
+  late final _JuceMixPlayer_exportPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(
+                  ffi.Pointer<ffi.Void>,
+                  ffi.Pointer<pkg_ffi.Utf8>,
+                  ffi.Pointer<
+                      ffi.NativeFunction<
+                          ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
+      'JuceMixPlayer_export');
+  late final _JuceMixPlayer_export = _JuceMixPlayer_exportPtr.asFunction<
+      void Function(
+          ffi.Pointer<ffi.Void>,
+          ffi.Pointer<pkg_ffi.Utf8>,
+          ffi.Pointer<
+              ffi.NativeFunction<
+                  ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>)>();
 }

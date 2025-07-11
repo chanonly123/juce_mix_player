@@ -36,6 +36,7 @@ private:
     bool _isPlaying = false;
     bool _isPlayingInternal = false;
     bool _isSeeking = false;
+    bool _isExporting = false;
     int playHeadIndex = 0;
     juce::AudioBuffer<float> playBuffer;
     std::unordered_map<std::string, std::shared_ptr<juce::AudioBuffer<float>>> repetedBufferCache;
@@ -79,7 +80,7 @@ private:
     long playStartTime = -1;
     long playStartBufferWriteFinishTime = -1;
 
-    void prepare();
+    void _prepare();
 
     void _playInternal();
 
@@ -95,7 +96,7 @@ private:
                             float repeatInterval,
                             juce::AudioBuffer<float>* track);
 
-    void loadAudioBlockSafe(int block, bool reset, std::function<void()> completion);
+    void _loadAudioBlockSafe(int block, bool reset, std::function<void()> completion);
 
     /// loads audio block for `blockDuration` and `block` number. Blocks are chunks of the audio file.
     void _loadAudioBlock(int block, int taskQueueIndex);
@@ -108,15 +109,13 @@ private:
 
     std::optional<std::tuple<float, float, float>> _calculateBlockToRead(float block, MixerTrack& track);
 
-    void loadCompleteBuffer(juce::AudioBuffer<float>& buffer, bool takeRepeteTracks, bool takeNonRepeteTracks);
-
     void _createWriterForRecorder();
 
     void flushRecordBufferToFile(juce::AudioBuffer<float>& buffer, int sampleCount);
 
     void _onRecStateUpdateNotify(JuceMixPlayerRecState state);
 
-    void finishRecording();
+    void _finishRecording();
 
     void _resetRecorder();
 
@@ -130,11 +129,11 @@ private:
 
     void _resetPlayBufferBlocks();
 
-    void copyReaders(const MixerData& from, MixerData& to);
+    void _copyReaders(const MixerData& from, MixerData& to);
 
     // returns epoch time in millis
-    long getEpochTime();
-
+    long _getEpochTime();
+    
 public:
 
     JuceMixPlayerCallbackFloat onProgressCallback = nullptr;
@@ -178,6 +177,8 @@ public:
     int isPlaying();
 
     std::string getCurrentState();
+
+    void exportToFile(const char* outputFile, std::function<void(const char*)> completion);
 
     // MARK: Recorder
     void prepareRecorder(const char* file);
