@@ -1,5 +1,6 @@
 // ignore_for_file: constant_identifier_names, always_use_package_imports
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi';
 import 'package:ffi/ffi.dart';
@@ -209,14 +210,23 @@ class JuceMixPlayer {
     return _juceLib.JuceMixPlayer_getDeviceLatencyInfo(_ptr).toDartString();
   }
 
-  void export(String outputFile, void Function(String error) callback) {
+  Future<void> export(String outputFile) async {
+    final completer = Completer<void>();
+
     NativeStringCallbackDart2 closure = (cstring) {
       String error = cstring.toDartString();
-      callback(error);
+      if (error.isNotEmpty) {
+        completer.completeError(Exception('Export failed: $error'));
+      } else {
+        completer.complete();
+      }
     };
+
     _exportUpdateNativeCallable?.close();
     _exportUpdateNativeCallable = NativeCallable<StringUpdateCallback2>.listener(closure);
     _juceLib.JuceMixPlayer_export(_ptr, outputFile.toNativeUtf8(), _exportUpdateNativeCallable!.nativeFunction);
+
+    return completer.future;
   }
 
   void dispose() {

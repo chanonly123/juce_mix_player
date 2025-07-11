@@ -169,9 +169,7 @@ class PlayerPageState extends State<PlayerPage> {
                       onChangeEnd: (value) {
                         isVolSliderEditing = false;
                         if (lastMixerComposeModel != null) {
-                          final updatedTracks =
-                              lastMixerComposeModel!.tracks?.map((track) => track.copyWith(volume: volume)).toList() ??
-                                  [];
+                          final updatedTracks = lastMixerComposeModel!.tracks?.map((track) => track.copyWith(volume: volume)).toList() ?? [];
                           lastMixerComposeModel = lastMixerComposeModel!.copyWith(tracks: updatedTracks);
                           player.setMixData(lastMixerComposeModel!);
                         }
@@ -265,9 +263,12 @@ class PlayerPageState extends State<PlayerPage> {
                   children: [
                     ElevatedButton(
                       onPressed: () async {
-                        player.export(await extractOutput, (error) {
-                          print("export completion $error");
-                        });
+                        try {
+                          await player.export(await extractOutput);
+                          print("export completed successfully");
+                        } catch (e) {
+                          print("export failed: $e");
+                        }
                       },
                       child: const Text('Export'),
                     ),
@@ -312,38 +313,10 @@ class PlayerPageState extends State<PlayerPage> {
     final pathL = await AssetHelper.extractAsset('assets/media/met_l.wav');
     lastMixerComposeModel = MixerComposeModel(tracks: [
       MixerTrack(id: "bgm", path: bgmPath, volume: volume, enabled: true),
-      MixerTrack(
-          id: "metronome_track_0",
-          path: pathH,
-          offset: 0,
-          volume: volume,
-          enabled: true,
-          repeat: true,
-          repeatInterval: 3.2),
-      MixerTrack(
-          id: "metronome_track_1",
-          path: pathL,
-          offset: 0.8,
-          volume: 1,
-          enabled: true,
-          repeat: true,
-          repeatInterval: 3.2),
-      MixerTrack(
-          id: "metronome_track_2",
-          path: pathL,
-          offset: 1.6,
-          volume: 1,
-          enabled: true,
-          repeat: true,
-          repeatInterval: 3.2),
-      MixerTrack(
-          id: "metronome_track_3",
-          path: pathL,
-          offset: 2.4,
-          volume: 1,
-          enabled: true,
-          repeat: true,
-          repeatInterval: 3.2)
+      MixerTrack(id: "metronome_track_0", path: pathH, offset: 0, volume: volume, enabled: true, repeat: true, repeatInterval: 3.2),
+      MixerTrack(id: "metronome_track_1", path: pathL, offset: 0.8, volume: 1, enabled: true, repeat: true, repeatInterval: 3.2),
+      MixerTrack(id: "metronome_track_2", path: pathL, offset: 1.6, volume: 1, enabled: true, repeat: true, repeatInterval: 3.2),
+      MixerTrack(id: "metronome_track_3", path: pathL, offset: 2.4, volume: 1, enabled: true, repeat: true, repeatInterval: 3.2)
     ]);
     return lastMixerComposeModel!;
   }
@@ -352,5 +325,4 @@ class PlayerPageState extends State<PlayerPage> {
     final dirPath = await AssetHelper.getApplicationDocumentsDirectoryPath();
     return "$dirPath/out.wav";
   }
-
 }
