@@ -178,7 +178,8 @@ struct MixerData {
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(MixerData,
                                                 tracks,
-                                                outputDuration);
+                                                outputDuration,
+                                                output);
 
     bool operator==(const MixerData& other) const {
         return
