@@ -77,8 +77,9 @@ private:
     int samplesPerBlockExpected = -1;
     int outputLatencyInSamples = -1;
     int inputLatencyInSamples = -1;
-    long playStartTime = -1;
-    long playStartBufferWriteFinishTime = -1;
+    long deviceCallbackTime1 = -1;
+    long deviceCallbackTime2 = -1;
+    long playBufferTime = -1;
 
     void _prepare();
 

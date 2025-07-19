@@ -23,6 +23,7 @@ class RecorderPageState extends State<RecorderPage> {
   final recorder = JuceMixPlayer();
   bool isRecording = false;
   String latencyInfo = "";
+  LatencyInfo? latencyInfoObj;
   bool isRecorderPrepared = false;
   bool isRecorderPreparing = false;
   bool isMicPermissionGranted = false;
@@ -111,6 +112,7 @@ class RecorderPageState extends State<RecorderPage> {
         case JuceMixRecState.STOPPED:
           setState(() {
             latencyInfo = recorder.getDeviceLatencyInfo();
+            latencyInfoObj = recorder.getDeviceLatencyInfoObject();
             log("latencyinfo: $latencyInfo");
             isRecording = false;
             isRecorderPrepared = false;
@@ -136,6 +138,7 @@ class RecorderPageState extends State<RecorderPage> {
                           builder: (context) => AudioPlayerDialog(
                             filePath: recordingPath,
                             latencyInfo: latencyInfo,
+                            latencyInfoObj: latencyInfoObj,
                             onOkPressed: () {
                               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                                 content: Text('Recording processing completed'),
@@ -159,6 +162,7 @@ class RecorderPageState extends State<RecorderPage> {
                   builder: (context) => AudioPlayerDialog(
                     filePath: recordingPath,
                     latencyInfo: latencyInfo,
+                    latencyInfoObj: latencyInfoObj,
                     onOkPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                         content: Text('Recording processing completed'),
@@ -284,8 +288,8 @@ class RecorderPageState extends State<RecorderPage> {
       }
 
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      recordingPath = '${recordingsDir.path}/rec.wav';
-      // recordingPath = "/sdcard/Documents/rec.wav";
+      // recordingPath = '${recordingsDir.path}/rec.wav';
+      recordingPath = "/sdcard/Documents/rec_and.wav";
 
       log('Preparing recorder with path: $recordingPath');
       recorder.prepareRecording(recordingPath);

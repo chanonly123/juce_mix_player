@@ -207,21 +207,23 @@ struct DeviceLaencyInfo {
 
     // millis
     float inputLatency = -1;
-
-    // millis
     float outputLatency = -1;
-
-    // millis
-    float playerStartLatency = -1;
-
+    float playBufferTime = -1;
+    float deviceCallbackTime1 = -1;
+    float deviceCallbackTime2 = -1;
     float bufferLatency = -1;
+    float timeDiff = -1;
 
+    // samples per second
     int sampleRate = -1;
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(DeviceLaencyInfo,
                                                 inputLatency,
                                                 outputLatency,
                                                 bufferLatency,
-                                                playerStartLatency,
+                                                playBufferTime,
+                                                deviceCallbackTime1,
+                                                deviceCallbackTime2,
+                                                timeDiff,
                                                 sampleRate);
 };

@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
@@ -208,6 +209,12 @@ class JuceMixPlayer {
   */
   String getDeviceLatencyInfo() {
     return _juceLib.JuceMixPlayer_getDeviceLatencyInfo(_ptr).toDartString();
+  }
+
+  LatencyInfo getDeviceLatencyInfoObject() {
+    var str = _juceLib.JuceMixPlayer_getDeviceLatencyInfo(_ptr).toDartString();
+    LatencyInfo info = LatencyInfo.fromJson(json.decode(str));
+    return info;
   }
 
   Future<void> export(String outputFile) async {
@@ -470,4 +477,40 @@ class MixerSettings {
     json['enableMicMonitoring'] = enableMicMonitoring;
     return json;
   }
+}
+
+class LatencyInfo {
+  // millis
+  double? inputLatency;
+  double? outputLatency;
+  double? playBufferTime;
+  double? deviceCallbackTime1;
+  double? deviceCallbackTime2;
+  double? bufferLatency;
+  double? timeDiff;
+
+  // samples per second
+  int? sampleRate;
+
+  LatencyInfo({
+    this.inputLatency,
+    this.outputLatency,
+    this.playBufferTime,
+    this.deviceCallbackTime1,
+    this.deviceCallbackTime2,
+    this.bufferLatency,
+    this.timeDiff,
+    this.sampleRate,
+  });
+
+  factory LatencyInfo.fromJson(Map<String, dynamic> json) => LatencyInfo(
+        inputLatency: json['inputLatency'],
+        outputLatency: json['outputLatency'],
+        playBufferTime: json['playBufferTime'],
+        deviceCallbackTime1: json['deviceCallbackTime1'],
+        deviceCallbackTime2: json['deviceCallbackTime2'],
+        bufferLatency: json['bufferLatency'],
+        timeDiff: json['timeDiff'],
+        sampleRate: json['sampleRate'],
+      );
 }

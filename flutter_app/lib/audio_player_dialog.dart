@@ -8,12 +8,14 @@ class AudioPlayerDialog extends StatefulWidget {
   final String filePath;
   final VoidCallback onOkPressed;
   final String latencyInfo;
+  final LatencyInfo? latencyInfoObj;
 
   const AudioPlayerDialog({
     super.key,
     required this.filePath,
     required this.latencyInfo,
     required this.onOkPressed,
+    this.latencyInfoObj,
   });
 
   @override
@@ -84,7 +86,7 @@ class AudioPlayerDialogState extends State<AudioPlayerDialog> {
     final mixComposeModel = MixerComposeModel(
       tracks: [
         MixerTrack(id: "beats", path: beats, volume: metVol),
-        MixerTrack(id: "music", path: widget.filePath, volume: metVol),
+        MixerTrack(id: "music", path: widget.filePath, fromTime: widget.latencyInfoObj?.timeDiff ?? 0, volume: metVol),
         // MixerTrack(id: "met_1", path: pathH, offset: 0, repeat: true, repeatInterval: 2, volume: metVol),
         // MixerTrack(id: "met_2", path: pathL, offset: 0.5, repeat: true, repeatInterval: 2, volume: metVol),
         // MixerTrack(id: "met_3", path: pathL, offset: 1, repeat: true, repeatInterval: 2, volume: metVol),
