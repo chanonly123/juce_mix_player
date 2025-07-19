@@ -288,8 +288,8 @@ class RecorderPageState extends State<RecorderPage> {
       }
 
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      // recordingPath = '${recordingsDir.path}/rec.wav';
-      recordingPath = "/sdcard/Documents/rec_and.wav";
+      recordingPath = '${recordingsDir.path}/rec.wav';
+      // recordingPath = "/sdcard/Documents/rec_and.wav";
 
       log('Preparing recorder with path: $recordingPath');
       recorder.prepareRecording(recordingPath);
