@@ -906,7 +906,7 @@ const char* JuceMixPlayer::getDeviceLatencyInfo() {
     info.deviceCallbackTime1 = deviceCallbackTime1;
     info.deviceCallbackTime2 = deviceCallbackTime2;
     info.playBufferTime = playBufferTime;
-    info.timeDiff = (info.bufferLatency + info.outputLatency) * 2;
+    info.timeDiff = info.bufferLatency * 5.6;
 
     nlohmann::json j = info;
     return returnCopyCharDelete(j.dump(4));

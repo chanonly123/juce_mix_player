@@ -83,10 +83,11 @@ class AudioPlayerDialogState extends State<AudioPlayerDialog> {
     final pathH = await AssetHelper.extractAsset('assets/media/met_h.wav');
     final pathL = await AssetHelper.extractAsset('assets/media/met_l.wav');
     double metVol = 0.5;
+    final timeDiff = widget.latencyInfoObj?.timeDiff ?? 0;
     final mixComposeModel = MixerComposeModel(
       tracks: [
         MixerTrack(id: "beats", path: beats, volume: metVol),
-        MixerTrack(id: "music", path: widget.filePath, fromTime: widget.latencyInfoObj?.timeDiff ?? 0, volume: metVol),
+        MixerTrack(id: "music", path: widget.filePath, fromTime: timeDiff / 1000, volume: metVol),
         // MixerTrack(id: "met_1", path: pathH, offset: 0, repeat: true, repeatInterval: 2, volume: metVol),
         // MixerTrack(id: "met_2", path: pathL, offset: 0.5, repeat: true, repeatInterval: 2, volume: metVol),
         // MixerTrack(id: "met_3", path: pathL, offset: 1, repeat: true, repeatInterval: 2, volume: metVol),
