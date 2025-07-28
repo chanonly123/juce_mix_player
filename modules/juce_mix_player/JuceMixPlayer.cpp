@@ -17,6 +17,7 @@ bool setAudioSessionPlay() {
 bool setAudioSessionRecord() {
     NSUInteger options = AVAudioSessionCategoryOptionDefaultToSpeaker
     | AVAudioSessionCategoryOptionAllowBluetoothA2DP
+    | AVAudioSessionCategoryOptionAllowBluetooth
     | AVAudioSessionCategoryOptionMixWithOthers;
     NSError* error = nil;
     [[AVAudioSession sharedInstance] setCategory: AVAudioSessionCategoryPlayAndRecord
@@ -552,17 +553,19 @@ void JuceMixPlayer::exportToFile(const char* outputFile, std::function<void(cons
         }
         _isExporting = false;
 
-        std::string format = "wav";
         int targetSampleRate = settings.sampleRate;
         juce::File file(outputFile);
         file.deleteFile();
         juce::FileOutputStream* outputStream = new juce::FileOutputStream(file);
         std::shared_ptr<juce::AudioFormat> audioFormat;
         std::shared_ptr<juce::AudioFormatWriter> writer;
-        if (format == "wav") {
+        if (juce::String(outputFile).toLowerCase().endsWith("wav")) {
             audioFormat.reset(new juce::WavAudioFormat());
-        } else if (format == "flac") {
+        } else if (juce::String(outputFile).toLowerCase().endsWith("flac")) {
             audioFormat.reset(new juce::FlacAudioFormat());
+        } else {
+            completion("Failed to export, unsupported file extension");
+            return;
         }
         writer.reset(audioFormat->createWriterFor(outputStream, targetSampleRate, 1, 16, {}, 0));
         bool success = writer->writeFromAudioSampleBuffer(playBuffer, 0, playBuffer.getNumSamples());
@@ -661,15 +664,18 @@ void JuceMixPlayer::_createWriterForRecorder() {
     recordBuffer1.setSize(1, recordBufferDuration * 1.5 * deviceSampleRate);
     recordBuffer2.setSize(1, recordBufferDuration * 1.5 * deviceSampleRate);
 
-    std::string format = "wav";
     int targetSampleRate = settings.sampleRate;
     juce::File outputFile(recordPath);
     outputFile.deleteFile();
     juce::FileOutputStream* outputStream = new juce::FileOutputStream(outputFile);
-    if (format == "wav") {
+    if (juce::String(recordPath).toLowerCase().endsWith("wav")) {
         recAudioFormat.reset(new juce::WavAudioFormat());
-    } else if (format == "flac") {
+    } else if (juce::String(recordPath).toLowerCase().endsWith("flac")) {
         recAudioFormat.reset(new juce::FlacAudioFormat());
+    } else {
+        if (onRecErrorCallback) onRecErrorCallback(this, "unsupported file extension");
+        _onRecStateUpdateNotify(JuceMixPlayerRecState::ERROR);
+        return;
     }
     recWriter.reset(recAudioFormat->createWriterFor(outputStream, targetSampleRate, 1, 16, {}, 0));
     _onRecStateUpdateNotify(JuceMixPlayerRecState::READY);
