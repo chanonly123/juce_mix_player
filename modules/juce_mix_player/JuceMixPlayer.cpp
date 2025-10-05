@@ -17,8 +17,7 @@ bool setAudioSessionPlay() {
 bool setAudioSessionRecord() {
     NSUInteger options = AVAudioSessionCategoryOptionDefaultToSpeaker
     | AVAudioSessionCategoryOptionAllowBluetoothA2DP
-    | AVAudioSessionCategoryOptionAllowBluetooth
-    | AVAudioSessionCategoryOptionMixWithOthers;
+    | AVAudioSessionCategoryOptionAllowBluetoothHFP;
     NSError* error = nil;
     [[AVAudioSession sharedInstance] setCategory: AVAudioSessionCategoryPlayAndRecord
                                      withOptions: options
@@ -242,7 +241,7 @@ void JuceMixPlayer::setSettings(const char* json) {
             juce::MessageManager::getInstanceWithoutCreating()->callAsync([&]{
                 juce::AudioDeviceManager::AudioDeviceSetup setup = deviceManager->getAudioDeviceSetup();
                 setup.sampleRate = settings.sampleRate;
-                bool treatAsChosenDevice = true;
+                bool treatAsChosenDevice = false;
                 juce::String error = deviceManager->setAudioDeviceSetup(setup, treatAsChosenDevice);
                 if (error.isNotEmpty()) {
                     PRINT("setSettings: " << error);
