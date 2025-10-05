@@ -15,10 +15,19 @@ typedef FloatCallback = Void Function(Pointer<Void>, Float);
 
 // Dart function typedefs
 typedef FloatCallbackDart = void Function(Pointer<Void> ptr, double progress);
-typedef NativeStringCallbackDart = void Function(Pointer<Void> ptr, Pointer<Utf8> state);
+typedef NativeStringCallbackDart = void Function(
+    Pointer<Void> ptr, Pointer<Utf8> state);
 typedef NativeStringCallbackDart2 = void Function(Pointer<Utf8> state);
 
-enum JuceMixPlayerState { IDLE, READY, PLAYING, PAUSED, STOPPED, COMPLETED, ERROR }
+enum JuceMixPlayerState {
+  IDLE,
+  READY,
+  PLAYING,
+  PAUSED,
+  STOPPED,
+  COMPLETED,
+  ERROR
+}
 
 enum JuceMixRecState { IDLE, READY, RECORDING, STOPPED, ERROR }
 
@@ -42,7 +51,9 @@ class JuceMixPlayer {
   static var libname = 'libjuce_jni.so';
 
   static void juce_init() {
-    _juceLib = JuceLibGen(defaultTargetPlatform == TargetPlatform.iOS ? DynamicLibrary.process() : DynamicLibrary.open(libname));
+    _juceLib = JuceLibGen(defaultTargetPlatform == TargetPlatform.iOS
+        ? DynamicLibrary.process()
+        : DynamicLibrary.open(libname));
     _juceLib.juce_init();
   }
 
@@ -55,7 +66,9 @@ class JuceMixPlayer {
   }
 
   JuceMixPlayer() {
-    _juceLib = JuceLibGen(defaultTargetPlatform == TargetPlatform.iOS ? DynamicLibrary.process() : DynamicLibrary.open(libname));
+    _juceLib = JuceLibGen(defaultTargetPlatform == TargetPlatform.iOS
+        ? DynamicLibrary.process()
+        : DynamicLibrary.open(libname));
 
     _ptr = _juceLib.JuceMixPlayer_init();
   }
@@ -65,8 +78,10 @@ class JuceMixPlayer {
       callback(progress);
     };
     _progressCallbackNativeCallable?.close();
-    _progressCallbackNativeCallable = NativeCallable<FloatCallback>.listener(closure);
-    _juceLib.JuceMixPlayer_onProgress(_ptr, _progressCallbackNativeCallable!.nativeFunction);
+    _progressCallbackNativeCallable =
+        NativeCallable<FloatCallback>.listener(closure);
+    _juceLib.JuceMixPlayer_onProgress(
+        _ptr, _progressCallbackNativeCallable!.nativeFunction);
   }
 
   void setStateUpdateHandler(void Function(JuceMixPlayerState state) callback) {
@@ -74,8 +89,10 @@ class JuceMixPlayer {
       callback(JuceMixPlayerState.values.byName(cstring.toDartString()));
     };
     _stateUpdateNativeCallable?.close();
-    _stateUpdateNativeCallable = NativeCallable<StringUpdateCallback>.listener(closure);
-    _juceLib.JuceMixPlayer_onStateUpdate(_ptr, _stateUpdateNativeCallable!.nativeFunction);
+    _stateUpdateNativeCallable =
+        NativeCallable<StringUpdateCallback>.listener(closure);
+    _juceLib.JuceMixPlayer_onStateUpdate(
+        _ptr, _stateUpdateNativeCallable!.nativeFunction);
   }
 
   void setErrorHandler(void Function(String error) callback) {
@@ -83,18 +100,24 @@ class JuceMixPlayer {
       callback(cstring.toDartString());
     };
     _errorUpdateNativeCallable?.close();
-    _errorUpdateNativeCallable = NativeCallable<StringUpdateCallback>.listener(closure);
-    _juceLib.JuceMixPlayer_onError(_ptr, _errorUpdateNativeCallable!.nativeFunction);
+    _errorUpdateNativeCallable =
+        NativeCallable<StringUpdateCallback>.listener(closure);
+    _juceLib.JuceMixPlayer_onError(
+        _ptr, _errorUpdateNativeCallable!.nativeFunction);
   }
 
-  void setDeviceUpdateHandler(void Function(MixerDeviceList deviceList) callback) {
+  void setDeviceUpdateHandler(
+      void Function(MixerDeviceList deviceList) callback) {
     NativeStringCallbackDart closure = (ptr, cstring) {
-      MixerDeviceList data = MixerDeviceList.fromJson(json.decode(cstring.toDartString()));
+      MixerDeviceList data =
+          MixerDeviceList.fromJson(json.decode(cstring.toDartString()));
       callback(data);
     };
     _deviceUpdateNativeCallable?.close();
-    _deviceUpdateNativeCallable = NativeCallable<StringUpdateCallback>.listener(closure);
-    _juceLib.JuceMixPlayer_onDeviceUpdate(_ptr, _deviceUpdateNativeCallable!.nativeFunction);
+    _deviceUpdateNativeCallable =
+        NativeCallable<StringUpdateCallback>.listener(closure);
+    _juceLib.JuceMixPlayer_onDeviceUpdate(
+        _ptr, _deviceUpdateNativeCallable!.nativeFunction);
   }
 
   void setFile(String path) {
@@ -170,8 +193,10 @@ class JuceMixPlayer {
       callback(cstring.toDartString());
     };
     _recErrorUpdateNativeCallable?.close();
-    _recErrorUpdateNativeCallable = NativeCallable<StringUpdateCallback>.listener(closure);
-    _juceLib.JuceMixPlayer_onRecError(_ptr, _recErrorUpdateNativeCallable!.nativeFunction);
+    _recErrorUpdateNativeCallable =
+        NativeCallable<StringUpdateCallback>.listener(closure);
+    _juceLib.JuceMixPlayer_onRecError(
+        _ptr, _recErrorUpdateNativeCallable!.nativeFunction);
   }
 
   void setRecStateUpdateHandler(void Function(JuceMixRecState state) callback) {
@@ -179,8 +204,10 @@ class JuceMixPlayer {
       callback(JuceMixRecState.values.byName(cstring.toDartString()));
     };
     _recStateUpdateNativeCallable?.close();
-    _recStateUpdateNativeCallable = NativeCallable<StringUpdateCallback>.listener(closure);
-    _juceLib.JuceMixPlayer_onRecStateUpdate(_ptr, _recStateUpdateNativeCallable!.nativeFunction);
+    _recStateUpdateNativeCallable =
+        NativeCallable<StringUpdateCallback>.listener(closure);
+    _juceLib.JuceMixPlayer_onRecStateUpdate(
+        _ptr, _recStateUpdateNativeCallable!.nativeFunction);
   }
 
   void setRecProgressHandler(void Function(double level) callback) {
@@ -188,8 +215,10 @@ class JuceMixPlayer {
       callback(progress);
     };
     _recRrogressCallbackNativeCallable?.close();
-    _recRrogressCallbackNativeCallable = NativeCallable<FloatCallback>.listener(closure);
-    _juceLib.JuceMixPlayer_onRecProgress(_ptr, _recRrogressCallbackNativeCallable!.nativeFunction);
+    _recRrogressCallbackNativeCallable =
+        NativeCallable<FloatCallback>.listener(closure);
+    _juceLib.JuceMixPlayer_onRecProgress(
+        _ptr, _recRrogressCallbackNativeCallable!.nativeFunction);
   }
 
   void setRecLevelHandler(void Function(double level) callback) {
@@ -197,8 +226,10 @@ class JuceMixPlayer {
       callback(progress);
     };
     _recInputlevelCallbackNativeCallable?.close();
-    _recInputlevelCallbackNativeCallable = NativeCallable<FloatCallback>.listener(closure);
-    _juceLib.JuceMixPlayer_onRecLevel(_ptr, _recInputlevelCallbackNativeCallable!.nativeFunction);
+    _recInputlevelCallbackNativeCallable =
+        NativeCallable<FloatCallback>.listener(closure);
+    _juceLib.JuceMixPlayer_onRecLevel(
+        _ptr, _recInputlevelCallbackNativeCallable!.nativeFunction);
   }
 
   /**
@@ -230,8 +261,10 @@ class JuceMixPlayer {
     };
 
     _exportUpdateNativeCallable?.close();
-    _exportUpdateNativeCallable = NativeCallable<StringUpdateCallback2>.listener(closure);
-    _juceLib.JuceMixPlayer_export(_ptr, outputFile.toNativeUtf8(), _exportUpdateNativeCallable!.nativeFunction);
+    _exportUpdateNativeCallable =
+        NativeCallable<StringUpdateCallback2>.listener(closure);
+    _juceLib.JuceMixPlayer_export(_ptr, outputFile.toNativeUtf8(),
+        _exportUpdateNativeCallable!.nativeFunction);
 
     return completer.future;
   }
@@ -277,15 +310,19 @@ class MixerComposeModel {
     );
   }
 
-  factory MixerComposeModel.fromJson(Map<String, dynamic> json) => MixerComposeModel(
-        tracks: (json['tracks'] as List<dynamic>?)?.map((e) => MixerTrack.fromJson(e as Map<String, dynamic>)).toList(),
+  factory MixerComposeModel.fromJson(Map<String, dynamic> json) =>
+      MixerComposeModel(
+        tracks: (json['tracks'] as List<dynamic>?)
+            ?.map((e) => MixerTrack.fromJson(e as Map<String, dynamic>))
+            .toList(),
         output: json['output'],
         outputDuration: json['outputDuration']?.toDouble(),
       );
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
-    if (tracks != null) json['tracks'] = tracks?.map((e) => e.toJson()).toList();
+    if (tracks != null)
+      json['tracks'] = tracks?.map((e) => e.toJson()).toList();
     if (output != null) json['output'] = output;
     if (outputDuration != null) json['outputDuration'] = outputDuration;
     return json;
@@ -391,10 +428,20 @@ class MixerDevice {
         name: json['name'],
         isInput: json['isInput'],
         isSelected: json['isSelected'],
-        inputChannelNames: (json['inputChannelNames'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
-        outputChannelNames: (json['outputChannelNames'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+        inputChannelNames: (json['inputChannelNames'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            [],
+        outputChannelNames: (json['outputChannelNames'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            [],
         currentSampleRate: json['currentSampleRate']?.toDouble() ?? 0.0,
-        availableSampleRates: (json['availableSampleRates'] as List<dynamic>?)?.map((e) => e.toDouble()).toList().cast<double>() ?? [],
+        availableSampleRates: (json['availableSampleRates'] as List<dynamic>?)
+                ?.map((e) => e.toDouble())
+                .toList()
+                .cast<double>() ??
+            [],
         deviceType: json['deviceType'] ?? '',
       );
 
@@ -419,8 +466,12 @@ class MixerDeviceList {
     required this.devices,
   });
 
-  factory MixerDeviceList.fromJson(Map<String, dynamic> json) => MixerDeviceList(
-        devices: (json['devices'] as List<dynamic>?)?.map((e) => MixerDevice.fromJson(e as Map<String, dynamic>)).toList() ?? [],
+  factory MixerDeviceList.fromJson(Map<String, dynamic> json) =>
+      MixerDeviceList(
+        devices: (json['devices'] as List<dynamic>?)
+                ?.map((e) => MixerDevice.fromJson(e as Map<String, dynamic>))
+                .toList() ??
+            [],
       );
 
   Map<String, dynamic> toJson() {
@@ -449,6 +500,9 @@ class MixerSettings {
   /// enableMicMonitoring [false]
   bool enableMicMonitoring;
 
+  /// disallow bluetooth mic [false]
+  bool dissallowBluetoothMic;
+
   MixerSettings({
     this.progressUpdateInterval = 0.05,
     this.sampleRate = 48000,
@@ -456,15 +510,18 @@ class MixerSettings {
     this.loop = false,
     this.recBgPlayback = true,
     this.enableMicMonitoring = false,
+    this.dissallowBluetoothMic = false,
   });
 
   factory MixerSettings.fromJson(Map<String, dynamic> json) => MixerSettings(
-        progressUpdateInterval: json['progressUpdateInterval']?.toDouble() ?? 0.05,
+        progressUpdateInterval:
+            json['progressUpdateInterval']?.toDouble() ?? 0.05,
         sampleRate: json['sampleRate'] ?? 48000,
         stopRecOnPlaybackComplete: json['stopRecOnPlaybackComplete'] ?? true,
         loop: json['loop'] ?? true,
         recBgPlayback: json['recBgPlayback'] ?? true,
         enableMicMonitoring: json['enableMicMonitoring'] ?? false,
+        dissallowBluetoothMic: json['dissallowBluetoothMic'] ?? false,
       );
 
   Map<String, dynamic> toJson() {
@@ -475,6 +532,7 @@ class MixerSettings {
     json['loop'] = loop;
     json['recBgPlayback'] = recBgPlayback;
     json['enableMicMonitoring'] = enableMicMonitoring;
+    json['dissallowBluetoothMic'] = dissallowBluetoothMic;
     return json;
   }
 }

@@ -100,6 +100,8 @@ struct MixerSettings {
     bool recBgPlayback = false;
     // recording feedback to earphone/output device
     bool enableMicMonitoring = false;
+    // disallow bluetooth mic
+    bool dissallowBluetoothMic = false; // iOS only, default false
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(MixerSettings,
                                                 progressUpdateInterval,
@@ -107,7 +109,8 @@ struct MixerSettings {
                                                 loop,
                                                 recBgPlayback,
                                                 stopRecOnPlaybackComplete,
-                                                enableMicMonitoring);
+                                                enableMicMonitoring,
+                                                dissallowBluetoothMic);
 };
 
 struct MixerTrack {

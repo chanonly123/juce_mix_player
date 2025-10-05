@@ -36,7 +36,8 @@ class RecorderPageState extends State<RecorderPage> {
   double maxReclevel = -200.0;
   final double minAllowedLevelDb = -24.0;
   final double maxAllowedLevelDb = -3.5;
-  bool isLevelTooHigh = false; // Track if level is too high to avoid repeated vibrations
+  bool isLevelTooHigh =
+      false; // Track if level is too high to avoid repeated vibrations
   bool isMetronomeEnabled = false;
   bool isRecStoppedDueToDeviceChange = false;
   bool isMicMonitoringEnabled = false; // Track mic monitoring state
@@ -46,7 +47,7 @@ class RecorderPageState extends State<RecorderPage> {
     super.initState();
     print("RecorderPageState.initState");
 
-    recorder.setSettings(MixerSettings());
+    recorder.setSettings(MixerSettings(dissallowBluetoothMic: true));
 
     // Check microphone permission
     _checkMicrophonePermission();
@@ -128,7 +129,8 @@ class RecorderPageState extends State<RecorderPage> {
                 context: context,
                 builder: (context) => AlertDialog(
                   title: const Text("Recording Stopped"),
-                  content: const Text("Device change detected during recording."),
+                  content:
+                      const Text("Device change detected during recording."),
                   actions: [
                     TextButton(
                       onPressed: () {
@@ -140,7 +142,8 @@ class RecorderPageState extends State<RecorderPage> {
                             latencyInfo: latencyInfo,
                             latencyInfoObj: latencyInfoObj,
                             onOkPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(const SnackBar(
                                 content: Text('Recording processing completed'),
                                 backgroundColor: Colors.green,
                               ));
@@ -295,19 +298,19 @@ class RecorderPageState extends State<RecorderPage> {
       recorder.prepareRecording(recordingPath);
       final bgmPath = await AssetHelper.extractAsset('assets/media/beats.wav');
       // if (isMetronomeEnabled) {
-        final pathH = await AssetHelper.extractAsset('assets/media/met_h.wav');
-        final pathL = await AssetHelper.extractAsset('assets/media/met_l.wav');
-        double metVol = 0.5;
-        final mixComposeModel = MixerComposeModel(
-          tracks: [
+      final pathH = await AssetHelper.extractAsset('assets/media/met_h.wav');
+      final pathL = await AssetHelper.extractAsset('assets/media/met_l.wav');
+      double metVol = 0.5;
+      final mixComposeModel = MixerComposeModel(
+        tracks: [
           MixerTrack(id: "music", path: bgmPath, volume: 0.5),
           // MixerTrack(id: "met_1", path: pathH, offset: 0, repeat: true, repeatInterval: 2, volume: metVol),
           // MixerTrack(id: "met_2", path: pathL, offset: 0.5, repeat: true, repeatInterval: 2, volume: metVol),
           // MixerTrack(id: "met_3", path: pathL, offset: 1, repeat: true, repeatInterval: 2, volume: metVol),
           // MixerTrack(id: "met_4", path: pathL, offset: 1.5, repeat: true, repeatInterval: 2, volume: metVol),
-          ],
-        );
-        recorder.setMixData(mixComposeModel);
+        ],
+      );
+      recorder.setMixData(mixComposeModel);
       // }
       log('Recorder prepared successfully');
       setState(() {
@@ -417,7 +420,11 @@ class RecorderPageState extends State<RecorderPage> {
                           : isRecorderPreparing
                               ? "Preparing recorder..."
                               : "Not Prepared")),
-              style: TextStyle(fontSize: 16, color: !isMicPermissionGranted ? Colors.red : (isRecording ? Colors.red : Colors.grey)),
+              style: TextStyle(
+                  fontSize: 16,
+                  color: !isMicPermissionGranted
+                      ? Colors.red
+                      : (isRecording ? Colors.red : Colors.grey)),
             ),
             SizedBox(height: 40),
             Text("State: ${state.toString()}"),
@@ -443,22 +450,36 @@ class RecorderPageState extends State<RecorderPage> {
             SizedBox(height: 20),
             // Mic Monitoring Toggle Button
             ElevatedButton.icon(
-              icon: Icon(isMicMonitoringEnabled ? Icons.hearing : Icons.hearing_disabled, size: 20),
-              label: Text(isMicMonitoringEnabled ? 'Mic Monitoring ON' : 'Mic Monitoring OFF'),
+              icon: Icon(
+                  isMicMonitoringEnabled
+                      ? Icons.hearing
+                      : Icons.hearing_disabled,
+                  size: 20),
+              label: Text(isMicMonitoringEnabled
+                  ? 'Mic Monitoring ON'
+                  : 'Mic Monitoring OFF'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: isMicMonitoringEnabled ? Colors.green : Colors.grey,
+                backgroundColor:
+                    isMicMonitoringEnabled ? Colors.green : Colors.grey,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
-                  side: BorderSide(color: isMicMonitoringEnabled ? Colors.green.shade700 : Colors.grey.shade700, width: 1),
+                  side: BorderSide(
+                      color: isMicMonitoringEnabled
+                          ? Colors.green.shade700
+                          : Colors.grey.shade700,
+                      width: 1),
                 ),
               ),
               onPressed: () {
                 setState(() {
                   isMicMonitoringEnabled = !isMicMonitoringEnabled;
                 });
-                recorder.setSettings(MixerSettings(enableMicMonitoring: isMicMonitoringEnabled));
+                recorder.setSettings(MixerSettings(
+                    enableMicMonitoring: isMicMonitoringEnabled,
+                    dissallowBluetoothMic: true));
               },
             ),
             SizedBox(height: 20),
@@ -468,7 +489,8 @@ class RecorderPageState extends State<RecorderPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue[900],
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                   side: BorderSide(color: Colors.blue.shade700, width: 1),
@@ -476,7 +498,8 @@ class RecorderPageState extends State<RecorderPage> {
               ),
               onPressed: () => showDialog(
                 context: context,
-                builder: (context) => DeviceListDialog(devices: deviceList.devices),
+                builder: (context) =>
+                    DeviceListDialog(devices: deviceList.devices),
               ),
             ),
             SizedBox(height: 40),
@@ -488,8 +511,10 @@ class RecorderPageState extends State<RecorderPage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Current: ${currReclevel.toStringAsFixed(1)} dB', style: TextStyle(fontSize: 12)),
-                      Text('Max: ${maxReclevel.toStringAsFixed(1)} dB', style: TextStyle(fontSize: 12)),
+                      Text('Current: ${currReclevel.toStringAsFixed(1)} dB',
+                          style: TextStyle(fontSize: 12)),
+                      Text('Max: ${maxReclevel.toStringAsFixed(1)} dB',
+                          style: TextStyle(fontSize: 12)),
                     ],
                   ),
                 ),
@@ -500,7 +525,8 @@ class RecorderPageState extends State<RecorderPage> {
                     children: [
                       LinearPercentIndicator(
                         lineHeight: 4,
-                        percent: ((currReclevel + minAllowedLevelDb.abs()) / 25).clamp(0.0, 1.0),
+                        percent: ((currReclevel + minAllowedLevelDb.abs()) / 25)
+                            .clamp(0.0, 1.0),
                         progressColor: _getProgressColor(currReclevel),
                         backgroundColor: Colors.grey.withOpacity(0.1),
                         barRadius: Radius.circular(2),
@@ -511,8 +537,12 @@ class RecorderPageState extends State<RecorderPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('$minAllowedLevelDb dB', style: TextStyle(fontSize: 10, color: Colors.grey)),
-                          Text('$maxAllowedLevelDb dB', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                          Text('$minAllowedLevelDb dB',
+                              style:
+                                  TextStyle(fontSize: 10, color: Colors.grey)),
+                          Text('$maxAllowedLevelDb dB',
+                              style:
+                                  TextStyle(fontSize: 10, color: Colors.grey)),
                         ],
                       ),
                     ],
@@ -542,7 +572,9 @@ class RecorderPageState extends State<RecorderPage> {
         opacity: animation,
         child: child,
       ),
-      child: isRecording ? _buildActualWarning() : Container(height: 40), // Maintain consistent height
+      child: isRecording
+          ? _buildActualWarning()
+          : Container(height: 40), // Maintain consistent height
     );
   }
 

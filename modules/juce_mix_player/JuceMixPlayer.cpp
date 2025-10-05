@@ -14,10 +14,15 @@ bool setAudioSessionPlay() {
     return error == nil;
 }
 
-bool setAudioSessionRecord() {
+bool setAudioSessionRecord(MixerSettings& settings) {
     NSUInteger options = AVAudioSessionCategoryOptionDefaultToSpeaker
     | AVAudioSessionCategoryOptionAllowBluetoothA2DP
     | AVAudioSessionCategoryOptionAllowBluetoothHFP;
+    
+    if (settings.dissallowBluetoothMic) {
+        options = options & (~AVAudioSessionCategoryOptionAllowBluetoothHFP);
+    }
+    
     NSError* error = nil;
     [[AVAudioSession sharedInstance] setCategory: AVAudioSessionCategoryPlayAndRecord
                                      withOptions: options
@@ -26,10 +31,10 @@ bool setAudioSessionRecord() {
 }
 #elif JUCE_MAC
 bool setAudioSessionPlay() { return true; }
-bool setAudioSessionRecord() { return true; }
+bool setAudioSessionRecord(MixerSettings& settings) { return true; }
 #else
 bool setAudioSessionPlay() { return true; }
-bool setAudioSessionRecord() { return true; }
+bool setAudioSessionRecord(MixerSettings& settings) { return true; }
 #endif
 
 std::string JuceMixPlayerRecState_toString(JuceMixPlayerRecState state) {
@@ -595,7 +600,7 @@ void JuceMixPlayer::startRecorder() {
             return;
         }
 
-        bool success = setAudioSessionRecord();
+        bool success = setAudioSessionRecord(this->settings);
         if (!success) {
             if (onRecErrorCallback) onRecErrorCallback(this, "Failed to start system audio session");
             _onRecStateUpdateNotify(JuceMixPlayerRecState::ERROR);
@@ -611,7 +616,7 @@ void JuceMixPlayer::startRecorder() {
 
         deviceCallbackTime2 = _getEpochTime();
 
-        success = setAudioSessionRecord();
+        success = setAudioSessionRecord(this->settings);
         if (!success) {
             if (onRecErrorCallback) onRecErrorCallback(this, "Failed to start system audio session");
             _onRecStateUpdateNotify(JuceMixPlayerRecState::ERROR);
