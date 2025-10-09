@@ -65,6 +65,10 @@ class JuceMixPlayer {
     _juceLib.juce_enableLogs(enable ? 1 : 0);
   }
 
+  static int fileExists(String path) {
+    return _juceLib.JuceMixPlayer_fileExists(path.toNativeUtf8());
+  }
+
   JuceMixPlayer() {
     _juceLib = JuceLibGen(defaultTargetPlatform == TargetPlatform.iOS
         ? DynamicLibrary.process()

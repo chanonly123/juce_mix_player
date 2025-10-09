@@ -115,3 +115,9 @@ void JuceMixPlayer_export(void* ptr,
                           void (*completion)(const char*)) {
     return static_cast<JuceMixPlayer *>(ptr)->exportToFile(outputPath, completion);
 }
+
+// Utility methods
+int JuceMixPlayer_fileExists(const char* filePath) {
+    juce::File file(filePath);
+    return file.exists() ? 1 : 0;
+}

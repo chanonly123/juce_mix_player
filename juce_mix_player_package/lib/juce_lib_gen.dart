@@ -560,4 +560,18 @@ class JuceLibGen {
           ffi.Pointer<
               ffi.NativeFunction<
                   ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>)>();
+
+  int JuceMixPlayer_fileExists(
+    ffi.Pointer<pkg_ffi.Utf8> filePath,
+  ) {
+    return _JuceMixPlayer_fileExists(
+      filePath,
+    );
+  }
+
+  late final _JuceMixPlayer_fileExistsPtr =
+      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Pointer<pkg_ffi.Utf8>)>>(
+          'JuceMixPlayer_fileExists');
+  late final _JuceMixPlayer_fileExists = _JuceMixPlayer_fileExistsPtr
+      .asFunction<int Function(ffi.Pointer<pkg_ffi.Utf8>)>();
 }

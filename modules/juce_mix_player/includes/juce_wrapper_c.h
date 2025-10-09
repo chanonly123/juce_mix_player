@@ -62,3 +62,5 @@ EXPORT_C_FUNC const char* JuceMixPlayer_getDeviceLatencyInfo(void *ptr);
 EXPORT_C_FUNC void JuceMixPlayer_export(void* ptr,
                                         const char *outputPath,
                                         void (*completion)(const char*));
+
+EXPORT_C_FUNC int JuceMixPlayer_fileExists(const char* filePath);
