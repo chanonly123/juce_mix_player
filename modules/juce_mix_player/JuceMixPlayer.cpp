@@ -560,9 +560,8 @@ void JuceMixPlayer::exportToFile(const char* outputFile, std::function<void(cons
         int targetSampleRate = settings.sampleRate;
         juce::File file(outputFile);
         file.deleteFile();
-        juce::FileOutputStream* outputStream = new juce::FileOutputStream(file);
+        std::unique_ptr<juce::OutputStream> outputStream(new juce::FileOutputStream(file));
         std::shared_ptr<juce::AudioFormat> audioFormat;
-        std::shared_ptr<juce::AudioFormatWriter> writer;
         if (juce::String(outputFile).toLowerCase().endsWith("wav")) {
             audioFormat.reset(new juce::WavAudioFormat());
         } else if (juce::String(outputFile).toLowerCase().endsWith("flac")) {
@@ -571,7 +570,13 @@ void JuceMixPlayer::exportToFile(const char* outputFile, std::function<void(cons
             completion("Failed to export, unsupported file extension");
             return;
         }
-        writer.reset(audioFormat->createWriterFor(outputStream, targetSampleRate, 1, 16, {}, 0));
+        const auto options = juce::AudioFormatWriterOptions()
+            .withSampleRate(targetSampleRate)
+            .withNumChannels(2)
+            .withBitsPerSample(16)
+            .withQualityOptionIndex(0);
+        
+        auto writer = audioFormat->createWriterFor(outputStream, options);
         bool success = writer->writeFromAudioSampleBuffer(playBuffer, 0, playBuffer.getNumSamples());
         completion(success ? "" : "Failed to export");
     });
