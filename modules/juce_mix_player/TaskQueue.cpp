@@ -35,7 +35,9 @@ void TaskQueue::worker() {
         TaskQueueItem task;
         {
             std::unique_lock<std::mutex> lock(mtx);
-            cv.wait(lock, [this] { return stop || !taskList.empty(); });
+            cv.wait(lock, [this] {
+                return stop || !taskList.empty();
+            });
 
             if (stop && taskList.empty()) {
                 break;

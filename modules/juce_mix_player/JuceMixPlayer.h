@@ -2,8 +2,8 @@
 
 #include "nlohmann/json.hpp"
 #include "Logger.h"
+#include "OsExtras.h"
 #include "TaskQueue.h"
-#include "Models.h"
 #include "Models.h"
 #include <iostream>
 #include <tuple>
@@ -11,8 +11,6 @@
 class JuceMixPlayer : private juce::Timer, public juce::AudioIODeviceCallback, public juce::ChangeListener
 {
 private:
-
-    inline static juce::AudioDeviceManager* deviceManager;
 
     juce::CriticalSection lock;
     TaskQueue heavyTaskQueue;
@@ -111,6 +109,8 @@ private:
     std::optional<std::tuple<float, float, float>> _calculateBlockToRead(float block, MixerTrack& track);
 
     void _createWriterForRecorder();
+    
+    bool _startRecorderCheckList();
 
     void flushRecordBufferToFile(juce::AudioBuffer<float>& buffer, int sampleCount);
 

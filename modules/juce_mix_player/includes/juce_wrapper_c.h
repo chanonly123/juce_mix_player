@@ -64,3 +64,15 @@ EXPORT_C_FUNC void JuceMixPlayer_export(void* ptr,
                                         void (*completion)(const char*));
 
 EXPORT_C_FUNC int JuceMixPlayer_fileExists(const char* filePath);
+
+// MARK: LatencyCalc
+
+EXPORT_C_FUNC void* LatencyCalc_init();
+
+EXPORT_C_FUNC void LatencyCalc_deinit(void* ptr);
+
+EXPORT_C_FUNC void LatencyCalc_start(void* ptr, void (*onCompletion)(void* ptr, const char*));
+
+EXPORT_C_FUNC void LatencyCalc_stop(void* ptr);
+
+EXPORT_C_FUNC int findTwoTickPattern(float* buff, int size, int tickGap);

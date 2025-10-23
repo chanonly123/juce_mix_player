@@ -2,7 +2,6 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
@@ -57,6 +56,8 @@ class JuceMixPlayer {
     _juceLib.juce_init();
   }
 
+  static JuceLibGen get juceLib => _juceLib;
+
   Pointer<Void> getPtr() {
     return _ptr;
   }
@@ -70,10 +71,6 @@ class JuceMixPlayer {
   }
 
   JuceMixPlayer() {
-    _juceLib = JuceLibGen(defaultTargetPlatform == TargetPlatform.iOS
-        ? DynamicLibrary.process()
-        : DynamicLibrary.open(libname));
-
     _ptr = _juceLib.JuceMixPlayer_init();
   }
 

@@ -574,4 +574,72 @@ class JuceLibGen {
           'JuceMixPlayer_fileExists');
   late final _JuceMixPlayer_fileExists = _JuceMixPlayer_fileExistsPtr
       .asFunction<int Function(ffi.Pointer<pkg_ffi.Utf8>)>();
+
+  ffi.Pointer<ffi.Void> LatencyCalc_init() {
+    return _LatencyCalc_init();
+  }
+
+  late final _LatencyCalc_initPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Void> Function()>>(
+          'LatencyCalc_init');
+  late final _LatencyCalc_init =
+      _LatencyCalc_initPtr.asFunction<ffi.Pointer<ffi.Void> Function()>();
+
+  void LatencyCalc_deinit(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _LatencyCalc_deinit(
+      ptr,
+    );
+  }
+
+  late final _LatencyCalc_deinitPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'LatencyCalc_deinit');
+  late final _LatencyCalc_deinit =
+      _LatencyCalc_deinitPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void LatencyCalc_start(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(
+                    ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>
+        onCompletion,
+  ) {
+    return _LatencyCalc_start(
+      ptr,
+      onCompletion,
+    );
+  }
+
+  late final _LatencyCalc_startPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>,
+                          ffi.Pointer<pkg_ffi.Utf8>)>>)>>('LatencyCalc_start');
+  late final _LatencyCalc_start = _LatencyCalc_startPtr.asFunction<
+      void Function(
+          ffi.Pointer<ffi.Void>,
+          ffi.Pointer<
+              ffi.NativeFunction<
+                  ffi.Void Function(
+                      ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>)>();
+
+  void LatencyCalc_stop(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _LatencyCalc_stop(
+      ptr,
+    );
+  }
+
+  late final _LatencyCalc_stopPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'LatencyCalc_stop');
+  late final _LatencyCalc_stop =
+      _LatencyCalc_stopPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 }

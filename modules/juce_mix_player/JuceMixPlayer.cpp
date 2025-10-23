@@ -1,42 +1,5 @@
 #include "JuceMixPlayer.h"
 
-#if JUCE_IOS
-
-#import <AVFoundation/AVFoundation.h>
-
-// MARK: set audio session for iOS
-bool setAudioSessionPlay() {
-    NSUInteger options = AVAudioSessionCategoryOptionMixWithOthers;
-    NSError* error = nil;
-    [[AVAudioSession sharedInstance] setCategory: AVAudioSessionCategoryPlayback
-                                     withOptions: options
-                                           error: &error];
-    return error == nil;
-}
-
-bool setAudioSessionRecord(MixerSettings& settings) {
-    NSUInteger options = AVAudioSessionCategoryOptionDefaultToSpeaker
-    | AVAudioSessionCategoryOptionAllowBluetoothA2DP
-    | AVAudioSessionCategoryOptionAllowBluetoothHFP;
-    
-    if (settings.dissallowBluetoothMic) {
-        options = options & (~AVAudioSessionCategoryOptionAllowBluetoothHFP);
-    }
-    
-    NSError* error = nil;
-    [[AVAudioSession sharedInstance] setCategory: AVAudioSessionCategoryPlayAndRecord
-                                     withOptions: options
-                                           error: &error];
-    return error == nil;
-}
-#elif JUCE_MAC
-bool setAudioSessionPlay() { return true; }
-bool setAudioSessionRecord(MixerSettings& settings) { return true; }
-#else
-bool setAudioSessionPlay() { return true; }
-bool setAudioSessionRecord(MixerSettings& settings) { return true; }
-#endif
-
 std::string JuceMixPlayerRecState_toString(JuceMixPlayerRecState state) {
     nlohmann::json j = state;
     return j;
@@ -59,16 +22,13 @@ JuceMixPlayer::JuceMixPlayer() {
     juce::WindowedSincInterpolator interpolator;
 
     juce::MessageManager::getInstanceWithoutCreating()->callAsync([&, this]{
-        if (deviceManager == nullptr) {
-            deviceManager = new juce::AudioDeviceManager();
-        }
-        deviceManager->addAudioCallback(this);
-        deviceManager->addChangeListener(this);
-        deviceManager->initialise(0, 2, nullptr, true, {}, nullptr);
+        sharedDeviceManager()->addAudioCallback(this);
+        sharedDeviceManager()->addChangeListener(this);
+        sharedDeviceManager()->initialise(0, 2, nullptr, true, {}, nullptr);
 
         //        setDefaultSampleRate();
 
-        inputLevelMeter = deviceManager->getInputLevelGetter();
+        inputLevelMeter = sharedDeviceManager()->getInputLevelGetter();
 
         PRINT("JuceMixPlayer initialized");
     });
@@ -78,8 +38,8 @@ void JuceMixPlayer::dispose() {
     juce::MessageManager::getInstanceWithoutCreating()->callAsync([&]{
         PRINT("JuceMixPlayer::dispose");
         _stopProgressTimer();
-        deviceManager->removeAudioCallback(this);
-        deviceManager->removeChangeListener(this);
+        sharedDeviceManager()->removeAudioCallback(this);
+        sharedDeviceManager()->removeChangeListener(this);
         stop();
         stopRecorder();
         std::thread thread([&]{
@@ -244,10 +204,10 @@ void JuceMixPlayer::setSettings(const char* json) {
             settings = _settings;
 
             juce::MessageManager::getInstanceWithoutCreating()->callAsync([&]{
-                juce::AudioDeviceManager::AudioDeviceSetup setup = deviceManager->getAudioDeviceSetup();
+                juce::AudioDeviceManager::AudioDeviceSetup setup = sharedDeviceManager()->getAudioDeviceSetup();
                 setup.sampleRate = settings.sampleRate;
                 bool treatAsChosenDevice = false;
-                juce::String error = deviceManager->setAudioDeviceSetup(setup, treatAsChosenDevice);
+                juce::String error = sharedDeviceManager()->setAudioDeviceSetup(setup, treatAsChosenDevice);
                 if (error.isNotEmpty()) {
                     PRINT("setSettings: " << error);
                     _onErrorNotify(error.toStdString());
@@ -596,35 +556,43 @@ void JuceMixPlayer::prepareRecorder(const char *file) {
     });
 }
 
+bool JuceMixPlayer::_startRecorderCheckList() {
+    if (!_isRecorderPrepared) {
+        if (onRecErrorCallback) onRecErrorCallback(this, "Failed to start recording, prepare not called");
+        _onRecStateUpdateNotify(JuceMixPlayerRecState::ERROR);
+        return false;
+    }
+
+    bool success = setAudioSessionRecord(this->settings);
+    if (!success) {
+        if (onRecErrorCallback) onRecErrorCallback(this, "Failed to start system audio session");
+        _onRecStateUpdateNotify(JuceMixPlayerRecState::ERROR);
+        return false;
+    }
+
+    deviceManagerSavedState = sharedDeviceManager()->createStateXml();
+    sharedDeviceManager()->closeAudioDevice();
+
+    deviceCallbackTime1 = _getEpochTime();
+
+    sharedDeviceManager()->initialise(1, 2, deviceManagerSavedState.get(), true, {}, nullptr);
+
+    deviceCallbackTime2 = _getEpochTime();
+
+    success = setAudioSessionRecord(this->settings);
+    if (!success) {
+        if (onRecErrorCallback) onRecErrorCallback(this, "Failed to start system audio session");
+        _onRecStateUpdateNotify(JuceMixPlayerRecState::ERROR);
+        return false;
+    }
+    
+    return true;
+}
+
 void JuceMixPlayer::startRecorder() {
     if (_isRecording) return;
     juce::MessageManager::getInstanceWithoutCreating()->callAsync([&]{
-        if (!_isRecorderPrepared) {
-            if (onRecErrorCallback) onRecErrorCallback(this, "Failed to start recording, prepare not called");
-            _onRecStateUpdateNotify(JuceMixPlayerRecState::ERROR);
-            return;
-        }
-
-        bool success = setAudioSessionRecord(this->settings);
-        if (!success) {
-            if (onRecErrorCallback) onRecErrorCallback(this, "Failed to start system audio session");
-            _onRecStateUpdateNotify(JuceMixPlayerRecState::ERROR);
-            return;
-        }
-
-        deviceManagerSavedState = deviceManager->createStateXml();
-        deviceManager->closeAudioDevice();
-
-        deviceCallbackTime1 = _getEpochTime();
-
-        deviceManager->initialise(1, 2, deviceManagerSavedState.get(), true, {}, nullptr);
-
-        deviceCallbackTime2 = _getEpochTime();
-
-        success = setAudioSessionRecord(this->settings);
-        if (!success) {
-            if (onRecErrorCallback) onRecErrorCallback(this, "Failed to start system audio session");
-            _onRecStateUpdateNotify(JuceMixPlayerRecState::ERROR);
+        if (!_startRecorderCheckList()) {
             return;
         }
 
@@ -647,15 +615,15 @@ void JuceMixPlayer::stopRecorder() {
     if (!_isRecording) return;
     juce::MessageManager::getInstanceWithoutCreating()->callAsync([&]{
         if (_isRecording) {
-            this->outputLatencyInSamples = deviceManager->getCurrentAudioDevice()->getOutputLatencyInSamples();
+            this->outputLatencyInSamples = sharedDeviceManager()->getCurrentAudioDevice()->getOutputLatencyInSamples();
             PRINT("getDeviceLatencyInfo: " << getDeviceLatencyInfo());
             stop();
             _stopProgressTimer();
             _isRecording = false;
             _finishRecording();
-            deviceManagerSavedState = deviceManager->createStateXml();
-            deviceManager->closeAudioDevice();
-            deviceManager->initialise(0, 2, deviceManagerSavedState.get(), true, {}, nullptr);
+            deviceManagerSavedState = sharedDeviceManager()->createStateXml();
+            sharedDeviceManager()->closeAudioDevice();
+            sharedDeviceManager()->initialise(0, 2, deviceManagerSavedState.get(), true, {}, nullptr);
             setAudioSessionPlay();
         }
     });
@@ -799,11 +767,11 @@ void JuceMixPlayer::setMergeReadyListener(std::function<bool(juce::AudioBuffer<f
 void JuceMixPlayer::notifyDeviceUpdates() {
     MixerDeviceList list;
 
-    juce::AudioIODeviceType* audioDeviceType = deviceManager->getCurrentDeviceTypeObject();
-    juce::AudioDeviceManager::AudioDeviceSetup setup = deviceManager->getAudioDeviceSetup();
+    juce::AudioIODeviceType* audioDeviceType = sharedDeviceManager()->getCurrentDeviceTypeObject();
+    juce::AudioDeviceManager::AudioDeviceSetup setup = sharedDeviceManager()->getAudioDeviceSetup();
 
     if (audioDeviceType) {
-        juce::AudioIODevice* currentDevice = deviceManager->getCurrentAudioDevice();
+        juce::AudioIODevice* currentDevice = sharedDeviceManager()->getCurrentAudioDevice();
         if (currentDevice != nullptr) {
             // Current Input Device Info
             MixerDevice inputDev;

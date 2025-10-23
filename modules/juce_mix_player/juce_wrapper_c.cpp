@@ -121,3 +121,25 @@ int JuceMixPlayer_fileExists(const char* filePath) {
     juce::File file(filePath);
     return file.exists() ? 1 : 0;
 }
+
+void* LatencyCalc_init() {
+    return new LatencyCalc();
+}
+
+void LatencyCalc_deinit(void* ptr) {
+    static_cast<LatencyCalc *>(ptr)->dispose();
+}
+
+void LatencyCalc_start(void* ptr, void (*onCompletion)(void* ptr, const char*)) {
+    static_cast<LatencyCalc *>(ptr)->start(onCompletion);
+}
+
+void LatencyCalc_stop(void* ptr) {
+    static_cast<LatencyCalc *>(ptr)->stop();
+}
+
+int findTwoTickPattern(float* buff, int size, int tickGap) {
+    juce::AudioBuffer<float> buffer(1, size);
+    buffer.copyFrom(0, 0, buff, size);
+    return LatencyCalc::findTwoTickPattern(buffer, tickGap);
+}
