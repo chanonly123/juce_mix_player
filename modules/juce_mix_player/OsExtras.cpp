@@ -37,6 +37,8 @@ bool setAudioSessionPlay() { return true; }
 bool setAudioSessionRecord(MixerSettings& settings) { return true; }
 #endif
 
+juce::AudioDeviceManager* _sharedDeviceManager;
+
 juce::AudioDeviceManager* sharedDeviceManager()
 {
     if (_sharedDeviceManager == nullptr) {

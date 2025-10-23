@@ -642,4 +642,23 @@ class JuceLibGen {
           'LatencyCalc_stop');
   late final _LatencyCalc_stop =
       _LatencyCalc_stopPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  int findTwoTickPattern(
+    ffi.Pointer<ffi.Float> buff,
+    int size,
+    int tickGap,
+  ) {
+    return _findTwoTickPattern(
+      buff,
+      size,
+      tickGap,
+    );
+  }
+
+  late final _findTwoTickPatternPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Int Function(
+              ffi.Pointer<ffi.Float>, ffi.Int, ffi.Int)>>('findTwoTickPattern');
+  late final _findTwoTickPattern = _findTwoTickPatternPtr
+      .asFunction<int Function(ffi.Pointer<ffi.Float>, int, int)>();
 }

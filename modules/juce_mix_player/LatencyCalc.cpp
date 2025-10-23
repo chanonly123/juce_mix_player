@@ -10,11 +10,11 @@ LatencyCalc::LatencyCalc()
 
 void LatencyCalc::start(JuceMixPlayerCallbackString callback)
 {
+    onCalucateLatencyCallback = callback;
     if (_isLatencyCalc) {
         return;
     }
     _isLatencyCalc = true;
-    onCalucateLatencyCallback = callback;
     juce::MessageManager::getInstanceWithoutCreating()->callAsync([&]{
         
         MixerSettings settings;
