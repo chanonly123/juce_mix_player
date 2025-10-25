@@ -9,6 +9,9 @@ private:
     
     JuceMixPlayerCallbackString onCalucateLatencyCallback = nullptr;
     TaskQueue taskQueue;
+    std::unique_ptr<juce::AudioDeviceManager::AudioDeviceSetup> setup;
+    const float tickDurationSeconds = 0.03f;
+    int picCount = 0;
     
     int tickGap = 0;
     juce::AudioBuffer<float> bufferRec;
@@ -31,7 +34,20 @@ public:
     
     void stop();
     
-    static int findTwoTickPattern(juce::AudioBuffer<float> buff, int tickGap);
+    static void generateVeryShortBeep(juce::AudioBuffer<float>& buffer,
+                                      int sampleRate,
+                                      int fromIndex,
+                                      float tickDurationSeconds);
+    
+    static int findTwoTickPattern(juce::AudioBuffer<float>& buff,
+                                  int sampleRate,
+                                  int tickGap,
+                                  float tickDurationSeconds);
+    
+    void createImageAsync();
+    
+    static void createImageFile(const juce::AudioBuffer<float>& buffer,
+                         const juce::File& file);
 
     // juce::AudioIODeviceCallback
     

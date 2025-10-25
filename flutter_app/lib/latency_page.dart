@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:juce_mix_player/latency_calc.dart';
 
@@ -13,7 +15,11 @@ class LatencyPageState extends State<LatencyPage> {
   double latency = -1;
   String errorMessage = '';
   bool isCalculating = false;
-  LatencyPageState() {}
+  late String imageFile;
+
+  LatencyPageState() {
+    imageFile = '';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +31,12 @@ class LatencyPageState extends State<LatencyPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Image.file(
+              File(imageFile),
+              width: 500,
+              height: 300,
+            ),
+            SizedBox(height: 20),
             Text('Latency: $latency'),
             SizedBox(height: 20),
             Text('$errorMessage'),
@@ -38,7 +50,9 @@ class LatencyPageState extends State<LatencyPage> {
                 });
                 recorder.startLatencyCalculation((level) {
                   setState(() {
-                    if (double.tryParse(level) != null) {
+                    if (level.startsWith('/')) {
+                      setImageToViewFromFile(level);
+                    } else if (double.tryParse(level) != null) {
                       isCalculating = false;
                       latency = double.parse(level);
                     } else {
@@ -60,6 +74,12 @@ class LatencyPageState extends State<LatencyPage> {
         ),
       ),
     );
+  }
+
+  void setImageToViewFromFile(String path) {
+    setState(() {
+      imageFile = path;
+    });
   }
 
   @override

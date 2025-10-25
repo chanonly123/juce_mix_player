@@ -141,5 +141,8 @@ void LatencyCalc_stop(void* ptr) {
 int findTwoTickPattern(float* buff, int size, int tickGap) {
     juce::AudioBuffer<float> buffer(1, size);
     buffer.copyFrom(0, 0, buff, size);
-    return LatencyCalc::findTwoTickPattern(buffer, tickGap);
+    return LatencyCalc::findTwoTickPattern(buffer,
+                                           size,
+                                           tickGap,
+                                           0.03f);
 }
