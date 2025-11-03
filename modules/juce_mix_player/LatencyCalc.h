@@ -3,6 +3,12 @@
 #include "OsExtras.h"
 #include "JuceMixPlayer.h"
 
+struct FFiPointer
+{
+    void* ptr;
+    unsigned long size;
+};
+
 class LatencyCalc : public juce::AudioIODeviceCallback {
     
 private:
@@ -11,12 +17,15 @@ private:
     TaskQueue taskQueue;
     std::unique_ptr<juce::AudioDeviceManager::AudioDeviceSetup> setup;
     const float tickDurationSeconds = 0.03f;
-    int picCount = 0;
+    
+    juce::MemoryBlock imageBuffer;
+    juce::MemoryOutputStream memStream;
     
     int tickGap = 0;
     juce::AudioBuffer<float> bufferRec;
     juce::AudioBuffer<float> bufferPlay;
     
+    juce::String devSettings = "image_gen,gain_normalize,~image_gen";
     int playBufferSize = 0;
     bool _isLatencyCalc = false;
     int playHeadIndex = 0;
@@ -42,13 +51,17 @@ public:
     static int findTwoTickPattern(juce::AudioBuffer<float>& buff,
                                   int sampleRate,
                                   int tickGap,
-                                  float tickDurationSeconds);
+                                  float tickDurationSeconds,
+                                  bool enableGain);
     
     void createImageAsync();
     
-    static void createImageFile(const juce::AudioBuffer<float>& buffer,
-                         const juce::File& file);
-
+    juce::String setDevSettings(juce::String option);
+    
+    void fillImageBuffer(const juce::AudioBuffer<float>& buffer);
+    
+    FFiPointer getImageBufferPointer();
+    
     // juce::AudioIODeviceCallback
     
     void audioDeviceIOCallbackWithContext(const float* const* inputChannelData,

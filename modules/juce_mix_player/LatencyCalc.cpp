@@ -52,7 +52,27 @@ void LatencyCalc::stop()
     _isLatencyCalc = false;
     juce::MessageManager::getInstanceWithoutCreating()->callAsync([&]{
         sharedDeviceManager()->closeAudioDevice();
+        if (onCalucateLatencyCallback)
+            onCalucateLatencyCallback(this, "Stopped");
     });
+}
+
+juce::String LatencyCalc::setDevSettings(juce::String option)
+{
+    if (option.isEmpty()) {
+        return devSettings;
+    }
+    if (option.startsWith("~")) {
+        if (!devSettings.contains(option)) {
+            devSettings = devSettings + "," + option;
+        }
+    } else {
+        if (devSettings.contains("~" + option)) {
+            devSettings = devSettings.replace(",~" + option, "");
+        }
+    }
+    PRINT("devSettings: " << devSettings);
+    return devSettings;
 }
 
 void LatencyCalc::audioDeviceAboutToStart(juce::AudioIODevice *device) {
@@ -90,21 +110,28 @@ void LatencyCalc::audioDeviceIOCallbackWithContext(const float *const *inputChan
 {
     if (_isLatencyCalc && playBufferSize > 0) {
         if (playHeadIndex + numSamples > playBufferSize) {
-            playHeadIndex = 0;
             
+            bool enableGain = !devSettings.contains("~gain_normalize");
             int recPos = findTwoTickPattern(bufferRec,
                                             playBufferSize,
                                             tickGap,
-                                            tickDurationSeconds);
+                                            tickDurationSeconds,
+                                            enableGain);
             
             if (playTickPosition >=0 && recPos >=0) {
                 stop();
                 if (onCalucateLatencyCallback != nullptr) {
                     int latencySamples = float(recPos - playTickPosition) / float(playBufferSize/1000);
                     onCalucateLatencyCallback(this, returnCopyCharDelete(std::to_string(latencySamples)));
-//                    createImageAsync();
                 }
             }
+            
+            if (!devSettings.contains("~image_gen") ) {
+                createImageAsync();
+            }
+            
+            playHeadIndex = 0;
+            bufferRec.clear();
         }
         
         for (int ch=0; ch<numOutputChannels; ch++) {
@@ -154,7 +181,8 @@ LatencyCalc::~LatencyCalc()
 int LatencyCalc::findTwoTickPattern(juce::AudioBuffer<float>& buff,
                                     int sampleRate,
                                     int tickGap,
-                                    float tickDurationSeconds)
+                                    float tickDurationSeconds,
+                                    bool enableGain)
 {
     int size = buff.getNumSamples();
     const float minValue = 0.9;
@@ -165,7 +193,9 @@ int LatencyCalc::findTwoTickPattern(juce::AudioBuffer<float>& buff,
     
     float foundPeak = buff.getMagnitude(0, 0, size);
     float gain = minValue / foundPeak;
-    buff.applyGain(gain);
+    if (enableGain) {
+        buff.applyGain(gain);
+    }
     
     float finalPeak = buff.getMagnitude(0, 0, size);
     float* arr = buff.getWritePointer(0);
@@ -216,55 +246,69 @@ void LatencyCalc::generateVeryShortBeep(juce::AudioBuffer<float>& buffer,
 
 void LatencyCalc::createImageAsync()
 {
-    int picCount = this->picCount++;
-    
-    std::shared_ptr<juce::AudioBuffer<float>> buff(new juce::AudioBuffer<float>(1, bufferRec.getNumSamples()));
+    juce::AudioBuffer<float>* buff = new juce::AudioBuffer<float>(1, bufferRec.getNumSamples());
     buff->copyFrom(0, 0, bufferRec.getReadPointer(0), bufferRec.getNumSamples());
-    
-    taskQueue.async([&, buff, picCount]{
-        auto file = juce::File::getSpecialLocation(juce::File::userDocumentsDirectory).getChildFile("waveform_" + juce::String(picCount) + ".png");
-        createImageFile(*buff, file);
-        onCalucateLatencyCallback(this, returnCopyCharDelete(file.getFullPathName().toStdString()));
+    taskQueue.async([&, buff]{
+        fillImageBuffer(*buff);
+        delete buff;
+        onCalucateLatencyCallback(this, "image_buffer_ready");
     });
 }
 
-void LatencyCalc::createImageFile(const juce::AudioBuffer<float>& buffer,
-                                  const juce::File& file)
+FFiPointer LatencyCalc::getImageBufferPointer()
 {
-    auto width = 500;
-    auto height = 300;
+    FFiPointer ptr;
+    ptr.ptr = imageBuffer.getData();
+    ptr.size = imageBuffer.getSize();
+    return ptr;
+}
+
+void LatencyCalc::fillImageBuffer(const juce::AudioBuffer<float>& buffer)
+{
+    int width = 500;
+    int height = 300;
     juce::Image waveformImage (juce::Image::RGB, width, height, true);
     juce::Graphics g (waveformImage);
     g.fillAll (juce::Colours::black);
     g.setColour (juce::Colours::white);
-
+    
     auto* channelData = buffer.getReadPointer (0);
     int numSamples = buffer.getNumSamples();
-
+    
     for (int x = 0; x < width; ++x)
     {
         int sampleIndex = juce::jmap (x, 0, width, 0, numSamples - 1);
         float sample = channelData[sampleIndex];
         float y = juce::jmap (sample, -1.0f, 1.0f, (float)height, 0.0f);
-
+        
         // draw vertical line (simple waveform)
         g.drawLine ((float)x, (float)height / 2.0f, (float)x, y);
     }
     
     g.setColour (juce::Colours::yellow);
-    g.drawLine ((float)width / 4, 0, (float)width / 4, 20.0f);
-    g.drawLine ((float)width / 2, 0, (float)width / 2, 20.0f);
+    g.drawFittedText (juce::String(buffer.getNumSamples()),
+                      juce::Rectangle(5, 5, 100, 50) ,
+                      juce::Justification(juce::Justification::Flags::topLeft),
+                      1);
     
-    file.deleteFile();
+    g.drawLine ((float)width / 4, 0, (float)width / 4, 20.0f, 2.0f);
+    g.drawLine ((float)width / 2, 0, (float)width / 2, 20.0f, 2.0f);
+    
+    // draw ruler lines
+    const int split = 10;
+    for (int i = 0; i < split; i++) {
+        float x = float(width/split*i);
+        float sec = float(buffer.getNumSamples()) / float(playBufferSize) / float(split) * i;
+        g.drawLine (x, 0, x, height);
+        g.drawFittedText (juce::String(sec),
+                          juce::Rectangle(int(x) + 2, height-15, 50, 10) ,
+                          juce::Justification(juce::Justification::Flags::topLeft),
+                          1);
+    }
+    
     juce::PNGImageFormat format;
-    juce::FileOutputStream outStream (file);
-    if (outStream.openedOk() == false) {
-        PRINT("Failed to open image file: " << file.getFullPathName());
-        return;
-    }
-    bool succ = format.writeImageToStream (waveformImage, outStream);
-    outStream.flush();
-    if (!succ) {
-        PRINT("Failed to create image file: " << file.getFullPathName());
-    }
+    memStream.reset();
+    format.writeImageToStream(waveformImage, memStream);
+    imageBuffer.reset();
+    imageBuffer.replaceAll(memStream.getData(), memStream.getDataSize());
 }

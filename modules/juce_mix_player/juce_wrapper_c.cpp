@@ -144,5 +144,20 @@ int findTwoTickPattern(float* buff, int size, int tickGap) {
     return LatencyCalc::findTwoTickPattern(buffer,
                                            size,
                                            tickGap,
-                                           0.03f);
+                                           0.03f,
+                                           true);
+}
+
+const char* LatencyCalc_setDevSettings(void* ptr, const char* option) {
+    juce::String settings = static_cast<LatencyCalc *>(ptr)->setDevSettings(juce::String(option));
+    return returnCopyCharDelete(settings.toStdString());
+}
+
+void* LatencyCalc_getImageBufferPointer(void* ptr) {
+    return static_cast<LatencyCalc *>(ptr)->getImageBufferPointer().ptr;
+
+}
+
+unsigned long LatencyCalc_getImageBufferPointerSize(void* ptr) {
+    return static_cast<LatencyCalc *>(ptr)->getImageBufferPointer().size;
 }

@@ -76,3 +76,9 @@ EXPORT_C_FUNC void LatencyCalc_start(void* ptr, void (*onCompletion)(void* ptr, 
 EXPORT_C_FUNC void LatencyCalc_stop(void* ptr);
 
 EXPORT_C_FUNC int findTwoTickPattern(float* buff, int size, int tickGap);
+
+EXPORT_C_FUNC const char* LatencyCalc_setDevSettings(void* ptr, const char*);
+
+EXPORT_C_FUNC void* LatencyCalc_getImageBufferPointer(void* ptr);
+
+EXPORT_C_FUNC unsigned long LatencyCalc_getImageBufferPointerSize(void* ptr);

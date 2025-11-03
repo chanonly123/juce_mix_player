@@ -661,4 +661,54 @@ class JuceLibGen {
               ffi.Pointer<ffi.Float>, ffi.Int, ffi.Int)>>('findTwoTickPattern');
   late final _findTwoTickPattern = _findTwoTickPatternPtr
       .asFunction<int Function(ffi.Pointer<ffi.Float>, int, int)>();
+
+  ffi.Pointer<pkg_ffi.Utf8> LatencyCalc_setDevSettings(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<pkg_ffi.Utf8> arg1,
+  ) {
+    return _LatencyCalc_setDevSettings(
+      ptr,
+      arg1,
+    );
+  }
+
+  late final _LatencyCalc_setDevSettingsPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<pkg_ffi.Utf8> Function(ffi.Pointer<ffi.Void>,
+              ffi.Pointer<pkg_ffi.Utf8>)>>('LatencyCalc_setDevSettings');
+  late final _LatencyCalc_setDevSettings =
+      _LatencyCalc_setDevSettingsPtr.asFunction<
+          ffi.Pointer<pkg_ffi.Utf8> Function(
+              ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>();
+
+  ffi.Pointer<ffi.Void> LatencyCalc_getImageBufferPointer(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _LatencyCalc_getImageBufferPointer(
+      ptr,
+    );
+  }
+
+  late final _LatencyCalc_getImageBufferPointerPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<ffi.Void> Function(
+              ffi.Pointer<ffi.Void>)>>('LatencyCalc_getImageBufferPointer');
+  late final _LatencyCalc_getImageBufferPointer =
+      _LatencyCalc_getImageBufferPointerPtr.asFunction<
+          ffi.Pointer<ffi.Void> Function(ffi.Pointer<ffi.Void>)>();
+
+  int LatencyCalc_getImageBufferPointerSize(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _LatencyCalc_getImageBufferPointerSize(
+      ptr,
+    );
+  }
+
+  late final _LatencyCalc_getImageBufferPointerSizePtr = _lookup<
+          ffi.NativeFunction<ffi.UnsignedLong Function(ffi.Pointer<ffi.Void>)>>(
+      'LatencyCalc_getImageBufferPointerSize');
+  late final _LatencyCalc_getImageBufferPointerSize =
+      _LatencyCalc_getImageBufferPointerSizePtr.asFunction<
+          int Function(ffi.Pointer<ffi.Void>)>();
 }
