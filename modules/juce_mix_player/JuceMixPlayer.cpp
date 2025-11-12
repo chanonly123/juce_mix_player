@@ -69,7 +69,6 @@ JuceMixPlayer::JuceMixPlayer() {
         //        setDefaultSampleRate();
 
         inputLevelMeter = deviceManager->getInputLevelGetter();
-
         PRINT("JuceMixPlayer initialized");
     });
 }

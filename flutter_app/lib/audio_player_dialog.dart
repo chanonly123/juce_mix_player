@@ -80,8 +80,8 @@ class AudioPlayerDialogState extends State<AudioPlayerDialog> {
 
   void setupPlayer() async {
     final beats = await AssetHelper.extractAsset('assets/media/beats.wav');
-    final pathH = await AssetHelper.extractAsset('assets/media/met_h.wav');
-    final pathL = await AssetHelper.extractAsset('assets/media/met_l.wav');
+    // final pathH = await AssetHelper.extractAsset('assets/media/met_h.wav');
+    // final pathL = await AssetHelper.extractAsset('assets/media/met_l.wav');
     double metVol = 0.5;
     final timeDiff = widget.latencyInfoObj?.timeDiff ?? 0;
     final mixComposeModel = MixerComposeModel(

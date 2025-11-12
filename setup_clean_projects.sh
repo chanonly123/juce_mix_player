@@ -12,6 +12,6 @@ if [ ! -d "$libname/Builds/iOS" ]; then
 fi
 
 if [ ! -d "$libname/Builds/Android" ]; then
-    echo "🔴 failed to create iOS lib project"
+    echo "🔴 failed to create Android lib project"
     exit 1
 fi
