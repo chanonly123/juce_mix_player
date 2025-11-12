@@ -2,8 +2,10 @@
 #include "Logger.h"
 #include "JuceMixPlayer.h"
 #include "Models.h"
+#include <gst/gst.h>
 
 void juce_init() {
+    gst_init(nullptr, nullptr);
     juce::MessageManager::getInstance();
 }
 
