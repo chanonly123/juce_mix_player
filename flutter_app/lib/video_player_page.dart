@@ -21,42 +21,51 @@ class VideoPlayerState extends State<VideoPlayerPage> {
       ),
       body: Column(
         children: [
-          Expanded(child: Container()),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final double maxWidth = constraints.maxWidth;
-              final double width = maxWidth;
-              final double height = width / 16 * 9;
-              return Center(
-                child: SizedBox(
-                  width: width,
-                  height: height,
-                  child: GstVideoView(),
-                ),
-              );
-            },
+          Expanded(
+            child: Center(
+              child: AspectRatio(
+                aspectRatio: 9 / 16,
+                child: GstVideoView(),
+              ),
+            ),
           ),
+          const SizedBox(height: 16),
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
             ElevatedButton(
               onPressed: () async {
                 // player.setUrl(
                 //     'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4');
 
-                final pathL = await AssetHelper.extractAsset(
-                    'assets/media/music_small.wav');
-                player.setUrl(pathL);
+                final pathL = await AssetHelper.extractAsset('assets/media/1753713435183.mp4');
+                print('Loading audio file: $pathL');
+                bool success = player.setUrl(pathL);
+                if (success) {
+                  print('URL set successfully, starting playback');
+                  player.play();
+                } else {
+                  print('Failed to set URL');
+                }
               },
               child: const Text('Play'),
             ),
-            SizedBox(width: 20),
+            const SizedBox(width: 20),
             ElevatedButton(
               onPressed: () {
+                print('Pausing playback');
+                player.pause();
+              },
+              child: const Text('Pause'),
+            ),
+            const SizedBox(width: 20),
+            ElevatedButton(
+              onPressed: () {
+                print('Stopping playback');
                 player.stop();
               },
               child: const Text('Stop'),
             ),
           ]),
-          Expanded(child: Container()),
+          const SizedBox(height: 16),
         ],
       ),
     );

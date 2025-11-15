@@ -155,9 +155,10 @@ GST_PLUGIN_STATIC_DECLARE(wavpack);
 #if defined(GST_IOS_PLUGIN_WAVPARSE) || defined(GST_IOS_PLUGINS_CODECS)
 GST_PLUGIN_STATIC_DECLARE(wavparse);
 #endif
-#if defined(GST_IOS_PLUGIN_Y4M) || defined(GST_IOS_PLUGINS_CODECS)
-GST_PLUGIN_STATIC_DECLARE(y4m);
-#endif
+// Disabled y4m static plugin: not available in current iOS GStreamer build
+//#if defined(GST_IOS_PLUGIN_Y4M) || defined(GST_IOS_PLUGINS_CODECS)
+//GST_PLUGIN_STATIC_DECLARE(y4m);
+//#endif
 #if defined(GST_IOS_PLUGIN_ADPCMDEC) || defined(GST_IOS_PLUGINS_CODECS)
 GST_PLUGIN_STATIC_DECLARE(adpcmdec);
 #endif
@@ -712,9 +713,10 @@ gst_ios_init (void)
 #if defined(GST_IOS_PLUGIN_WAVPARSE) || defined(GST_IOS_PLUGINS_CODECS)
     GST_PLUGIN_STATIC_REGISTER(wavparse);
 #endif
-#if defined(GST_IOS_PLUGIN_Y4M) || defined(GST_IOS_PLUGINS_CODECS)
-    GST_PLUGIN_STATIC_REGISTER(y4m);
-#endif
+    // Disabled y4m static plugin: not available in current iOS GStreamer build
+    //#if defined(GST_IOS_PLUGIN_Y4M) || defined(GST_IOS_PLUGINS_CODECS)
+    //    GST_PLUGIN_STATIC_REGISTER(y4m);
+    //#endif
 #if defined(GST_IOS_PLUGIN_ADPCMDEC) || defined(GST_IOS_PLUGINS_CODECS)
     GST_PLUGIN_STATIC_REGISTER(adpcmdec);
 #endif

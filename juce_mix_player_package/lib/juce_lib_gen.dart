@@ -657,4 +657,37 @@ class JuceLibGen {
           'GstPlayer_stop');
   late final _GstPlayer_stop =
       _GstPlayer_stopPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void GstPlayer_setWindowHandleGlobal(
+    ffi.Pointer<ffi.Void> nativeView,
+  ) {
+    return _GstPlayer_setWindowHandleGlobal(
+      nativeView,
+    );
+  }
+
+  late final _GstPlayer_setWindowHandleGlobalPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'GstPlayer_setWindowHandleGlobal');
+  late final _GstPlayer_setWindowHandleGlobal =
+      _GstPlayer_setWindowHandleGlobalPtr.asFunction<
+          void Function(ffi.Pointer<ffi.Void>)>();
+
+  void GstPlayer_setWindowHandle(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<ffi.Void> nativeView,
+  ) {
+    return _GstPlayer_setWindowHandle(
+      ptr,
+      nativeView,
+    );
+  }
+
+  late final _GstPlayer_setWindowHandlePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<ffi.Void>,
+              ffi.Pointer<ffi.Void>)>>('GstPlayer_setWindowHandle');
+  late final _GstPlayer_setWindowHandle =
+      _GstPlayer_setWindowHandlePtr.asFunction<
+          void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
 }

@@ -11,9 +11,16 @@ class GstPlayer {
   }
 
   bool setUrl(String url) {
-    var success =
-        JuceMixPlayer.getJuceLib().GstPlayer_setURL(_ptr, url.toNativeUtf8());
+    var success = JuceMixPlayer.getJuceLib().GstPlayer_setURL(_ptr, url.toNativeUtf8());
     return success == 1;
+  }
+
+  void play() {
+    JuceMixPlayer.getJuceLib().GstPlayer_play(_ptr);
+  }
+
+  void pause() {
+    JuceMixPlayer.getJuceLib().GstPlayer_pause(_ptr);
   }
 
   void stop() {

@@ -5,6 +5,12 @@
 #include "Models.h"
 #include "gst_ios_init.h"
 
+// Global bridge for the single GstPlayer instance used by the Flutter video POC.
+// This lets iOS (Swift) provide a UIView* as the window handle for the
+// GStreamer video sink.
+static GstPlayer* g_globalGstPlayer = nullptr;
+static void* g_globalNativeView = nullptr;
+
 void juce_init() {
     juce::MessageManager::getInstance();
     gst_ios_init();
@@ -128,7 +134,21 @@ int JuceMixPlayer_fileExists(const char* filePath) {
 // GstVideoPlayer
 
 void* GstPlayer_init() {
-    return new GstPlayer();
+    auto* player = new GstPlayer();
+    // Register as the global video player instance so that if a native view
+    // was already provided from iOS we can immediately attach to it.
+    g_globalGstPlayer = player;
+    if (g_globalNativeView != nullptr) {
+        player->setWindowHandle(g_globalNativeView);
+    }
+    return player;
+}
+
+void GstPlayer_setWindowHandleGlobal(void* nativeView) {
+    g_globalNativeView = nativeView;
+    if (g_globalGstPlayer != nullptr) {
+        g_globalGstPlayer->setWindowHandle(nativeView);
+    }
 }
 
 void GstPlayer_setWindowHandle(void* ptr, void* nativeView) {

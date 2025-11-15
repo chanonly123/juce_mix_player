@@ -65,7 +65,7 @@ EXPORT_C_FUNC void JuceMixPlayer_export(void* ptr,
 
 EXPORT_C_FUNC int JuceMixPlayer_fileExists(const char* filePath);
 
-// GstVideoPlayer
+// GstVideoPlayer (GStreamer-based video-focused player)
 
 EXPORT_C_FUNC void* GstPlayer_init();
 EXPORT_C_FUNC void GstPlayer_dispose(void* ptr);
@@ -74,3 +74,8 @@ EXPORT_C_FUNC int GstPlayer_setURL(void* ptr, const char* url);
 EXPORT_C_FUNC void GstPlayer_play(void* ptr);
 EXPORT_C_FUNC void GstPlayer_pause(void* ptr);
 EXPORT_C_FUNC void GstPlayer_stop(void* ptr);
+
+// Bridge from iOS native view to the GstPlayer video sink. This is used only on
+// the JUCE/iOS side (Swift) and not exposed through Flutter FFI.
+EXPORT_C_FUNC void GstPlayer_setWindowHandleGlobal(void* nativeView);
+EXPORT_C_FUNC void GstPlayer_setWindowHandle(void* ptr, void* nativeView);
