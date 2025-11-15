@@ -290,7 +290,7 @@ class RecorderPageState extends State<RecorderPage> {
         log('Recordings directory created');
       }
 
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      // final timestamp = DateTime.now().millisecondsSinceEpoch;
       recordingPath = '${recordingsDir.path}/rec.wav';
       // recordingPath = "/sdcard/Documents/rec_and.wav";
 
@@ -298,9 +298,9 @@ class RecorderPageState extends State<RecorderPage> {
       recorder.prepareRecording(recordingPath);
       final bgmPath = await AssetHelper.extractAsset('assets/media/beats.wav');
       // if (isMetronomeEnabled) {
-      final pathH = await AssetHelper.extractAsset('assets/media/met_h.wav');
-      final pathL = await AssetHelper.extractAsset('assets/media/met_l.wav');
-      double metVol = 0.5;
+      // final pathH = await AssetHelper.extractAsset('assets/media/met_h.wav');
+      // final pathL = await AssetHelper.extractAsset('assets/media/met_l.wav');
+      // double metVol = 0.5;
       final mixComposeModel = MixerComposeModel(
         tracks: [
           MixerTrack(id: "music", path: bgmPath, volume: 0.5),
