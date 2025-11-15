@@ -574,4 +574,87 @@ class JuceLibGen {
           'JuceMixPlayer_fileExists');
   late final _JuceMixPlayer_fileExists = _JuceMixPlayer_fileExistsPtr
       .asFunction<int Function(ffi.Pointer<pkg_ffi.Utf8>)>();
+
+  ffi.Pointer<ffi.Void> GstPlayer_init() {
+    return _GstPlayer_init();
+  }
+
+  late final _GstPlayer_initPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Void> Function()>>(
+          'GstPlayer_init');
+  late final _GstPlayer_init =
+      _GstPlayer_initPtr.asFunction<ffi.Pointer<ffi.Void> Function()>();
+
+  void GstPlayer_dispose(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _GstPlayer_dispose(
+      ptr,
+    );
+  }
+
+  late final _GstPlayer_disposePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'GstPlayer_dispose');
+  late final _GstPlayer_dispose =
+      _GstPlayer_disposePtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  int GstPlayer_setURL(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<pkg_ffi.Utf8> url,
+  ) {
+    return _GstPlayer_setURL(
+      ptr,
+      url,
+    );
+  }
+
+  late final _GstPlayer_setURLPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Int Function(ffi.Pointer<ffi.Void>,
+              ffi.Pointer<pkg_ffi.Utf8>)>>('GstPlayer_setURL');
+  late final _GstPlayer_setURL = _GstPlayer_setURLPtr.asFunction<
+      int Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>();
+
+  void GstPlayer_play(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _GstPlayer_play(
+      ptr,
+    );
+  }
+
+  late final _GstPlayer_playPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'GstPlayer_play');
+  late final _GstPlayer_play =
+      _GstPlayer_playPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void GstPlayer_pause(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _GstPlayer_pause(
+      ptr,
+    );
+  }
+
+  late final _GstPlayer_pausePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'GstPlayer_pause');
+  late final _GstPlayer_pause =
+      _GstPlayer_pausePtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void GstPlayer_stop(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _GstPlayer_stop(
+      ptr,
+    );
+  }
+
+  late final _GstPlayer_stopPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'GstPlayer_stop');
+  late final _GstPlayer_stop =
+      _GstPlayer_stopPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 }

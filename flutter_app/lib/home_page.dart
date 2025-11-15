@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/player_page.dart';
 import 'package:flutter_app/recorder_page.dart';
-// import 'package:flutter_app/recorder_page.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_app/video_player_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -12,12 +12,13 @@ class HomePage extends StatefulWidget {
 }
 
 class HomePageState extends State<HomePage> {
-  int _selectedIndex = 0;
+  int _selectedIndex = 2;
 
   // Using a getter instead of static final to create new instances when needed
   List<Widget> get _pages => [
         PlayerPage(),
         RecorderPage(),
+        VideoPlayerPage(),
       ];
 
   void _onItemTapped(int index) {
@@ -40,7 +41,11 @@ class HomePageState extends State<HomePage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.mic),
             label: 'Recorder',
-          )
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.videocam),
+            label: 'Video Player',
+          ),
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: Theme.of(context).primaryColor,

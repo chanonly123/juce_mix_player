@@ -64,3 +64,13 @@ EXPORT_C_FUNC void JuceMixPlayer_export(void* ptr,
                                         void (*completion)(const char*));
 
 EXPORT_C_FUNC int JuceMixPlayer_fileExists(const char* filePath);
+
+// GstVideoPlayer
+
+EXPORT_C_FUNC void* GstPlayer_init();
+EXPORT_C_FUNC void GstPlayer_dispose(void* ptr);
+
+EXPORT_C_FUNC int GstPlayer_setURL(void* ptr, const char* url);
+EXPORT_C_FUNC void GstPlayer_play(void* ptr);
+EXPORT_C_FUNC void GstPlayer_pause(void* ptr);
+EXPORT_C_FUNC void GstPlayer_stop(void* ptr);

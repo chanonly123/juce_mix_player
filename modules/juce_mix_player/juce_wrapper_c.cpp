@@ -1,12 +1,13 @@
 #include "includes/juce_wrapper_c.h"
 #include "Logger.h"
 #include "JuceMixPlayer.h"
+#include "GstPlayer.h"
 #include "Models.h"
-#include <gst/gst.h>
+#include "gst_ios_init.h"
 
 void juce_init() {
-    gst_init(nullptr, nullptr);
     juce::MessageManager::getInstance();
+    gst_ios_init();
 }
 
 void Java_com_rmsl_juce_Native_juceMessageManagerInit() {
@@ -122,4 +123,34 @@ void JuceMixPlayer_export(void* ptr,
 int JuceMixPlayer_fileExists(const char* filePath) {
     juce::File file(filePath);
     return file.exists() ? 1 : 0;
+}
+
+// GstVideoPlayer
+
+void* GstPlayer_init() {
+    return new GstPlayer();
+}
+
+void GstPlayer_setWindowHandle(void* ptr, void* nativeView) {
+    static_cast<GstPlayer *>(ptr)->setWindowHandle(nativeView);
+}
+
+int GstPlayer_setURL(void* ptr, const char* url) {
+    return static_cast<GstPlayer *>(ptr)->setURL(url) ? 1 : 0;
+}
+
+void GstPlayer_dispose(void* ptr) {
+    static_cast<GstPlayer *>(ptr)->dispose();
+}
+
+void GstPlayer_play(void* ptr) {
+    static_cast<GstPlayer *>(ptr)->play();
+}
+
+void GstPlayer_pause(void* ptr) {
+    static_cast<GstPlayer *>(ptr)->pause();
+}
+
+void GstPlayer_stop(void* ptr) {
+    static_cast<GstPlayer *>(ptr)->stop();
 }

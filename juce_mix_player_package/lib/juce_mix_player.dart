@@ -57,6 +57,10 @@ class JuceMixPlayer {
     _juceLib.juce_init();
   }
 
+  static JuceLibGen getJuceLib() {
+    return _juceLib;
+  }
+
   Pointer<Void> getPtr() {
     return _ptr;
   }
