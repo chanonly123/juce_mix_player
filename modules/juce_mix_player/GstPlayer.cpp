@@ -228,6 +228,36 @@ void GstPlayer::stop() {
     }
 }
 
+void GstPlayer::seek(double position) {
+    std::lock_guard<std::mutex> lock(p->mtx);
+    if (!p->pipeline) {
+        std::cerr << "GstPlayer: Cannot seek - no pipeline" << std::endl;
+        return;
+    }
+
+    // Query duration
+    gint64 duration;
+    if (!gst_element_query_duration(p->pipeline, GST_FORMAT_TIME, &duration)) {
+        std::cerr << "GstPlayer: Failed to query duration for seek" << std::endl;
+        return;
+    }
+
+    // Calculate target position (position is 0.0 to 1.0)
+    gint64 seekPos = (gint64)(position * duration);
+    
+    std::cout << "GstPlayer: Seeking to position " << position 
+              << " (time: " << (seekPos / GST_SECOND) << "s)" << std::endl;
+
+    // Perform seek
+    if (!gst_element_seek_simple(p->pipeline, GST_FORMAT_TIME,
+                                  (GstSeekFlags)(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT),
+                                  seekPos)) {
+        std::cerr << "GstPlayer: Seek failed" << std::endl;
+    } else {
+        std::cout << "GstPlayer: Seek successful" << std::endl;
+    }
+}
+
 void GstPlayer::dispose() {
     std::cout << "GstPlayer: Disposing player" << std::endl;
     stop();

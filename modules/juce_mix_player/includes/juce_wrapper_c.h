@@ -74,6 +74,7 @@ EXPORT_C_FUNC int GstPlayer_setURL(void* ptr, const char* url);
 EXPORT_C_FUNC void GstPlayer_play(void* ptr);
 EXPORT_C_FUNC void GstPlayer_pause(void* ptr);
 EXPORT_C_FUNC void GstPlayer_stop(void* ptr);
+EXPORT_C_FUNC void GstPlayer_seek(void* ptr, float position);
 
 // Bridge from iOS native view to the GstPlayer video sink. This is used only on
 // the JUCE/iOS side (Swift) and not exposed through Flutter FFI.

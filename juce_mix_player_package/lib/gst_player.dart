@@ -11,7 +11,8 @@ class GstPlayer {
   }
 
   bool setUrl(String url) {
-    var success = JuceMixPlayer.getJuceLib().GstPlayer_setURL(_ptr, url.toNativeUtf8());
+    var success =
+        JuceMixPlayer.getJuceLib().GstPlayer_setURL(_ptr, url.toNativeUtf8());
     return success == 1;
   }
 
@@ -25,6 +26,10 @@ class GstPlayer {
 
   void stop() {
     JuceMixPlayer.getJuceLib().GstPlayer_stop(_ptr);
+  }
+
+  void seek(double position) {
+    JuceMixPlayer.getJuceLib().GstPlayer_seek(_ptr, position);
   }
 
   void dispose() {

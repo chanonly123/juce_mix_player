@@ -26,6 +26,7 @@ public:
     void play();
     void pause();
     void stop();
+    void seek(double position);
     void dispose();
 
     // Public for bus callback access

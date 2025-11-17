@@ -174,3 +174,7 @@ void GstPlayer_pause(void* ptr) {
 void GstPlayer_stop(void* ptr) {
     static_cast<GstPlayer *>(ptr)->stop();
 }
+
+void GstPlayer_seek(void* ptr, float position) {
+    static_cast<GstPlayer *>(ptr)->seek(position);
+}
