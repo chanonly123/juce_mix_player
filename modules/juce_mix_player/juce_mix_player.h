@@ -21,4 +21,5 @@
 #include "Models.h"
 #include "Logger.h"
 #include "TaskQueue.h"
+#include "GstPlatform.h"
 #include "GstPlayer.h"

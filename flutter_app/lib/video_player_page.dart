@@ -14,6 +14,7 @@ class VideoPlayerPage extends StatefulWidget {
 }
 
 class VideoPlayerState extends State<VideoPlayerPage> {
+  // --- Controller & State Variables (Kept logic identical) ---
   GstPlayerController player = GstPlayerController();
   double _seekPosition = 0.0;
   double _currentPosition = 0.0;
@@ -26,16 +27,21 @@ class VideoPlayerState extends State<VideoPlayerPage> {
   bool _hasVideoLoaded = false;
   bool _showPreview = false;
 
-  // Video processing state
+  // Processing State
   String _currentRotation = "0";
   VisualEffectType _currentEffect = VisualEffectType.none;
   bool _isExporting = false;
 
+  // --- UI State Variables ---
+  bool _isToolsPanelOpen = false; // Controls the visibility of the edit tray
+
   @override
   void initState() {
     super.initState();
+    _initializePlayer();
+  }
 
-    // Set up progress handler for real-time updates
+  void _initializePlayer() {
     player.setProgressHandler((progress) {
       if (mounted) {
         setState(() {
@@ -46,26 +52,21 @@ class VideoPlayerState extends State<VideoPlayerPage> {
       }
     });
 
-    // Set up state update handler
     player.setStateUpdateHandler((state) {
       if (mounted) {
         setState(() {
           _playerState = state;
           _isPlaying = player.isPlaying();
 
-          // When video is ready, show preview and get duration
           if (state == "READY" && !_showPreview) {
             _showPreview = true;
             _hasVideoLoaded = true;
             _duration = player.getDuration();
-
-            // Seek to first frame for preview (position 0)
             Future.delayed(const Duration(milliseconds: 100), () {
               player.seek(0.0);
             });
           }
 
-          // Reset preview when stopped or error
           if (state == "STOPPED" || state == "ERROR" || state == "IDLE") {
             _showPreview = false;
             _hasVideoLoaded = false;
@@ -77,515 +78,454 @@ class VideoPlayerState extends State<VideoPlayerPage> {
       }
     });
 
-    // Set up error handler
     player.setErrorHandler((error) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $error'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      if (mounted) _showSnack('Error: $error', isError: true);
     });
+  }
+
+  // --- Logic Helpers ---
+
+  void _showSnack(String msg, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: isError ? Colors.redAccent : Colors.green,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: const EdgeInsets.all(10),
+      ),
+    );
   }
 
   Future<void> pickVideoFromGallery() async {
     final ImagePicker picker = ImagePicker();
     final XFile? video = await picker.pickVideo(source: ImageSource.gallery);
-
     if (video != null) {
       setState(() {
         _hasVideoLoaded = false;
         _showPreview = false;
       });
-
       player.setVideoPath(video.path);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Video loaded: ${video.name}'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      _showSnack('Video loaded: ${video.name}');
     }
   }
 
   void toggleMute() {
     player.toggleMute();
-    setState(() {
-      _isMuted = player.isMuted();
-    });
+    setState(() => _isMuted = player.isMuted());
   }
 
   void rotateVideo(String degrees) {
     try {
       player.setRotation(degrees);
-      setState(() {
-        _currentRotation = degrees;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Video rotated to $degrees degrees'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      setState(() => _currentRotation = degrees);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error rotating video: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showSnack('Rotation Error: $e', isError: true);
     }
   }
 
   void applyVisualEffect(VisualEffectType effect) {
     try {
       player.setVisualEffect(effect);
-      setState(() {
-        _currentEffect = effect;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Applied effect: ${effect.name.toUpperCase()}'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      setState(() => _currentEffect = effect);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error applying effect: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showSnack('Effect Error: $e', isError: true);
     }
   }
 
   Future<void> exportVideo() async {
-    if (!_hasVideoLoaded) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No video loaded to export'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    setState(() {
-      _isExporting = true;
-    });
-
+    if (!_hasVideoLoaded) return;
+    setState(() => _isExporting = true);
     try {
       final directory = await getApplicationDocumentsDirectory();
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final outputPath = '${directory.path}/exported_video_$timestamp.mp4';
-
       await player.exportVideo(outputPath);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Video exported successfully to: $outputPath'),
-          backgroundColor: Colors.green,
-          duration: const Duration(seconds: 3),
-        ),
-      );
+      _showSnack('Exported to: $outputPath');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Export failed: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showSnack('Export failed: $e', isError: true);
     } finally {
-      setState(() {
-        _isExporting = false;
-      });
+      setState(() => _isExporting = false);
     }
-  }
-
-  Color _getStateColor(String state) {
-    switch (state.toUpperCase()) {
-      case 'PLAYING':
-        return Colors.green;
-      case 'PAUSED':
-        return Colors.orange;
-      case 'STOPPED':
-        return Colors.red;
-      case 'ERROR':
-        return Colors.red;
-      case 'READY':
-        return Colors.blue;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  IconData _getStateIcon(String state) {
-    switch (state.toUpperCase()) {
-      case 'PLAYING':
-        return Icons.play_arrow;
-      case 'PAUSED':
-        return Icons.pause;
-      case 'STOPPED':
-        return Icons.stop;
-      case 'ERROR':
-        return Icons.error;
-      case 'READY':
-        return Icons.check_circle;
-      default:
-        return Icons.info;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Video Player'),
-        actions: [
-          IconButton(
-            icon: Icon(
-              _isMuted ? Icons.volume_off : Icons.volume_up,
-              color: _isMuted ? Colors.red : Colors.blue,
-            ),
-            onPressed: toggleMute,
-            tooltip: _isMuted ? 'Unmute' : 'Mute',
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Player State Display
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            margin: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: _getStateColor(_playerState).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: _getStateColor(_playerState)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(_getStateIcon(_playerState), color: _getStateColor(_playerState)),
-                const SizedBox(width: 8),
-                Text(
-                  'State: $_playerState',
-                  style: TextStyle(
-                    color: _getStateColor(_playerState),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Center(
-              child: AspectRatio(
-                aspectRatio: 9 / 16,
-                child: Stack(
-                  children: [
-                    GstVideoView(
-                      controller: player,
-                      onViewReady: () {
-                        setState(() {
-                          _isViewReady = true;
-                        });
-                      },
-                    ),
-
-                    // Preview overlay when video is loaded but not playing
-                    if (_hasVideoLoaded && !_isPlaying && _showPreview)
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(20),
-                                decoration: const BoxDecoration(
-                                  color: Colors.black54,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.play_arrow,
-                                  color: Colors.white,
-                                  size: 60,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: Colors.black54,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  'Video Ready',
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Time Display
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  TimeUtils.formatDuration(_currentPosition),
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
-                Text(
-                  TimeUtils.formatDuration(_duration),
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
-              ],
-            ),
-          ),
-
-          // Progress Slider
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              children: [
-                Slider(
-                  value: _seekPosition,
-                  min: 0.0,
-                  max: 1.0,
-                  onChanged: (value) {
-                    setState(() {
-                      _seekPosition = value;
-                    });
-                  },
-                  onChangeEnd: (value) {
-                    player.seek(value);
-                  },
-                ),
-                Text(
-                  '${(_seekPosition * 100).toStringAsFixed(1)}%',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Control Buttons
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              ElevatedButton.icon(
-                onPressed: pickVideoFromGallery,
-                icon: const Icon(Icons.photo_library),
-                label: const Text('Pick Video'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                ),
-              ),
-              ElevatedButton(
-                onPressed: _isViewReady
-                    ? () async {
-                        final pathL = await AssetHelper.extractAsset('assets/media/Fate_of_Ophelia.mp4');
-                        print('Loading video file: $pathL');
-                        player.setVideoPath(pathL);
-                      }
-                    : null,
-                child: const Text('Load Sample'),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          // Playback Controls
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton.icon(
-                onPressed: _isViewReady && (_hasVideoLoaded || _isPlaying)
-                    ? () {
-                        player.togglePlayPause();
-                      }
-                    : null,
-                icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
-                label: Text(_isPlaying ? 'Pause' : 'Play'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _isPlaying ? Colors.orange : Colors.green,
-                  foregroundColor: Colors.white,
-                ),
-              ),
-              const SizedBox(width: 20),
-              ElevatedButton.icon(
-                onPressed: _isViewReady
-                    ? () {
-                        player.stop();
-                      }
-                    : null,
-                icon: const Icon(Icons.stop),
-                label: const Text('Stop'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
-          // Video Processing Controls
-          if (_hasVideoLoaded) ...[
-            Container(
-              padding: const EdgeInsets.all(16),
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: Colors.blue.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Video Processing',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Rotation Controls
-                  const Text(
-                    'Rotation:',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: ['0', '90', '180', '270'].map((degrees) {
-                      return ChoiceChip(
-                        label: Text('${degrees}°'),
-                        selected: _currentRotation == degrees,
-                        onSelected: (selected) {
-                          if (selected) rotateVideo(degrees);
-                        },
-                        selectedColor: Colors.blue.withValues(alpha: 0.3),
-                      );
-                    }).toList(),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Visual Effects Controls
-                  const Text(
-                    'Visual Effects:',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: VisualEffectType.values.map((effect) {
-                      return ChoiceChip(
-                        label: Text(effect.name.toUpperCase()),
-                        selected: _currentEffect == effect,
-                        onSelected: (selected) {
-                          if (selected) applyVisualEffect(effect);
-                        },
-                        selectedColor: Colors.purple.withValues(alpha: 0.3),
-                      );
-                    }).toList(),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Export Button
-                  Center(
-                    child: ElevatedButton.icon(
-                      onPressed: _isExporting ? null : exportVideo,
-                      icon: _isExporting
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.download),
-                      label: Text(_isExporting ? 'Exporting...' : 'Export Video'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-          ],
-
-          // Progress Update Interval Configuration
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Progress Update Interval: ${(_progressUpdateInterval * 1000).toInt()}ms',
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                ),
-                Slider(
-                  value: _progressUpdateInterval,
-                  min: 0.01,
-                  max: 0.5,
-                  divisions: 49,
-                  onChanged: (value) {
-                    setState(() {
-                      _progressUpdateInterval = value;
-                    });
-                    // Note: This would need to be implemented in the native side
-                    // to actually change the update interval
-                  },
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
   }
 
   @override
   void dispose() {
     player.dispose();
     super.dispose();
+  }
+
+  // --- Widgets ---
+
+  @override
+  Widget build(BuildContext context) {
+    // Dark theme for the media player look
+    return Theme(
+      data: ThemeData.dark().copyWith(
+        scaffoldBackgroundColor: Colors.black,
+        sliderTheme: SliderThemeData(
+          trackHeight: 2,
+          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+          overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+          activeTrackColor: Colors.blueAccent,
+          inactiveTrackColor: Colors.white24,
+          thumbColor: Colors.white,
+        ),
+      ),
+      child: Scaffold(
+        body: SafeArea(
+          child: Column(
+            children: [
+              // 1. The Viewport (Video + Overlays)
+              Expanded(
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    // A. Background & Video
+                    Center(
+                      child: AspectRatio(
+                        aspectRatio: 9 / 16,
+                        child: Container(
+                          color: Colors.grey[900],
+                          child: Stack(
+                            children: [
+                              GstVideoView(
+                                controller: player,
+                                onViewReady: () => setState(() => _isViewReady = true),
+                              ),
+                              // Placeholder / Loading State
+                              if (!_hasVideoLoaded && !_isPlaying)
+                                Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.movie_filter,
+                                          size: 64, color: Colors.white12),
+                                      const SizedBox(height: 16),
+                                      const Text("No Video Loaded",
+                                          style: TextStyle(color: Colors.white38)),
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // B. Top Bar (Floating)
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: _buildTopBar(),
+                    ),
+
+                    // C. Center Play Button (Overlay)
+                    if (_hasVideoLoaded)
+                      Center(
+                        child: IconButton(
+                          iconSize: 80,
+                          icon: Icon(
+                            _isPlaying ? Icons.pause_circle : Icons.play_circle,
+                            color: Colors.white.withOpacity(0.7),
+                          ),
+                          onPressed: () => player.togglePlayPause(),
+                        ),
+                      ),
+
+                    // D. Bottom Gradient for text visibility
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: 150,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.bottomCenter,
+                            end: Alignment.topCenter,
+                            colors: [Colors.black87, Colors.transparent],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // E. Primary Controls (Seekbar + Main Actions)
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: _buildPrimaryControls(),
+                    ),
+                  ],
+                ),
+              ),
+
+              // 2. The Collapsible Tools Panel
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                height: _isToolsPanelOpen ? 240 : 0,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1E1E1E),
+                  border: Border(top: BorderSide(color: Colors.white10)),
+                ),
+                child: SingleChildScrollView(
+                  physics: const NeverScrollableScrollPhysics(),
+                  child: _buildToolsPanel(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.black87, Colors.transparent],
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Status Indicator
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.black45,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.circle, size: 8, color: _getStateColor(_playerState)),
+                const SizedBox(width: 6),
+                Text(_playerState,
+                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
+          Row(
+            children: [
+               // Load Sample Button
+              if (_isViewReady)
+                IconButton(
+                  icon: const Icon(Icons.smart_display_outlined),
+                  tooltip: "Load Sample",
+                  onPressed: () async {
+                    final pathL = await AssetHelper.extractAsset(
+                        'assets/media/Fate_of_Ophelia.mp4');
+                    player.setVideoPath(pathL);
+                  },
+                ),
+              IconButton(
+                icon: Icon(_isMuted ? Icons.volume_off : Icons.volume_up),
+                onPressed: toggleMute,
+              ),
+              IconButton(
+                icon: const Icon(Icons.add_photo_alternate_outlined),
+                onPressed: pickVideoFromGallery,
+              ),
+            ],
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPrimaryControls() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Time & Seek
+          Row(
+            children: [
+              Text(TimeUtils.formatDuration(_currentPosition),
+                  style: const TextStyle(fontSize: 12)),
+              Expanded(
+                child: Slider(
+                  value: _seekPosition,
+                  onChanged: (v) => setState(() => _seekPosition = v),
+                  onChangeEnd: (v) => player.seek(v),
+                ),
+              ),
+              Text(TimeUtils.formatDuration(_duration),
+                  style: const TextStyle(fontSize: 12)),
+            ],
+          ),
+          
+          // Bottom Action Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Play/Pause Mini
+              IconButton(
+                icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
+                onPressed: _hasVideoLoaded ? () => player.togglePlayPause() : null,
+              ),
+              
+              // Toggle Edit Panel Button
+              FilledButton.icon(
+                onPressed: _hasVideoLoaded
+                    ? () {
+                        setState(() {
+                          _isToolsPanelOpen = !_isToolsPanelOpen;
+                        });
+                      }
+                    : null,
+                icon: Icon(_isToolsPanelOpen ? Icons.keyboard_arrow_down : Icons.edit),
+                label: Text(_isToolsPanelOpen ? "Close Tools" : "Edit Video"),
+                style: FilledButton.styleFrom(
+                  backgroundColor: _isToolsPanelOpen ? Colors.grey[800] : Colors.blueAccent,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+
+              // Stop
+              IconButton(
+                icon: const Icon(Icons.stop),
+                onPressed: _hasVideoLoaded ? () => player.stop() : null,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToolsPanel() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 1. Processing Label
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("VIDEO TOOLS", 
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: Colors.grey)),
+              if (_isExporting)
+                 const SizedBox(height: 14, width: 14, child: CircularProgressIndicator(strokeWidth: 2))
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // 2. Rotation Row
+          Row(
+            children: [
+              const Icon(Icons.rotate_right, size: 20, color: Colors.grey),
+              const SizedBox(width: 12),
+              Expanded(
+                child: SizedBox(
+                  height: 40,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: ['0', '90', '180', '270'].map((deg) {
+                      bool isSelected = _currentRotation == deg;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ChoiceChip(
+                          label: Text('$deg°'),
+                          selected: isSelected,
+                          onSelected: (s) => rotateVideo(deg),
+                          selectedColor: Colors.blueAccent.withOpacity(0.3),
+                          labelStyle: TextStyle(
+                            color: isSelected ? Colors.blueAccent : Colors.white,
+                            fontSize: 12
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // 3. Effects List (Horizontal)
+          SizedBox(
+            height: 80,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: VisualEffectType.values.map((effect) {
+                bool isSelected = _currentEffect == effect;
+                return GestureDetector(
+                  onTap: () => applyVisualEffect(effect),
+                  child: Container(
+                    width: 70,
+                    margin: const EdgeInsets.only(right: 8),
+                    decoration: BoxDecoration(
+                      color: isSelected ? Colors.purpleAccent.withOpacity(0.2) : Colors.white10,
+                      border: Border.all(
+                        color: isSelected ? Colors.purpleAccent : Colors.transparent
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.auto_fix_high, 
+                           size: 24, 
+                           color: isSelected ? Colors.purpleAccent : Colors.grey),
+                        const SizedBox(height: 4),
+                        Text(
+                          effect.name.toUpperCase(),
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: isSelected ? Colors.white : Colors.grey
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // 4. Export Button (Full Width)
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _isExporting ? null : exportVideo,
+              icon: const Icon(Icons.download_rounded),
+              label: Text(_isExporting ? "EXPORTING..." : "EXPORT VIDEO"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green[700],
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getStateColor(String state) {
+    switch (state.toUpperCase()) {
+      case 'PLAYING': return Colors.greenAccent;
+      case 'PAUSED': return Colors.orangeAccent;
+      case 'STOPPED': return Colors.redAccent;
+      case 'ERROR': return Colors.red;
+      case 'READY': return Colors.blueAccent;
+      default: return Colors.grey;
+    }
   }
 }

@@ -3,6 +3,7 @@
 #include "Models.cpp"
 #include "Logger.cpp"
 #include "TaskQueue.cpp"
+#include "GstPlatform.cpp"
 #include "GstPlayer.cpp"
 extern "C" {
 #include "gst_ios_init.cpp"

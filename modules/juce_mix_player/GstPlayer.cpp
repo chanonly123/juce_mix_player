@@ -1,25 +1,13 @@
 #include "GstPlayer.h"
 #include "Logger.h"
 
-#if JUCE_IOS
-#include "gst_ios_init.h"
-#include <mutex>
-
-static std::once_flag gGstInitOnce;
-
-static void ensureGStreamerInitialized() {
-    std::call_once(gGstInitOnce, [] {
-        PRINT("GstPlayer: calling gst_ios_init()")
-        gst_ios_init();
-    });
-}
-#endif
-
-GstPlayer::GstPlayer() {
-#if JUCE_IOS
-    ensureGStreamerInitialized();
-#endif
-    PRINT("GstPlayer: created")
+GstPlayer::GstPlayer() : platform(GstPlatform::create()) {
+    if (platform && platform->isSupported()) {
+        platform->initialize();
+        PRINT("GstPlayer: created with platform support")
+    } else {
+        PRINT("GstPlayer: created without platform support (fallback mode)")
+    }
 }
 
 GstPlayer::~GstPlayer() {
@@ -29,9 +17,9 @@ GstPlayer::~GstPlayer() {
 void GstPlayer::dispose() {
     stopTimer();
     playing = false;
-#if JUCE_IOS
-    teardownPipeline();
-#endif
+    if (platform && platform->isSupported()) {
+        teardownPipeline();
+    }
 }
 
 void GstPlayer::notifyState(JuceMixPlayerState state) {
@@ -56,20 +44,21 @@ void GstPlayer::setVideoPath(const char* path) {
     ready = true;
     progress = 0.0f;
     completed = false;
-#if JUCE_IOS
-    buildPipelineIfNeeded();
-    // set URI
-    GError* err = nullptr;
-    gchar* uri = gst_filename_to_uri(videoPath.c_str(), &err);
-    if (err) {
-        notifyError(err->message);
-        g_error_free(err);
-    } else if (pipeline) {
-        g_object_set(pipeline, "uri", uri, nullptr);
-        g_free(uri);
+
+    if (platform && platform->isSupported()) {
+        buildPipelineIfNeeded();
+        // set URI
+        GError* err = nullptr;
+        gchar* uri = gst_filename_to_uri(videoPath.c_str(), &err);
+        if (err) {
+            notifyError(err->message);
+            g_error_free(err);
+        } else if (pipeline) {
+            g_object_set(pipeline, "uri", uri, nullptr);
+            g_free(uri);
+        }
+        applyOverlayIfAvailable();
     }
-    applyOverlayIfAvailable();
-#endif
     notifyState(JuceMixPlayerState::READY);
 }
 
@@ -81,18 +70,16 @@ void GstPlayer::play() {
     if (completed) {
         progress = 0.0f;
         completed = false;
-#if JUCE_IOS
-        if (pipeline) {
+        if (platform && platform->isSupported() && pipeline) {
             gst_element_seek_simple(pipeline, GST_FORMAT_TIME,
                                     GstSeekFlags(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT),
                                     0);
         }
-#endif
     }
     playing = true;
-#if JUCE_IOS
-    if (pipeline) gst_element_set_state(pipeline, GST_STATE_PLAYING);
-#endif
+    if (platform && platform->isSupported() && pipeline) {
+        gst_element_set_state(pipeline, GST_STATE_PLAYING);
+    }
     lastTickMs = juce::Time::getMillisecondCounter();
     startTimer(int(progressUpdateIntervalSec * 1000.0));
     notifyState(JuceMixPlayerState::PLAYING);
@@ -101,9 +88,9 @@ void GstPlayer::play() {
 void GstPlayer::pause() {
     if (!playing) return;
     playing = false;
-#if JUCE_IOS
-    if (pipeline) gst_element_set_state(pipeline, GST_STATE_PAUSED);
-#endif
+    if (platform && platform->isSupported() && pipeline) {
+        gst_element_set_state(pipeline, GST_STATE_PAUSED);
+    }
     stopTimer();
     notifyState(JuceMixPlayerState::PAUSED);
 }
@@ -113,23 +100,21 @@ void GstPlayer::stop() {
     stopTimer();
     progress = 0.0f;
     completed = false;
-#if JUCE_IOS
-    if (pipeline) gst_element_set_state(pipeline, GST_STATE_READY);
-#endif
+    if (platform && platform->isSupported() && pipeline) {
+        gst_element_set_state(pipeline, GST_STATE_READY);
+    }
     notifyState(JuceMixPlayerState::STOPPED);
 }
 
 void GstPlayer::seek(float normalized) {
     if (normalized < 0.0f) normalized = 0.0f;
     if (normalized > 1.0f) normalized = 1.0f;
-#if JUCE_IOS
-    if (pipeline && durationNs > 0) {
+    if (platform && platform->isSupported() && pipeline && durationNs > 0) {
         gint64 target = (gint64)(normalized * (double) durationNs);
         gst_element_seek_simple(pipeline, GST_FORMAT_TIME,
                                 GstSeekFlags(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT),
                                 target);
     }
-#endif
     progress = normalized;
     lastTickMs = juce::Time::getMillisecondCounter();
     if (onProgressCallback) onProgressCallback(this, progress);
@@ -140,9 +125,9 @@ int GstPlayer::isPlaying() {
 }
 
 float GstPlayer::getDuration() {
-#if JUCE_IOS
-    if (durationNs > 0) return (float)((double)durationNs / 1e9);
-#endif
+    if (platform && platform->isSupported() && durationNs > 0) {
+        return (float)((double)durationNs / 1e9);
+    }
     return 0.0f;
 }
 
@@ -153,20 +138,18 @@ void GstPlayer::setProgressUpdateInterval(float seconds) {
 }
 
 void GstPlayer::setMuteEmbeddedAudio(int mute) {
-#if JUCE_IOS
     muteEmbedded = (mute != 0);
-    if (pipeline) {
+    if (platform && platform->isSupported() && pipeline) {
         g_object_set(pipeline, "mute", muteEmbedded ? TRUE : FALSE, nullptr);
         g_object_set(pipeline, "volume", muteEmbedded ? 0.0 : 1.0, nullptr);
     }
-#endif
 }
 
 void GstPlayer::setSurfaceHandle(void* handle) {
     surfaceHandle = handle;
-#if JUCE_IOS
-    applyOverlayIfAvailable();
-#endif
+    if (platform && platform->isSupported()) {
+        applyOverlayIfAvailable();
+    }
 }
 
 void GstPlayer::setRotation(int degrees) {
@@ -185,11 +168,11 @@ void GstPlayer::setRotation(int degrees) {
 
     currentRotation = newRotation;
 
-#if JUCE_IOS
-    if (videoFlip) {
+    if (platform && platform->isSupported() && videoFlip) {
         g_object_set(videoFlip, "method", static_cast<int>(currentRotation), nullptr);
     }
-#endif
+    std::cout << "ROTATION APPLIED: " << degrees << std::endl;
+
 }
 
 void GstPlayer::setVisualEffect(int effectId) {
@@ -208,9 +191,10 @@ void GstPlayer::setVisualEffect(int effectId) {
 
     currentEffect = newEffect;
 
-#if JUCE_IOS
-    rebuildPipelineWithEffects();
-#endif
+    if (platform && platform->isSupported()) {
+        safelyReplaceEffectFilter();
+    }
+    std::cout << "VIDEO FILTER APPLIED: " << effectId << std::endl;
 }
 
 void GstPlayer::exportVideo(const char* outputPath, void (*completion)(const char*)) {
@@ -224,45 +208,47 @@ void GstPlayer::exportVideo(const char* outputPath, void (*completion)(const cha
         return;
     }
 
-#if JUCE_IOS
-    // For now, implement a simple export by copying the file with transformations
-    // This is a simplified version - a full implementation would use GStreamer's
-    // encoding pipeline to apply effects and save the result
+    if (platform && platform->isSupported()) {
+        // For now, implement a simple export by copying the file with transformations
+        // This is a simplified version - a full implementation would use GStreamer's
+        // encoding pipeline to apply effects and save the result
 
-    // Create a simple file copy with current transformations applied
-    // In a real implementation, this would:
-    // 1. Create an encoding pipeline with filesink
-    // 2. Apply current rotation and effects
-    // 3. Encode to the output format
-    // 4. Monitor progress and call completion when done
+        // Create a simple file copy with current transformations applied
+        // In a real implementation, this would:
+        // 1. Create an encoding pipeline with filesink
+        // 2. Apply current rotation and effects
+        // 3. Encode to the output format
+        // 4. Monitor progress and call completion when done
 
-    PRINT("Exporting video with rotation: " << static_cast<int>(currentRotation)
-          << " and effect: " << static_cast<int>(currentEffect));
+        PRINT("Exporting video with rotation: " << static_cast<int>(currentRotation)
+              << " and effect: " << static_cast<int>(currentEffect));
 
-    // For this implementation, we'll simulate export success
-    // TODO: Implement actual GStreamer encoding pipeline
-    completion("");
-#else
-    completion("Export not supported on this platform");
-#endif
+        // For this implementation, we'll simulate export success
+        // TODO: Implement actual GStreamer encoding pipeline
+        completion("");
+    } else {
+        completion("Export not supported on this platform");
+    }
 }
 
 void GstPlayer::timerCallback() {
-#if JUCE_IOS
-    pollBus();
-    updateProgressFromPipeline();
-#endif
+    if (platform && platform->isSupported()) {
+        pollBus();
+        updateProgressFromPipeline();
+    }
     if (!playing) return;
+
     // If duration unknown or pipeline not active, simulate minimal progress updates
     auto nowMs = juce::Time::getMillisecondCounter();
     auto deltaMs = nowMs - lastTickMs;
     lastTickMs = nowMs;
 
-#if JUCE_IOS
-    if (durationNs <= 0) {
-#else
-    if (true) { // On non-iOS platforms, always simulate progress
-#endif
+    bool shouldSimulateProgress = true;
+    if (platform && platform->isSupported() && durationNs > 0) {
+        shouldSimulateProgress = false; // Real progress is handled by updateProgressFromPipeline
+    }
+
+    if (shouldSimulateProgress) {
         float deltaSec = float(deltaMs) / 1000.0f;
         float deltaNorm = deltaSec / kDefaultDurationSec;
         progress = juce::jmin(1.0f, progress + deltaNorm);
@@ -276,10 +262,10 @@ void GstPlayer::timerCallback() {
     }
 }
 
-#if JUCE_IOS
 void GstPlayer::buildPipelineIfNeeded() {
-    if (pipeline) return;
-    pipeline = gst_element_factory_make("playbin", "playbin");
+    if (pipeline || !platform || !platform->isSupported()) return;
+
+    pipeline = platform->createPipeline();
     if (!pipeline) {
         notifyError("Failed to create playbin");
         return;
@@ -296,45 +282,51 @@ void GstPlayer::buildPipelineIfNeeded() {
 }
 
 void GstPlayer::teardownPipeline() {
+    // First, set pipeline to NULL state and wait for state change
     if (pipeline) {
         gst_element_set_state(pipeline, GST_STATE_NULL);
+        // Wait for state change to complete
+        GstState state;
+        gst_element_get_state(pipeline, &state, nullptr, GST_CLOCK_TIME_NONE);
     }
+
+    // Now safely unref all elements
     if (bus) {
         gst_object_unref(bus);
         bus = nullptr;
     }
+
+    // Note: videoBin owns videoSink, videoFlip, and effectFilter, so we don't unref them individually
     if (videoBin) {
         gst_object_unref(videoBin);
         videoBin = nullptr;
-    }
-    if (videoSink) {
-        gst_object_unref(videoSink);
+        // Clear references to child elements
         videoSink = nullptr;
-    }
-    if (videoFlip) {
-        gst_object_unref(videoFlip);
         videoFlip = nullptr;
-    }
-    if (effectFilter) {
-        gst_object_unref(effectFilter);
         effectFilter = nullptr;
     }
+
     if (pipeline) {
         gst_object_unref(pipeline);
         pipeline = nullptr;
     }
+
     durationNs = 0;
+
+    if (platform) {
+        platform->cleanup();
+    }
 }
 
 void GstPlayer::applyOverlayIfAvailable() {
-    if (videoSink && surfaceHandle) {
-        if (GST_IS_VIDEO_OVERLAY(videoSink)) {
-            gst_video_overlay_set_window_handle(GST_VIDEO_OVERLAY(videoSink), (guintptr) surfaceHandle);
-        }
+    if (platform && platform->isSupported() && videoSink && surfaceHandle) {
+        platform->applySurfaceHandle(videoSink, surfaceHandle);
     }
 }
 
 void GstPlayer::setupVideoProcessingBin() {
+    if (!platform || !platform->isSupported()) return;
+
     // Create a bin to hold video processing elements
     videoBin = gst_bin_new("video-processing-bin");
     if (!videoBin) {
@@ -349,38 +341,105 @@ void GstPlayer::setupVideoProcessingBin() {
         return;
     }
 
-    // Create effect filter (start with identity for no effect)
-    effectFilter = gst_element_factory_make("identity", "effectfilter");
+    // Create effect filter using platform abstraction
+    effectFilter = platform->createEffectFilter(currentEffect);
     if (!effectFilter) {
         notifyError("Failed to create effect filter");
         return;
     }
 
-    // Create GL image sink
-    videoSink = gst_element_factory_make("glimagesink", "videosink");
+    // Create video sink using platform abstraction
+    videoSink = platform->createVideoSink();
     if (!videoSink) {
-        notifyError("Failed to create glimagesink");
-        return;
-    }
-    g_object_set(videoSink, "force-aspect-ratio", TRUE, nullptr);
-
-    // Add elements to bin
-    gst_bin_add_many(GST_BIN(videoBin), videoFlip, effectFilter, videoSink, nullptr);
-
-    // Link elements: videoflip -> effectfilter -> videosink
-    if (!gst_element_link_many(videoFlip, effectFilter, videoSink, nullptr)) {
-        notifyError("Failed to link video processing elements");
+        notifyError("Failed to create video sink");
         return;
     }
 
-    // Create ghost pad for the bin
-    GstPad* sinkPad = gst_element_get_static_pad(videoFlip, "sink");
-    gst_element_add_pad(videoBin, gst_ghost_pad_new("sink", sinkPad));
-    gst_object_unref(sinkPad);
+    // Use platform-specific setup
+    platform->setupVideoProcessingBin(videoBin, videoFlip, effectFilter, videoSink);
+
+    // Apply initial effect parameters
+    platform->applyEffectParameters(effectFilter, currentEffect);
 
     // Set initial rotation
     g_object_set(videoFlip, "method", static_cast<int>(currentRotation), nullptr);
 }
+
+void GstPlayer::safelyReplaceEffectFilter() {
+    if (!pipeline || !videoBin || !platform || !platform->isSupported()) return;
+
+    bool wasPlaying = playing;
+    float currentProgress = progress;
+
+    // Pause pipeline with timeout to avoid infinite hang
+    if (wasPlaying) {
+        gst_element_set_state(pipeline, GST_STATE_PAUSED);
+        GstState state;
+        GstStateChangeReturn ret = gst_element_get_state(pipeline, &state, nullptr, 5 * GST_SECOND);
+        if (ret == GST_STATE_CHANGE_FAILURE) {
+            notifyError("Failed to pause pipeline for effect change");
+            return;
+        }
+    }
+
+    // Simple approach: just replace the effect filter, keep the same pipeline structure
+    if (effectFilter) {
+        // Set to NULL state first
+        gst_element_set_state(effectFilter, GST_STATE_NULL);
+
+        // Get the converter element (should be linked before effectFilter)
+        GstElement* converter = gst_bin_get_by_name(GST_BIN(videoBin), "effect-converter");
+
+        // Unlink and remove old effect filter
+        if (converter) {
+            gst_element_unlink(converter, effectFilter);
+        }
+        gst_element_unlink(effectFilter, videoSink);
+        gst_bin_remove(GST_BIN(videoBin), effectFilter);
+        effectFilter = nullptr;
+
+        // Create new effect filter
+        effectFilter = platform->createEffectFilter(currentEffect);
+        if (!effectFilter) {
+            notifyError("Failed to create new effect filter");
+            return;
+        }
+
+        // Add to bin
+        gst_bin_add(GST_BIN(videoBin), effectFilter);
+
+        // Apply effect parameters (this will handle NONE case properly)
+        platform->applyEffectParameters(effectFilter, currentEffect);
+
+        // Relink: converter -> effectFilter -> videoSink
+        if (converter) {
+            if (!gst_element_link(converter, effectFilter)) {
+                notifyError("Failed to link converter to new effect filter");
+                return;
+            }
+        }
+        if (!gst_element_link(effectFilter, videoSink)) {
+            notifyError("Failed to link new effect filter to video sink");
+            return;
+        }
+
+        // Sync state
+        gst_element_sync_state_with_parent(effectFilter);
+
+        if (converter) {
+            gst_object_unref(converter);
+        }
+    }
+
+    // Resume playback if it was playing
+    if (wasPlaying) {
+        gst_element_set_state(pipeline, GST_STATE_PLAYING);
+        if (currentProgress > 0.0f) {
+            seek(currentProgress);
+        }
+    }
+}
+
 
 void GstPlayer::pollBus() {
     if (!bus) return;
@@ -424,95 +483,3 @@ void GstPlayer::updateProgressFromPipeline() {
         if (onProgressCallback) onProgressCallback(this, progress);
     }
 }
-
-std::map<std::string, std::string> GstPlayer::getEffectParameters(VisualEffect effect) {
-    std::map<std::string, std::string> params;
-
-    switch (effect) {
-        case VisualEffect::NONE:
-            // No effect - use identity element
-            break;
-        case VisualEffect::GRAINY:
-            // Add noise/grain effect parameters
-            params["noise"] = "0.3";
-            params["grain"] = "0.4";
-            break;
-        case VisualEffect::GRITTY:
-            // High contrast, desaturated look
-            params["contrast"] = "1.5";
-            params["saturation"] = "0.7";
-            params["brightness"] = "-0.1";
-            break;
-        case VisualEffect::HYPER:
-            // Oversaturated, high contrast
-            params["contrast"] = "1.8";
-            params["saturation"] = "1.6";
-            params["brightness"] = "0.1";
-            break;
-    }
-
-    return params;
-}
-
-void GstPlayer::rebuildPipelineWithEffects() {
-    if (!pipeline) return;
-
-    bool wasPlaying = playing;
-    float currentProgress = progress;
-
-    // Stop and rebuild pipeline
-    if (wasPlaying) {
-        gst_element_set_state(pipeline, GST_STATE_PAUSED);
-    }
-
-    // Remove old effect filter
-    if (effectFilter) {
-        gst_element_unlink(videoFlip, effectFilter);
-        gst_element_unlink(effectFilter, videoSink);
-        gst_bin_remove(GST_BIN(videoBin), effectFilter);
-        gst_object_unref(effectFilter);
-        effectFilter = nullptr;
-    }
-
-    // Create new effect filter based on current effect
-    const char* filterName = "identity";
-    switch (currentEffect) {
-        case VisualEffect::NONE:
-            filterName = "identity";
-            break;
-        case VisualEffect::GRAINY:
-        case VisualEffect::GRITTY:
-        case VisualEffect::HYPER:
-            filterName = "videobalance";
-            break;
-    }
-
-    effectFilter = gst_element_factory_make(filterName, "effectfilter");
-    if (!effectFilter) {
-        notifyError("Failed to create new effect filter");
-        return;
-    }
-
-    // Apply effect parameters
-    auto params = getEffectParameters(currentEffect);
-    for (const auto& param : params) {
-        g_object_set(effectFilter, param.first.c_str(), std::stod(param.second), nullptr);
-    }
-
-    // Add and link new filter
-    gst_bin_add(GST_BIN(videoBin), effectFilter);
-    if (!gst_element_link_many(videoFlip, effectFilter, videoSink, nullptr)) {
-        notifyError("Failed to link new effect filter");
-        return;
-    }
-
-    // Sync state
-    gst_element_sync_state_with_parent(effectFilter);
-
-    // Resume playback if it was playing
-    if (wasPlaying) {
-        gst_element_set_state(pipeline, GST_STATE_PLAYING);
-        seek(currentProgress);
-    }
-}
-#endif

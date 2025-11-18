@@ -78,3 +78,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### Contact
 - Email: chan.only.123@gmail.com
 - Turorials [Bringing JUCE to Flutter](https://medium.com/@chan.only.123/bringing-juce-to-flutter-a-walk-in-the-park-part-1-flutter-ios-569dee72d7e8)
+
+### GST Docs
+- [GStreamer](https://gstreamer.freedesktop.org/documentation/)
+- https://model-realtime.hcldoc.com/help/index.jsp

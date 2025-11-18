@@ -4,9 +4,11 @@
 #include <JuceHeader.h>
 #include "Logger.h"
 #include "Models.h"
+#include "GstPlatform.h"
 #include <mutex>
 #include <map>
 #include <string>
+#include <memory>
 
 extern "C" {
 #include <gst/gst.h>
@@ -54,9 +56,11 @@ private:
     // Video processing state
     VideoRotation currentRotation = VideoRotation::ROTATE_0;
     VisualEffect currentEffect = VisualEffect::NONE;
-    bool needsPipelineRebuild = false;
 
-#if JUCE_IOS
+    // Platform abstraction
+    std::unique_ptr<GstPlatform> platform;
+
+    // GStreamer elements (now cross-platform)
     GstElement* pipeline = nullptr;
     GstElement* videoSink = nullptr;
     GstElement* videoFlip = nullptr;
@@ -66,15 +70,14 @@ private:
     gint64 durationNs = 0;
     bool muteEmbedded = true;
 
+    // Pipeline management methods
     void buildPipelineIfNeeded();
     void teardownPipeline();
-    void rebuildPipelineWithEffects();
+    void safelyReplaceEffectFilter();
     void applyOverlayIfAvailable();
     void pollBus();
     void updateProgressFromPipeline();
     void setupVideoProcessingBin();
-    std::map<std::string, std::string> getEffectParameters(VisualEffect effect);
-#endif
 
     void notifyState(JuceMixPlayerState state);
     void notifyError(const char* message);
