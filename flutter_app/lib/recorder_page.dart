@@ -528,7 +528,7 @@ class RecorderPageState extends State<RecorderPage> {
                         percent: ((currReclevel + minAllowedLevelDb.abs()) / 25)
                             .clamp(0.0, 1.0),
                         progressColor: _getProgressColor(currReclevel),
-                        backgroundColor: Colors.grey.withOpacity(0.1),
+                        backgroundColor: Colors.grey.withValues(alpha: 0.1),
                         barRadius: Radius.circular(2),
                         animation: true,
                         animateFromLastPercent: true,
@@ -612,17 +612,17 @@ class RecorderPageState extends State<RecorderPage> {
   BoxDecoration _getWarningDecoration() {
     if (currReclevel > maxAllowedLevelDb) {
       return BoxDecoration(
-        color: Colors.red.withOpacity(0.8),
+        color: Colors.red.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(4),
       );
     } else if (currReclevel < minAllowedLevelDb) {
       return BoxDecoration(
-        color: Colors.amber.withOpacity(0.8),
+        color: Colors.amber.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(4),
       );
     }
     return BoxDecoration(
-      color: Colors.green.withOpacity(0.8),
+      color: Colors.green.withValues(alpha: 0.8),
       borderRadius: BorderRadius.circular(4),
     );
   }

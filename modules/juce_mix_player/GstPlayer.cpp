@@ -1,264 +1,294 @@
 #include "GstPlayer.h"
-#include <iostream>
+#include "Logger.h"
 
-// Bus callback for handling GStreamer messages
-static gboolean bus_callback(GstBus *bus, GstMessage *msg, gpointer data) {
-    GstPlayer* player = static_cast<GstPlayer*>(data);
+#if JUCE_IOS
+#include "gst_ios_init.h"
+#include <mutex>
 
-    switch (GST_MESSAGE_TYPE(msg)) {
-        case GST_MESSAGE_ERROR: {
-            GError *err;
-            gchar *debug;
-            gst_message_parse_error(msg, &err, &debug);
-            std::cerr << "GStreamer Error: " << err->message << std::endl;
-            if (debug) {
-                std::cerr << "Debug info: " << debug << std::endl;
-            }
-            g_error_free(err);
-            g_free(debug);
-            break;
-        }
-        case GST_MESSAGE_EOS:
-            std::cout << "GStreamer: End of stream" << std::endl;
-            break;
-        case GST_MESSAGE_STATE_CHANGED: {
-            if (GST_MESSAGE_SRC(msg) == GST_OBJECT(player->pipeline)) {
-                GstState old_state, new_state, pending_state;
-                gst_message_parse_state_changed(msg, &old_state, &new_state, &pending_state);
-                std::cout << "GStreamer: State changed from "
-                         << gst_element_state_get_name(old_state) << " to "
-                         << gst_element_state_get_name(new_state) << std::endl;
-            }
-            break;
-        }
-        case GST_MESSAGE_WARNING: {
-            GError *err;
-            gchar *debug;
-            gst_message_parse_warning(msg, &err, &debug);
-            std::cerr << "GStreamer Warning: " << err->message << std::endl;
-            if (debug) {
-                std::cerr << "Debug info: " << debug << std::endl;
-            }
-            g_error_free(err);
-            g_free(debug);
-            break;
-        }
-        default:
-            break;
-    }
-    return TRUE;
+static std::once_flag gGstInitOnce;
+
+static void ensureGStreamerInitialized() {
+    std::call_once(gGstInitOnce, [] {
+        PRINT("GstPlayer: calling gst_ios_init()")
+        gst_ios_init();
+    });
 }
+#endif
 
 GstPlayer::GstPlayer() {
-    p = new GstVideoPlayerVars();
+#if JUCE_IOS
+    ensureGStreamerInitialized();
+#endif
+    PRINT("GstPlayer: created")
 }
 
 GstPlayer::~GstPlayer() {
-    stop();
-    delete p;
-}
-
-bool GstPlayer::setURL(std::string url) {
-    std::lock_guard<std::mutex> lock(p->mtx);
-
-    // stop any existing pipeline
-    if (p->pipeline) {
-        gst_element_set_state(p->pipeline, GST_STATE_NULL);
-        gst_object_unref(p->pipeline);
-        p->pipeline = nullptr;
-        p->sink = nullptr;
-        pipeline = nullptr;
-        sink = nullptr;
-    }
-
-    std::cout << "GstPlayer: Creating VIDEO pipeline for URL: " << url << std::endl;
-
-    // Build a simple pipeline using playbin
-    p->pipeline = gst_element_factory_make("playbin", "video_player");
-    if (!p->pipeline) {
-        std::cerr << "GstPlayer: Failed to create playbin element" << std::endl;
-        return false;
-    }
-
-    // For AUDIO ONLY
-    //  p->pipeline = gst_element_factory_make("playbin", "audio_player");
-    // if (!p->pipeline) {
-    //     std::cerr << "GstAudioPlayer: Failed to create playbin element" << std::endl;
-    //     return false;
-    // }
-
-    // Keep a direct pointer for bus callback comparisons
-    pipeline = p->pipeline;
-
-    // Convert file path to URI
-    char* uri = gst_filename_to_uri(url.c_str(), nullptr);
-    if (!uri) {
-        std::cerr << "GstPlayer: Failed to convert path to URI: " << url << std::endl;
-        gst_object_unref(p->pipeline);
-        p->pipeline = nullptr;
-        pipeline = nullptr;
-        return false;
-    }
-
-    std::cout << "GstPlayer: Setting URI: " << uri << std::endl;
-    g_object_set(G_OBJECT(p->pipeline), "uri", uri, nullptr);
-    g_free(uri);
-
-    // Configure video sink for iOS. We prefer glimagesink so we can use GstVideoOverlay
-    // against a UIView* passed from Flutter (via Swift).
-    GstElement* videoSink = gst_element_factory_make("glimagesink", "videosink");
-    if (videoSink) {
-        std::cout << "GstPlayer: Using glimagesink for video output" << std::endl;
-        g_object_set(G_OBJECT(p->pipeline), "video-sink", videoSink, nullptr);
-        p->sink = videoSink;
-        sink = videoSink;
-
-        // If a native window handle was already provided (from iOS), attach it now.
-        if (p->windowHandle && GST_IS_VIDEO_OVERLAY(videoSink)) {
-            GstVideoOverlay* overlay = GST_VIDEO_OVERLAY(videoSink);
-            gst_video_overlay_set_window_handle(overlay, (guintptr)p->windowHandle);
-            std::cout << "GstPlayer: Applied stored window handle to video sink" << std::endl;
-        }
-    } else {
-        std::cerr << "GstPlayer: Warning - glimagesink not available, using default video sink" << std::endl;
-        p->sink = nullptr;
-        sink = nullptr;
-    }
-
-    // // Configure audio sink for iOS
-    // GstElement* audioSink = gst_element_factory_make("osxaudiosink", "audiosink");
-    // if (audioSink) {
-    //     std::cout << "GstAudioPlayer: Using osxaudiosink for audio output" << std::endl;
-    //     g_object_set(G_OBJECT(p->pipeline), "audio-sink", audioSink, nullptr);
-    // } else {
-    //     std::cerr << "GstAudioPlayer: Warning - osxaudiosink not available, using default" << std::endl;
-    // }
-
-    // Mute audio by default for this video-focused player so that you can
-    // easily remove or re-enable embedded audio later without affecting video.
-//    GParamSpec* muteProp = g_object_class_find_property(G_OBJECT_GET_CLASS(p->pipeline), "mute");
-//    if (muteProp) {
-//        g_object_set(G_OBJECT(p->pipeline), "mute", TRUE, nullptr);
-//        std::cout << "GstPlayer: Audio muted by default" << std::endl;
-//    }
-
-    // Set up bus to watch for messages
-    GstBus* bus = gst_element_get_bus(p->pipeline);
-    gst_bus_add_watch(bus, bus_callback, this);
-    gst_object_unref(bus);
-
-    // Set pipeline to PAUSED state first (preroll)
-    std::cout << "GstPlayer: Setting pipeline to PAUSED state" << std::endl;
-    GstStateChangeReturn ret = gst_element_set_state(p->pipeline, GST_STATE_PAUSED);
-    if (ret == GST_STATE_CHANGE_FAILURE) {
-        std::cerr << "GstPlayer: Failed to set pipeline to PAUSED state" << std::endl;
-        gst_object_unref(p->pipeline);
-        p->pipeline = nullptr;
-        p->sink = nullptr;
-        pipeline = nullptr;
-        sink = nullptr;
-        return false;
-    }
-
-    std::cout << "GstPlayer: VIDEO pipeline created successfully, ready to play" << std::endl;
-    return true;
-}
-
-void GstPlayer::setWindowHandle(void* nativeView) {
-    std::lock_guard<std::mutex> lock(p->mtx);
-
-    // Always remember the last window handle so that we can apply it when the
-    // pipeline/sink become available (or are recreated).
-    p->windowHandle = nativeView;
-
-    if (!p->pipeline || !p->sink) {
-        std::cout << "GstPlayer: Stored window handle, pipeline/sink not ready yet" << std::endl;
-        return;
-    }
-
-    // Use GstVideoOverlay API for video rendering
-    if (GST_IS_VIDEO_OVERLAY(p->sink)) {
-        GstVideoOverlay* overlay = GST_VIDEO_OVERLAY(p->sink);
-        // On iOS/ObjC++ we pass UIView* or the view's layer pointer
-        gst_video_overlay_set_window_handle(overlay, (guintptr)nativeView);
-        std::cout << "GstPlayer: Video overlay window handle set" << std::endl;
-    } else {
-        std::cout << "GstPlayer: Sink does not implement GstVideoOverlay" << std::endl;
-    }
-}
-
-void GstPlayer::play() {
-    std::lock_guard<std::mutex> lock(p->mtx);
-    if (!p->pipeline) {
-        std::cerr << "GstPlayer: Cannot play - no pipeline" << std::endl;
-        return;
-    }
-
-    std::cout << "GstPlayer: Setting pipeline to PLAYING state" << std::endl;
-    GstStateChangeReturn ret = gst_element_set_state(p->pipeline, GST_STATE_PLAYING);
-    if (ret == GST_STATE_CHANGE_FAILURE) {
-        std::cerr << "GstPlayer: Failed to set pipeline to PLAYING state" << std::endl;
-    }
-}
-
-void GstPlayer::pause() {
-    std::lock_guard<std::mutex> lock(p->mtx);
-    if (!p->pipeline) {
-        std::cerr << "GstPlayer: Cannot pause - no pipeline" << std::endl;
-        return;
-    }
-
-    std::cout << "GstPlayer: Setting pipeline to PAUSED state" << std::endl;
-    GstStateChangeReturn ret = gst_element_set_state(p->pipeline, GST_STATE_PAUSED);
-    if (ret == GST_STATE_CHANGE_FAILURE) {
-        std::cerr << "GstPlayer: Failed to set pipeline to PAUSED state" << std::endl;
-    }
-}
-
-void GstPlayer::stop() {
-    std::lock_guard<std::mutex> lock(p->mtx);
-    if (p->pipeline) {
-        std::cout << "GstPlayer: Stopping pipeline" << std::endl;
-        gst_element_set_state(p->pipeline, GST_STATE_NULL);
-        gst_object_unref(p->pipeline);
-        p->pipeline = nullptr;
-        p->sink = nullptr;
-        pipeline = nullptr;
-        sink = nullptr;
-    }
-}
-
-void GstPlayer::seek(double position) {
-    std::lock_guard<std::mutex> lock(p->mtx);
-    if (!p->pipeline) {
-        std::cerr << "GstPlayer: Cannot seek - no pipeline" << std::endl;
-        return;
-    }
-
-    // Query duration
-    gint64 duration;
-    if (!gst_element_query_duration(p->pipeline, GST_FORMAT_TIME, &duration)) {
-        std::cerr << "GstPlayer: Failed to query duration for seek" << std::endl;
-        return;
-    }
-
-    // Calculate target position (position is 0.0 to 1.0)
-    gint64 seekPos = (gint64)(position * duration);
-    
-    std::cout << "GstPlayer: Seeking to position " << position 
-              << " (time: " << (seekPos / GST_SECOND) << "s)" << std::endl;
-
-    // Perform seek
-    if (!gst_element_seek_simple(p->pipeline, GST_FORMAT_TIME,
-                                  (GstSeekFlags)(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT),
-                                  seekPos)) {
-        std::cerr << "GstPlayer: Seek failed" << std::endl;
-    } else {
-        std::cout << "GstPlayer: Seek successful" << std::endl;
-    }
+    dispose();
 }
 
 void GstPlayer::dispose() {
-    std::cout << "GstPlayer: Disposing player" << std::endl;
-    stop();
+    stopTimer();
+    playing = false;
+#if JUCE_IOS
+    teardownPipeline();
+#endif
 }
+
+void GstPlayer::notifyState(JuceMixPlayerState state) {
+    if (onStateUpdateCallback) {
+        auto s = JuceMixPlayerState_toString(state);
+        onStateUpdateCallback(this, returnCopyCharDelete(s.c_str()));
+    }
+}
+
+void GstPlayer::notifyError(const char* message) {
+    if (onErrorCallback) {
+        onErrorCallback(this, returnCopyCharDelete(message));
+    }
+}
+
+void GstPlayer::setVideoPath(const char* path) {
+    if (path == nullptr || std::strlen(path) == 0) {
+        notifyError("Invalid video path");
+        return;
+    }
+    videoPath = path;
+    ready = true;
+    progress = 0.0f;
+    completed = false;
+#if JUCE_IOS
+    buildPipelineIfNeeded();
+    // set URI
+    GError* err = nullptr;
+    gchar* uri = gst_filename_to_uri(videoPath.c_str(), &err);
+    if (err) {
+        notifyError(err->message);
+        g_error_free(err);
+    } else if (pipeline) {
+        g_object_set(pipeline, "uri", uri, nullptr);
+        g_free(uri);
+    }
+    applyOverlayIfAvailable();
+#endif
+    notifyState(JuceMixPlayerState::READY);
+}
+
+void GstPlayer::play() {
+    if (!ready) {
+        notifyError("Video not set");
+        return;
+    }
+    if (completed) {
+        progress = 0.0f;
+        completed = false;
+#if JUCE_IOS
+        if (pipeline) {
+            gst_element_seek_simple(pipeline, GST_FORMAT_TIME,
+                                    GstSeekFlags(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT),
+                                    0);
+        }
+#endif
+    }
+    playing = true;
+#if JUCE_IOS
+    if (pipeline) gst_element_set_state(pipeline, GST_STATE_PLAYING);
+#endif
+    lastTickMs = juce::Time::getMillisecondCounter();
+    startTimer(int(progressUpdateIntervalSec * 1000.0));
+    notifyState(JuceMixPlayerState::PLAYING);
+}
+
+void GstPlayer::pause() {
+    if (!playing) return;
+    playing = false;
+#if JUCE_IOS
+    if (pipeline) gst_element_set_state(pipeline, GST_STATE_PAUSED);
+#endif
+    stopTimer();
+    notifyState(JuceMixPlayerState::PAUSED);
+}
+
+void GstPlayer::stop() {
+    playing = false;
+    stopTimer();
+    progress = 0.0f;
+    completed = false;
+#if JUCE_IOS
+    if (pipeline) gst_element_set_state(pipeline, GST_STATE_READY);
+#endif
+    notifyState(JuceMixPlayerState::STOPPED);
+}
+
+void GstPlayer::seek(float normalized) {
+    if (normalized < 0.0f) normalized = 0.0f;
+    if (normalized > 1.0f) normalized = 1.0f;
+#if JUCE_IOS
+    if (pipeline && durationNs > 0) {
+        gint64 target = (gint64)(normalized * (double) durationNs);
+        gst_element_seek_simple(pipeline, GST_FORMAT_TIME,
+                                GstSeekFlags(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT),
+                                target);
+    }
+#endif
+    progress = normalized;
+    lastTickMs = juce::Time::getMillisecondCounter();
+    if (onProgressCallback) onProgressCallback(this, progress);
+}
+
+int GstPlayer::isPlaying() {
+    return playing ? 1 : 0;
+}
+
+float GstPlayer::getDuration() {
+#if JUCE_IOS
+    if (durationNs > 0) return (float)((double)durationNs / 1e9);
+#endif
+    return 0.0f;
+}
+
+void GstPlayer::setProgressUpdateInterval(float seconds) {
+    if (seconds <= 0) return;
+    progressUpdateIntervalSec = seconds;
+    if (playing) startTimer(int(progressUpdateIntervalSec * 1000.0));
+}
+
+void GstPlayer::setMuteEmbeddedAudio(int mute) {
+#if JUCE_IOS
+    muteEmbedded = (mute != 0);
+    if (pipeline) {
+        g_object_set(pipeline, "mute", muteEmbedded ? TRUE : FALSE, nullptr);
+        g_object_set(pipeline, "volume", muteEmbedded ? 0.0 : 1.0, nullptr);
+    }
+#endif
+}
+
+void GstPlayer::setSurfaceHandle(void* handle) {
+    surfaceHandle = handle;
+#if JUCE_IOS
+    applyOverlayIfAvailable();
+#endif
+}
+
+void GstPlayer::timerCallback() {
+#if JUCE_IOS
+    pollBus();
+    updateProgressFromPipeline();
+#endif
+    if (!playing) return;
+    // If duration unknown or pipeline not active, simulate minimal progress updates
+    auto nowMs = juce::Time::getMillisecondCounter();
+    auto deltaMs = nowMs - lastTickMs;
+    lastTickMs = nowMs;
+
+#if JUCE_IOS
+    if (durationNs <= 0) {
+#else
+    if (true) { // On non-iOS platforms, always simulate progress
+#endif
+        float deltaSec = float(deltaMs) / 1000.0f;
+        float deltaNorm = deltaSec / kDefaultDurationSec;
+        progress = juce::jmin(1.0f, progress + deltaNorm);
+        if (onProgressCallback) onProgressCallback(this, progress);
+        if (progress >= 1.0f) {
+            playing = false;
+            stopTimer();
+            completed = true;
+            notifyState(JuceMixPlayerState::COMPLETED);
+        }
+    }
+}
+
+#if JUCE_IOS
+void GstPlayer::buildPipelineIfNeeded() {
+    if (pipeline) return;
+    pipeline = gst_element_factory_make("playbin", "playbin");
+    if (!pipeline) {
+        notifyError("Failed to create playbin");
+        return;
+    }
+
+    // Use GL image sink which supports GstVideoOverlay on iOS
+    videoSink = gst_element_factory_make("glimagesink", "videosink");
+    if (!videoSink) {
+        notifyError("Failed to create glimagesink");
+        return;
+    }
+    g_object_set(videoSink, "force-aspect-ratio", TRUE, nullptr);
+
+    g_object_set(pipeline, "video-sink", videoSink, nullptr);
+    g_object_set(pipeline, "mute", muteEmbedded ? TRUE : FALSE, nullptr);
+    g_object_set(pipeline, "volume", muteEmbedded ? 0.0 : 1.0, nullptr);
+
+    bus = gst_element_get_bus(pipeline);
+}
+
+void GstPlayer::teardownPipeline() {
+    if (pipeline) {
+        gst_element_set_state(pipeline, GST_STATE_NULL);
+    }
+    if (bus) {
+        gst_object_unref(bus);
+        bus = nullptr;
+    }
+    if (videoSink) {
+        gst_object_unref(videoSink);
+        videoSink = nullptr;
+    }
+    if (pipeline) {
+        gst_object_unref(pipeline);
+        pipeline = nullptr;
+    }
+    durationNs = 0;
+}
+
+void GstPlayer::applyOverlayIfAvailable() {
+    if (videoSink && surfaceHandle) {
+        if (GST_IS_VIDEO_OVERLAY(videoSink)) {
+            gst_video_overlay_set_window_handle(GST_VIDEO_OVERLAY(videoSink), (guintptr) surfaceHandle);
+        }
+    }
+}
+
+void GstPlayer::pollBus() {
+    if (!bus) return;
+    while (true) {
+        GstMessage* msg = gst_bus_pop(bus);
+        if (!msg) break;
+        switch (GST_MESSAGE_TYPE(msg)) {
+            case GST_MESSAGE_ERROR: {
+                GError* err = nullptr; gchar* dbg = nullptr;
+                gst_message_parse_error(msg, &err, &dbg);
+                if (err) { notifyError(err->message); g_error_free(err);}
+                if (dbg) g_free(dbg);
+                playing = false;
+                stopTimer();
+                notifyState(JuceMixPlayerState::STOPPED);
+            } break;
+            case GST_MESSAGE_EOS: {
+                playing = false;
+                stopTimer();
+                progress = 1.0f;
+                if (onProgressCallback) onProgressCallback(this, progress);
+                notifyState(JuceMixPlayerState::COMPLETED);
+            } break;
+            default: break;
+        }
+        gst_message_unref(msg);
+    }
+}
+
+void GstPlayer::updateProgressFromPipeline() {
+    if (!pipeline || !playing) return;
+    gint64 pos = 0;
+    if (!gst_element_query_position(pipeline, GST_FORMAT_TIME, &pos)) return;
+    gint64 dur = 0;
+    if (gst_element_query_duration(pipeline, GST_FORMAT_TIME, &dur)) {
+        durationNs = dur;
+    }
+    if (durationNs > 0) {
+        double norm = (double)pos / (double)durationNs;
+        progress = (float) juce::jlimit(0.0, 1.0, norm);
+        if (onProgressCallback) onProgressCallback(this, progress);
+    }
+}
+#endif

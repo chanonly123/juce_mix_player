@@ -527,13 +527,13 @@ gst_ios_init (void)
   const gchar *cache_dir = [cache UTF8String];
   const gchar *docs_dir = [docs UTF8String];
   gchar *ca_certificates;
-    
+
   g_setenv ("TMP", tmp_dir, TRUE);
   g_setenv ("TEMP", tmp_dir, TRUE);
   g_setenv ("TMPDIR", tmp_dir, TRUE);
   g_setenv ("XDG_RUNTIME_DIR", resources_dir, TRUE);
   g_setenv ("XDG_CACHE_HOME", cache_dir, TRUE);
-    
+
   g_setenv ("HOME", docs_dir, TRUE);
   g_setenv ("XDG_DATA_DIRS", resources_dir, TRUE);
   g_setenv ("XDG_CONFIG_DIRS", resources_dir, TRUE);
@@ -541,22 +541,25 @@ gst_ios_init (void)
   g_setenv ("XDG_DATA_HOME", resources_dir, TRUE);
   g_setenv ("FONTCONFIG_PATH", resources_dir, TRUE);
 
-  ca_certificates = g_build_filename (resources_dir, "ssl", "certs", "ca-certificates.crt", NULL);
-  g_setenv ("CA_CERTIFICATES", ca_certificates, TRUE);
+  // For local file playback we don't need to configure a custom CA bundle.
+  // Leave the example TLS configuration disabled to avoid depending on
+  // ssl/certs/ca-certificates.crt in the app bundle.
+  // ca_certificates = g_build_filename (resources_dir, "ssl", "certs", "ca-certificates.crt", NULL);
+  // g_setenv ("CA_CERTIFICATES", ca_certificates, TRUE);
 
 #if defined(GST_IOS_GIO_MODULE_OPENSSL)
   GST_G_IO_MODULE_LOAD(openssl);
 #endif
 
-  if (ca_certificates) {
-    GTlsBackend *backend = g_tls_backend_get_default ();
-    if (backend) {
-      GTlsDatabase *db = g_tls_file_database_new (ca_certificates, NULL);
-      if (db)
-        g_tls_backend_set_default_database (backend, db);
-    }
-  }
-  g_free (ca_certificates);
+  // if (ca_certificates) {
+  //   GTlsBackend *backend = g_tls_backend_get_default ();
+  //   if (backend) {
+  //     GTlsDatabase *db = g_tls_file_database_new (ca_certificates, NULL);
+  //     if (db)
+  //       g_tls_backend_set_default_database (backend, db);
+  //   }
+  // }
+  // g_free (ca_certificates);
 
   gst_init (NULL, NULL);
 

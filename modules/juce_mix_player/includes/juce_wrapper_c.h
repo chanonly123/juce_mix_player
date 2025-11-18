@@ -65,18 +65,22 @@ EXPORT_C_FUNC void JuceMixPlayer_export(void* ptr,
 
 EXPORT_C_FUNC int JuceMixPlayer_fileExists(const char* filePath);
 
-// GstVideoPlayer (GStreamer-based video-focused player)
-
+// MARK: GstPlayer (Phase 1 skeleton)
 EXPORT_C_FUNC void* GstPlayer_init();
-EXPORT_C_FUNC void GstPlayer_dispose(void* ptr);
-
-EXPORT_C_FUNC int GstPlayer_setURL(void* ptr, const char* url);
+EXPORT_C_FUNC void GstPlayer_deinit(void* ptr);
+EXPORT_C_FUNC void GstPlayer_setVideoPath(void* ptr, const char* path);
 EXPORT_C_FUNC void GstPlayer_play(void* ptr);
 EXPORT_C_FUNC void GstPlayer_pause(void* ptr);
 EXPORT_C_FUNC void GstPlayer_stop(void* ptr);
-EXPORT_C_FUNC void GstPlayer_seek(void* ptr, float position);
-
-// Bridge from iOS native view to the GstPlayer video sink. This is used only on
-// the JUCE/iOS side (Swift) and not exposed through Flutter FFI.
-EXPORT_C_FUNC void GstPlayer_setWindowHandleGlobal(void* nativeView);
-EXPORT_C_FUNC void GstPlayer_setWindowHandle(void* ptr, void* nativeView);
+// value range 0..1
+EXPORT_C_FUNC void GstPlayer_seek(void* ptr, float normalized);
+EXPORT_C_FUNC int GstPlayer_isPlaying(void* ptr);
+// seconds if known, 0 if unknown (phase 1)
+EXPORT_C_FUNC float GstPlayer_getDuration(void* ptr);
+// callbacks
+EXPORT_C_FUNC void GstPlayer_onStateUpdate(void* ptr, void (*callback)(void*, const char*));
+EXPORT_C_FUNC void GstPlayer_onProgress(void* ptr, void (*callback)(void*, float));
+EXPORT_C_FUNC void GstPlayer_onError(void* ptr, void (*callback)(void*, const char*));
+// placeholders
+EXPORT_C_FUNC void GstPlayer_setSurfaceHandle(void* ptr, void* nativeSurface);
+EXPORT_C_FUNC void GstPlayer_setMuteEmbeddedAudio(void* ptr, int mute);

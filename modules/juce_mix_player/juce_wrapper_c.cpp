@@ -1,19 +1,20 @@
 #include "includes/juce_wrapper_c.h"
 #include "Logger.h"
 #include "JuceMixPlayer.h"
-#include "GstPlayer.h"
+// #include "GstPlayer.h"
 #include "Models.h"
-#include "gst_ios_init.h"
-
+#include "GstPlayer.h"
 // Global bridge for the single GstPlayer instance used by the Flutter video POC.
 // This lets iOS (Swift) provide a UIView* as the window handle for the
 // GStreamer video sink.
-static GstPlayer* g_globalGstPlayer = nullptr;
-static void* g_globalNativeView = nullptr;
+//static GstPlayer* g_globalGstPlayer = nullptr;
+//static void* g_globalNativeView = nullptr;
 
 void juce_init() {
+    // JUCE message loop for the existing audio engine.
     juce::MessageManager::getInstance();
-    gst_ios_init();
+    // NOTE: GStreamer for video is now initialized lazily by GstPlayer
+    // on iOS via gst_ios_init(), so we don't block app startup here.
 }
 
 void Java_com_rmsl_juce_Native_juceMessageManagerInit() {
@@ -131,50 +132,111 @@ int JuceMixPlayer_fileExists(const char* filePath) {
     return file.exists() ? 1 : 0;
 }
 
-// GstVideoPlayer
 
+// MARK: GstPlayer (Phase 1 skeleton)
 void* GstPlayer_init() {
-    auto* player = new GstPlayer();
-    // Register as the global video player instance so that if a native view
-    // was already provided from iOS we can immediately attach to it.
-    g_globalGstPlayer = player;
-    if (g_globalNativeView != nullptr) {
-        player->setWindowHandle(g_globalNativeView);
-    }
-    return player;
+    return new GstPlayer();
 }
 
-void GstPlayer_setWindowHandleGlobal(void* nativeView) {
-    g_globalNativeView = nativeView;
-    if (g_globalGstPlayer != nullptr) {
-        g_globalGstPlayer->setWindowHandle(nativeView);
-    }
+void GstPlayer_deinit(void* ptr) {
+    delete static_cast<GstPlayer*>(ptr);
 }
 
-void GstPlayer_setWindowHandle(void* ptr, void* nativeView) {
-    static_cast<GstPlayer *>(ptr)->setWindowHandle(nativeView);
-}
-
-int GstPlayer_setURL(void* ptr, const char* url) {
-    return static_cast<GstPlayer *>(ptr)->setURL(url) ? 1 : 0;
-}
-
-void GstPlayer_dispose(void* ptr) {
-    static_cast<GstPlayer *>(ptr)->dispose();
+void GstPlayer_setVideoPath(void* ptr, const char* path) {
+    static_cast<GstPlayer*>(ptr)->setVideoPath(path);
 }
 
 void GstPlayer_play(void* ptr) {
-    static_cast<GstPlayer *>(ptr)->play();
+    static_cast<GstPlayer*>(ptr)->play();
 }
 
 void GstPlayer_pause(void* ptr) {
-    static_cast<GstPlayer *>(ptr)->pause();
+    static_cast<GstPlayer*>(ptr)->pause();
 }
 
 void GstPlayer_stop(void* ptr) {
-    static_cast<GstPlayer *>(ptr)->stop();
+    static_cast<GstPlayer*>(ptr)->stop();
 }
 
-void GstPlayer_seek(void* ptr, float position) {
-    static_cast<GstPlayer *>(ptr)->seek(position);
+void GstPlayer_seek(void* ptr, float normalized) {
+    static_cast<GstPlayer*>(ptr)->seek(normalized);
 }
+
+int GstPlayer_isPlaying(void* ptr) {
+    return static_cast<GstPlayer*>(ptr)->isPlaying();
+}
+
+float GstPlayer_getDuration(void* ptr) {
+    return static_cast<GstPlayer*>(ptr)->getDuration();
+}
+
+void GstPlayer_onStateUpdate(void* ptr, void (*callback)(void*, const char*)) {
+    static_cast<GstPlayer*>(ptr)->onStateUpdateCallback = callback;
+}
+
+void GstPlayer_onProgress(void* ptr, void (*callback)(void*, float)) {
+    static_cast<GstPlayer*>(ptr)->onProgressCallback = callback;
+}
+
+void GstPlayer_onError(void* ptr, void (*callback)(void*, const char*)) {
+    static_cast<GstPlayer*>(ptr)->onErrorCallback = callback;
+}
+
+void GstPlayer_setSurfaceHandle(void* ptr, void* nativeSurface) {
+    static_cast<GstPlayer*>(ptr)->setSurfaceHandle(nativeSurface);
+}
+
+void GstPlayer_setMuteEmbeddedAudio(void* ptr, int mute) {
+    static_cast<GstPlayer*>(ptr)->setMuteEmbeddedAudio(mute);
+}
+
+
+
+
+// GstPlayer
+
+//void* GstPlayer_init() {
+//    auto* player = new GstPlayer();
+//    // Register as the global video player instance so that if a native view
+//    // was already provided from iOS we can immediately attach to it.
+//    g_globalGstPlayer = player;
+//    if (g_globalNativeView != nullptr) {
+//        player->setWindowHandle(g_globalNativeView);
+//    }
+//    return player;
+//}
+//
+//void GstPlayer_setWindowHandleGlobal(void* nativeView) {
+//    g_globalNativeView = nativeView;
+//    if (g_globalGstPlayer != nullptr) {
+//        g_globalGstPlayer->setWindowHandle(nativeView);
+//    }
+//}
+//
+//void GstPlayer_setWindowHandle(void* ptr, void* nativeView) {
+//    static_cast<GstPlayer *>(ptr)->setWindowHandle(nativeView);
+//}
+//
+//int GstPlayer_setURL(void* ptr, const char* url) {
+//    return static_cast<GstPlayer *>(ptr)->setURL(url) ? 1 : 0;
+//}
+//
+//void GstPlayer_dispose(void* ptr) {
+//    static_cast<GstPlayer *>(ptr)->dispose();
+//}
+//
+//void GstPlayer_play(void* ptr) {
+//    static_cast<GstPlayer *>(ptr)->play();
+//}
+//
+//void GstPlayer_pause(void* ptr) {
+//    static_cast<GstPlayer *>(ptr)->pause();
+//}
+//
+//void GstPlayer_stop(void* ptr) {
+//    static_cast<GstPlayer *>(ptr)->stop();
+//}
+//
+//void GstPlayer_seek(void* ptr, float position) {
+//    static_cast<GstPlayer *>(ptr)->seek(position);
+//}

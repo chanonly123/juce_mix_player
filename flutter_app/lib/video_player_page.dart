@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/asset_helper.dart';
-import 'package:juce_mix_player/gst_player.dart';
+import 'package:juce_mix_player/gst_video_player.dart';
 import 'package:juce_mix_player/gst_video_view.dart';
 
 class VideoPlayerPage extends StatefulWidget {
@@ -11,8 +11,9 @@ class VideoPlayerPage extends StatefulWidget {
 }
 
 class VideoPlayerState extends State<VideoPlayerPage> {
-  GstPlayer player = GstPlayer();
+  GstPlayerController player = GstPlayerController();
   double _seekPosition = 0.0;
+  bool _isViewReady = false;
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +27,14 @@ class VideoPlayerState extends State<VideoPlayerPage> {
             child: Center(
               child: AspectRatio(
                 aspectRatio: 9 / 16,
-                child: GstVideoView(),
+                child: GstVideoView(
+                  controller: player,
+                  onViewReady: () {
+                    setState(() {
+                      _isViewReady = true;
+                    });
+                  },
+                ),
               ),
             ),
           ),
@@ -61,21 +69,19 @@ class VideoPlayerState extends State<VideoPlayerPage> {
           const SizedBox(height: 16),
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
             ElevatedButton(
-              onPressed: () async {
-                // player.setUrl(
-                //     'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4');
-
-                final pathL = await AssetHelper.extractAsset(
-                    'assets/media/BigBuckBunny.mp4');
-                print('Loading audio file: $pathL');
-                bool success = player.setUrl(pathL);
-                if (success) {
-                  print('URL set successfully, starting playback');
-                  player.play();
-                } else {
-                  print('Failed to set URL');
-                }
-              },
+              onPressed: _isViewReady
+                  ? () async {
+                      final pathL = await AssetHelper.extractAsset(
+                          'assets/media/Fate_of_Ophelia.mp4');
+                      print('Loading video file: $pathL');
+                      player.setMuteEmbeddedAudio(false);
+                      player.setVideoPath(pathL);
+                      // Give GStreamer a moment to set up the pipeline
+                      await Future.delayed(const Duration(milliseconds: 200));
+                      print('Starting playback');
+                      player.play();
+                    }
+                  : null,
               child: const Text('Play'),
             ),
             const SizedBox(width: 20),

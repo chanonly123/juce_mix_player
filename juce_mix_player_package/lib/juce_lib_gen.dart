@@ -585,36 +585,36 @@ class JuceLibGen {
   late final _GstPlayer_init =
       _GstPlayer_initPtr.asFunction<ffi.Pointer<ffi.Void> Function()>();
 
-  void GstPlayer_dispose(
+  void GstPlayer_deinit(
     ffi.Pointer<ffi.Void> ptr,
   ) {
-    return _GstPlayer_dispose(
+    return _GstPlayer_deinit(
       ptr,
     );
   }
 
-  late final _GstPlayer_disposePtr =
+  late final _GstPlayer_deinitPtr =
       _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-          'GstPlayer_dispose');
-  late final _GstPlayer_dispose =
-      _GstPlayer_disposePtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+          'GstPlayer_deinit');
+  late final _GstPlayer_deinit =
+      _GstPlayer_deinitPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
-  int GstPlayer_setURL(
+  void GstPlayer_setVideoPath(
     ffi.Pointer<ffi.Void> ptr,
-    ffi.Pointer<pkg_ffi.Utf8> url,
+    ffi.Pointer<pkg_ffi.Utf8> path,
   ) {
-    return _GstPlayer_setURL(
+    return _GstPlayer_setVideoPath(
       ptr,
-      url,
+      path,
     );
   }
 
-  late final _GstPlayer_setURLPtr = _lookup<
+  late final _GstPlayer_setVideoPathPtr = _lookup<
       ffi.NativeFunction<
-          ffi.Int Function(ffi.Pointer<ffi.Void>,
-              ffi.Pointer<pkg_ffi.Utf8>)>>('GstPlayer_setURL');
-  late final _GstPlayer_setURL = _GstPlayer_setURLPtr.asFunction<
-      int Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>();
+          ffi.Void Function(ffi.Pointer<ffi.Void>,
+              ffi.Pointer<pkg_ffi.Utf8>)>>('GstPlayer_setVideoPath');
+  late final _GstPlayer_setVideoPath = _GstPlayer_setVideoPathPtr.asFunction<
+      void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>();
 
   void GstPlayer_play(
     ffi.Pointer<ffi.Void> ptr,
@@ -660,11 +660,11 @@ class JuceLibGen {
 
   void GstPlayer_seek(
     ffi.Pointer<ffi.Void> ptr,
-    double position,
+    double normalized,
   ) {
     return _GstPlayer_seek(
       ptr,
-      position,
+      normalized,
     );
   }
 
@@ -675,36 +675,156 @@ class JuceLibGen {
   late final _GstPlayer_seek = _GstPlayer_seekPtr.asFunction<
       void Function(ffi.Pointer<ffi.Void>, double)>();
 
-  void GstPlayer_setWindowHandleGlobal(
-    ffi.Pointer<ffi.Void> nativeView,
-  ) {
-    return _GstPlayer_setWindowHandleGlobal(
-      nativeView,
-    );
-  }
-
-  late final _GstPlayer_setWindowHandleGlobalPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-          'GstPlayer_setWindowHandleGlobal');
-  late final _GstPlayer_setWindowHandleGlobal =
-      _GstPlayer_setWindowHandleGlobalPtr.asFunction<
-          void Function(ffi.Pointer<ffi.Void>)>();
-
-  void GstPlayer_setWindowHandle(
+  int GstPlayer_isPlaying(
     ffi.Pointer<ffi.Void> ptr,
-    ffi.Pointer<ffi.Void> nativeView,
   ) {
-    return _GstPlayer_setWindowHandle(
+    return _GstPlayer_isPlaying(
       ptr,
-      nativeView,
     );
   }
 
-  late final _GstPlayer_setWindowHandlePtr = _lookup<
+  late final _GstPlayer_isPlayingPtr =
+      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Pointer<ffi.Void>)>>(
+          'GstPlayer_isPlaying');
+  late final _GstPlayer_isPlaying =
+      _GstPlayer_isPlayingPtr.asFunction<int Function(ffi.Pointer<ffi.Void>)>();
+
+  double GstPlayer_getDuration(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _GstPlayer_getDuration(
+      ptr,
+    );
+  }
+
+  late final _GstPlayer_getDurationPtr =
+      _lookup<ffi.NativeFunction<ffi.Float Function(ffi.Pointer<ffi.Void>)>>(
+          'GstPlayer_getDuration');
+  late final _GstPlayer_getDuration = _GstPlayer_getDurationPtr.asFunction<
+      double Function(ffi.Pointer<ffi.Void>)>();
+
+  void GstPlayer_onStateUpdate(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(
+                    ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>
+        callback,
+  ) {
+    return _GstPlayer_onStateUpdate(
+      ptr,
+      callback,
+    );
+  }
+
+  late final _GstPlayer_onStateUpdatePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(
+                  ffi.Pointer<ffi.Void>,
+                  ffi.Pointer<
+                      ffi.NativeFunction<
+                          ffi.Void Function(ffi.Pointer<ffi.Void>,
+                              ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
+      'GstPlayer_onStateUpdate');
+  late final _GstPlayer_onStateUpdate = _GstPlayer_onStateUpdatePtr.asFunction<
+      void Function(
+          ffi.Pointer<ffi.Void>,
+          ffi.Pointer<
+              ffi.NativeFunction<
+                  ffi.Void Function(
+                      ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>)>();
+
+  void GstPlayer_onProgress(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>
+        callback,
+  ) {
+    return _GstPlayer_onProgress(
+      ptr,
+      callback,
+    );
+  }
+
+  late final _GstPlayer_onProgressPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>,
+                          ffi.Float)>>)>>('GstPlayer_onProgress');
+  late final _GstPlayer_onProgress = _GstPlayer_onProgressPtr.asFunction<
+      void Function(
+          ffi.Pointer<ffi.Void>,
+          ffi.Pointer<
+              ffi.NativeFunction<
+                  ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>)>();
+
+  void GstPlayer_onError(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(
+                    ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>
+        callback,
+  ) {
+    return _GstPlayer_onError(
+      ptr,
+      callback,
+    );
+  }
+
+  late final _GstPlayer_onErrorPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>,
+                          ffi.Pointer<pkg_ffi.Utf8>)>>)>>('GstPlayer_onError');
+  late final _GstPlayer_onError = _GstPlayer_onErrorPtr.asFunction<
+      void Function(
+          ffi.Pointer<ffi.Void>,
+          ffi.Pointer<
+              ffi.NativeFunction<
+                  ffi.Void Function(
+                      ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>)>();
+
+  void GstPlayer_setSurfaceHandle(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<ffi.Void> nativeSurface,
+  ) {
+    return _GstPlayer_setSurfaceHandle(
+      ptr,
+      nativeSurface,
+    );
+  }
+
+  late final _GstPlayer_setSurfaceHandlePtr = _lookup<
       ffi.NativeFunction<
           ffi.Void Function(ffi.Pointer<ffi.Void>,
-              ffi.Pointer<ffi.Void>)>>('GstPlayer_setWindowHandle');
-  late final _GstPlayer_setWindowHandle =
-      _GstPlayer_setWindowHandlePtr.asFunction<
+              ffi.Pointer<ffi.Void>)>>('GstPlayer_setSurfaceHandle');
+  late final _GstPlayer_setSurfaceHandle =
+      _GstPlayer_setSurfaceHandlePtr.asFunction<
           void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
+
+  void GstPlayer_setMuteEmbeddedAudio(
+    ffi.Pointer<ffi.Void> ptr,
+    int mute,
+  ) {
+    return _GstPlayer_setMuteEmbeddedAudio(
+      ptr,
+      mute,
+    );
+  }
+
+  late final _GstPlayer_setMuteEmbeddedAudioPtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Int)>>(
+      'GstPlayer_setMuteEmbeddedAudio');
+  late final _GstPlayer_setMuteEmbeddedAudio =
+      _GstPlayer_setMuteEmbeddedAudioPtr.asFunction<
+          void Function(ffi.Pointer<ffi.Void>, int)>();
 }
