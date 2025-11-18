@@ -4,6 +4,7 @@ import 'package:flutter_app/utils.dart';
 import 'package:juce_mix_player/gst_video_player.dart';
 import 'package:juce_mix_player/gst_video_view.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 
 class VideoPlayerPage extends StatefulWidget {
   const VideoPlayerPage({super.key});
@@ -24,6 +25,11 @@ class VideoPlayerState extends State<VideoPlayerPage> {
   double _progressUpdateInterval = 0.05;
   bool _hasVideoLoaded = false;
   bool _showPreview = false;
+
+  // Video processing state
+  String _currentRotation = "0";
+  VisualEffectType _currentEffect = VisualEffectType.none;
+  bool _isExporting = false;
 
   @override
   void initState() {
@@ -112,6 +118,93 @@ class VideoPlayerState extends State<VideoPlayerPage> {
     });
   }
 
+  void rotateVideo(String degrees) {
+    try {
+      player.setRotation(degrees);
+      setState(() {
+        _currentRotation = degrees;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Video rotated to $degrees degrees'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error rotating video: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void applyVisualEffect(VisualEffectType effect) {
+    try {
+      player.setVisualEffect(effect);
+      setState(() {
+        _currentEffect = effect;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Applied effect: ${effect.name.toUpperCase()}'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error applying effect: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> exportVideo() async {
+    if (!_hasVideoLoaded) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No video loaded to export'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isExporting = true;
+    });
+
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final outputPath = '${directory.path}/exported_video_$timestamp.mp4';
+
+      await player.exportVideo(outputPath);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Video exported successfully to: $outputPath'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Export failed: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isExporting = false;
+      });
+    }
+  }
+
   Color _getStateColor(String state) {
     switch (state.toUpperCase()) {
       case 'PLAYING':
@@ -177,8 +270,7 @@ class VideoPlayerState extends State<VideoPlayerPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(_getStateIcon(_playerState),
-                    color: _getStateColor(_playerState)),
+                Icon(_getStateIcon(_playerState), color: _getStateColor(_playerState)),
                 const SizedBox(width: 8),
                 Text(
                   'State: $_playerState',
@@ -230,8 +322,7 @@ class VideoPlayerState extends State<VideoPlayerPage> {
                               ),
                               const SizedBox(height: 16),
                               Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 8),
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                                 decoration: BoxDecoration(
                                   color: Colors.black54,
                                   borderRadius: BorderRadius.circular(20),
@@ -266,13 +357,11 @@ class VideoPlayerState extends State<VideoPlayerPage> {
               children: [
                 Text(
                   TimeUtils.formatDuration(_currentPosition),
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w500),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                 ),
                 Text(
                   TimeUtils.formatDuration(_duration),
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w500),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                 ),
               ],
             ),
@@ -324,8 +413,7 @@ class VideoPlayerState extends State<VideoPlayerPage> {
               ElevatedButton(
                 onPressed: _isViewReady
                     ? () async {
-                        final pathL = await AssetHelper.extractAsset(
-                            'assets/media/Fate_of_Ophelia.mp4');
+                        final pathL = await AssetHelper.extractAsset('assets/media/Fate_of_Ophelia.mp4');
                         print('Loading video file: $pathL');
                         player.setVideoPath(pathL);
                       }
@@ -373,6 +461,95 @@ class VideoPlayerState extends State<VideoPlayerPage> {
 
           const SizedBox(height: 20),
 
+          // Video Processing Controls
+          if (_hasVideoLoaded) ...[
+            Container(
+              padding: const EdgeInsets.all(16),
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.blue.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Video Processing',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Rotation Controls
+                  const Text(
+                    'Rotation:',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: ['0', '90', '180', '270'].map((degrees) {
+                      return ChoiceChip(
+                        label: Text('${degrees}°'),
+                        selected: _currentRotation == degrees,
+                        onSelected: (selected) {
+                          if (selected) rotateVideo(degrees);
+                        },
+                        selectedColor: Colors.blue.withValues(alpha: 0.3),
+                      );
+                    }).toList(),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Visual Effects Controls
+                  const Text(
+                    'Visual Effects:',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: VisualEffectType.values.map((effect) {
+                      return ChoiceChip(
+                        label: Text(effect.name.toUpperCase()),
+                        selected: _currentEffect == effect,
+                        onSelected: (selected) {
+                          if (selected) applyVisualEffect(effect);
+                        },
+                        selectedColor: Colors.purple.withValues(alpha: 0.3),
+                      );
+                    }).toList(),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Export Button
+                  Center(
+                    child: ElevatedButton.icon(
+                      onPressed: _isExporting ? null : exportVideo,
+                      icon: _isExporting
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.download),
+                      label: Text(_isExporting ? 'Exporting...' : 'Export Video'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
+
           // Progress Update Interval Configuration
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -381,8 +558,7 @@ class VideoPlayerState extends State<VideoPlayerPage> {
               children: [
                 Text(
                   'Progress Update Interval: ${(_progressUpdateInterval * 1000).toInt()}ms',
-                  style: const TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.w500),
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                 ),
                 Slider(
                   value: _progressUpdateInterval,

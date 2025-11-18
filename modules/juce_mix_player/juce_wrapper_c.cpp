@@ -190,6 +190,18 @@ void GstPlayer_setMuteEmbeddedAudio(void* ptr, int mute) {
     static_cast<GstPlayer*>(ptr)->setMuteEmbeddedAudio(mute);
 }
 
+void GstPlayer_setRotation(void* ptr, int degrees) {
+    static_cast<GstPlayer*>(ptr)->setRotation(degrees);
+}
+
+void GstPlayer_setVisualEffect(void* ptr, int effectId) {
+    static_cast<GstPlayer*>(ptr)->setVisualEffect(effectId);
+}
+
+void GstPlayer_exportVideo(void* ptr, const char* outputPath, void (*completion)(const char*)) {
+    static_cast<GstPlayer*>(ptr)->exportVideo(outputPath, completion);
+}
+
 
 
 

@@ -5,11 +5,29 @@
 #include "Logger.h"
 #include "Models.h"
 #include <mutex>
+#include <map>
+#include <string>
 
 extern "C" {
 #include <gst/gst.h>
 #include <gst/video/videooverlay.h>
 }
+
+// Video rotation enum
+enum class VideoRotation {
+    ROTATE_0 = 0,
+    ROTATE_90 = 1,
+    ROTATE_180 = 2,
+    ROTATE_270 = 3
+};
+
+// Visual effects enum
+enum class VisualEffect {
+    NONE = 0,
+    GRAINY = 1,
+    GRITTY = 2,
+    HYPER = 3
+};
 
 
 // Phase 1 placeholder video player, upgraded to real pipeline on iOS.
@@ -33,18 +51,29 @@ private:
     double progressUpdateIntervalSec = 0.05; // 50 ms default
     juce::int64 lastTickMs = 0;
 
+    // Video processing state
+    VideoRotation currentRotation = VideoRotation::ROTATE_0;
+    VisualEffect currentEffect = VisualEffect::NONE;
+    bool needsPipelineRebuild = false;
+
 #if JUCE_IOS
     GstElement* pipeline = nullptr;
     GstElement* videoSink = nullptr;
+    GstElement* videoFlip = nullptr;
+    GstElement* effectFilter = nullptr;
+    GstElement* videoBin = nullptr;
     GstBus* bus = nullptr;
     gint64 durationNs = 0;
     bool muteEmbedded = true;
 
     void buildPipelineIfNeeded();
     void teardownPipeline();
+    void rebuildPipelineWithEffects();
     void applyOverlayIfAvailable();
     void pollBus();
     void updateProgressFromPipeline();
+    void setupVideoProcessingBin();
+    std::map<std::string, std::string> getEffectParameters(VisualEffect effect);
 #endif
 
     void notifyState(JuceMixPlayerState state);
@@ -76,6 +105,11 @@ public:
     float getDuration();
 
     void setProgressUpdateInterval(float seconds);
+
+    // Video processing methods
+    void setRotation(int degrees);
+    void setVisualEffect(int effectId);
+    void exportVideo(const char* outputPath, void (*completion)(const char*));
 
     // Placeholders for future phases
     void setMuteEmbeddedAudio(int mute);

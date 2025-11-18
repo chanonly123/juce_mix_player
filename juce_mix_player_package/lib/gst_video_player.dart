@@ -1,8 +1,17 @@
 // ignore_for_file: constant_identifier_names, always_use_package_imports
 
+import 'dart:async';
 import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
+
+// Visual effects enum
+enum VisualEffectType {
+  none, // 0
+  grainy, // 1
+  gritty, // 2
+  hyper, // 3
+}
 
 // Native function typedefs
 typedef _StringUpdateCallback = Void Function(Pointer<Void>, Pointer<Utf8>);
@@ -18,12 +27,9 @@ typedef _seek_t = Void Function(Pointer<Void>, Float);
 typedef _isPlaying_t = Int32 Function(Pointer<Void>);
 typedef _getDuration_t = Float Function(Pointer<Void>);
 
-typedef _onStateUpdate_t = Void Function(
-    Pointer<Void>, Pointer<NativeFunction<_StringUpdateCallback>>);
-typedef _onProgress_t = Void Function(
-    Pointer<Void>, Pointer<NativeFunction<_FloatCallback>>);
-typedef _onError_t = Void Function(
-    Pointer<Void>, Pointer<NativeFunction<_StringUpdateCallback>>);
+typedef _onStateUpdate_t = Void Function(Pointer<Void>, Pointer<NativeFunction<_StringUpdateCallback>>);
+typedef _onProgress_t = Void Function(Pointer<Void>, Pointer<NativeFunction<_FloatCallback>>);
+typedef _onError_t = Void Function(Pointer<Void>, Pointer<NativeFunction<_StringUpdateCallback>>);
 
 typedef _setSurfaceHandle_t = Void Function(Pointer<Void>, Pointer<Void>);
 typedef _setMuteEmbeddedAudio_t = Void Function(Pointer<Void>, Int32);
@@ -42,21 +48,25 @@ typedef _seek_dart_t = void Function(Pointer<Void>, double);
 typedef _isPlaying_dart_t = int Function(Pointer<Void>);
 typedef _getDuration_dart_t = double Function(Pointer<Void>);
 
-typedef _onStateUpdate_dart_t = void Function(
-    Pointer<Void>, Pointer<NativeFunction<_StringUpdateCallback>>);
-typedef _onProgress_dart_t = void Function(
-    Pointer<Void>, Pointer<NativeFunction<_FloatCallback>>);
-typedef _onError_dart_t = void Function(
-    Pointer<Void>, Pointer<NativeFunction<_StringUpdateCallback>>);
+typedef _onStateUpdate_dart_t = void Function(Pointer<Void>, Pointer<NativeFunction<_StringUpdateCallback>>);
+typedef _onProgress_dart_t = void Function(Pointer<Void>, Pointer<NativeFunction<_FloatCallback>>);
+typedef _onError_dart_t = void Function(Pointer<Void>, Pointer<NativeFunction<_StringUpdateCallback>>);
 typedef _setSurfaceHandle_dart_t = void Function(Pointer<Void>, Pointer<Void>);
 typedef _setMuteEmbeddedAudio_dart_t = void Function(Pointer<Void>, int);
+
+// Video processing function typedefs
+typedef _setRotation_t = Void Function(Pointer<Void>, Int32);
+typedef _setRotation_dart_t = void Function(Pointer<Void>, int);
+typedef _setVisualEffect_t = Void Function(Pointer<Void>, Int32);
+typedef _setVisualEffect_dart_t = void Function(Pointer<Void>, int);
+typedef _exportVideo_t = Void Function(Pointer<Void>, Pointer<Utf8>, Pointer<NativeFunction<_StringUpdateCallback>>);
+typedef _exportVideo_dart_t = void Function(
+    Pointer<Void>, Pointer<Utf8>, Pointer<NativeFunction<_StringUpdateCallback>>);
 
 class GstPlayerController {
   // Open the same native library as JuceMixPlayer uses
   static DynamicLibrary _openLib() =>
-      defaultTargetPlatform == TargetPlatform.iOS
-          ? DynamicLibrary.process()
-          : DynamicLibrary.open('libjuce_jni.so');
+      defaultTargetPlatform == TargetPlatform.iOS ? DynamicLibrary.process() : DynamicLibrary.open('libjuce_jni.so');
 
   late final DynamicLibrary _lib;
 
@@ -84,6 +94,11 @@ class GstPlayerController {
   late final _setSurfaceHandle_dart_t _setSurfaceHandle;
   late final _setMuteEmbeddedAudio_dart_t _setMuteEmbeddedAudio;
 
+  // Video processing functions
+  late final _setRotation_dart_t _setRotation;
+  late final _setVisualEffect_dart_t _setVisualEffect;
+  late final _exportVideo_dart_t _exportVideo;
+
   NativeCallable<_FloatCallback>? _progressCallback;
   NativeCallable<_StringUpdateCallback>? _stateCallback;
   NativeCallable<_StringUpdateCallback>? _errorCallback;
@@ -92,31 +107,27 @@ class GstPlayerController {
     _lib = _openLib();
 
     _init = _lib.lookupFunction<_init_t, _init_t>('GstPlayer_init');
-    _deinit =
-        _lib.lookupFunction<_deinit_t, _deinit_dart_t>('GstPlayer_deinit');
-    _setVideoPath = _lib.lookupFunction<_setVideoPath_t, _setVideoPath_dart_t>(
-        'GstPlayer_setVideoPath');
+    _deinit = _lib.lookupFunction<_deinit_t, _deinit_dart_t>('GstPlayer_deinit');
+    _setVideoPath = _lib.lookupFunction<_setVideoPath_t, _setVideoPath_dart_t>('GstPlayer_setVideoPath');
     _play = _lib.lookupFunction<_play_t, _play_dart_t>('GstPlayer_play');
     _pause = _lib.lookupFunction<_pause_t, _pause_dart_t>('GstPlayer_pause');
     _stop = _lib.lookupFunction<_stop_t, _stop_dart_t>('GstPlayer_stop');
     _seek = _lib.lookupFunction<_seek_t, _seek_dart_t>('GstPlayer_seek');
-    _isPlaying = _lib
-        .lookupFunction<_isPlaying_t, _isPlaying_dart_t>('GstPlayer_isPlaying');
-    _getDuration = _lib.lookupFunction<_getDuration_t, _getDuration_dart_t>(
-        'GstPlayer_getDuration');
-    _onStateUpdate =
-        _lib.lookupFunction<_onStateUpdate_t, _onStateUpdate_dart_t>(
-            'GstPlayer_onStateUpdate');
-    _onProgress = _lib.lookupFunction<_onProgress_t, _onProgress_dart_t>(
-        'GstPlayer_onProgress');
-    _onError =
-        _lib.lookupFunction<_onError_t, _onError_dart_t>('GstPlayer_onError');
+    _isPlaying = _lib.lookupFunction<_isPlaying_t, _isPlaying_dart_t>('GstPlayer_isPlaying');
+    _getDuration = _lib.lookupFunction<_getDuration_t, _getDuration_dart_t>('GstPlayer_getDuration');
+    _onStateUpdate = _lib.lookupFunction<_onStateUpdate_t, _onStateUpdate_dart_t>('GstPlayer_onStateUpdate');
+    _onProgress = _lib.lookupFunction<_onProgress_t, _onProgress_dart_t>('GstPlayer_onProgress');
+    _onError = _lib.lookupFunction<_onError_t, _onError_dart_t>('GstPlayer_onError');
 
     _setSurfaceHandle =
-        _lib.lookupFunction<_setSurfaceHandle_t, _setSurfaceHandle_dart_t>(
-            'GstPlayer_setSurfaceHandle');
-    _setMuteEmbeddedAudio = _lib.lookupFunction<_setMuteEmbeddedAudio_t,
-        _setMuteEmbeddedAudio_dart_t>('GstPlayer_setMuteEmbeddedAudio');
+        _lib.lookupFunction<_setSurfaceHandle_t, _setSurfaceHandle_dart_t>('GstPlayer_setSurfaceHandle');
+    _setMuteEmbeddedAudio =
+        _lib.lookupFunction<_setMuteEmbeddedAudio_t, _setMuteEmbeddedAudio_dart_t>('GstPlayer_setMuteEmbeddedAudio');
+
+    // Video processing function lookups
+    _setRotation = _lib.lookupFunction<_setRotation_t, _setRotation_dart_t>('GstPlayer_setRotation');
+    _setVisualEffect = _lib.lookupFunction<_setVisualEffect_t, _setVisualEffect_dart_t>('GstPlayer_setVisualEffect');
+    _exportVideo = _lib.lookupFunction<_exportVideo_t, _exportVideo_dart_t>('GstPlayer_exportVideo');
 
     _ptr = _init();
   }
@@ -155,19 +166,64 @@ class GstPlayerController {
     }
   }
 
-  void setMuteEmbeddedAudio(bool mute) =>
-      _setMuteEmbeddedAudio(_ptr, mute ? 1 : 0);
+  void setMuteEmbeddedAudio(bool mute) => _setMuteEmbeddedAudio(_ptr, mute ? 1 : 0);
 
-  void setSurfaceHandle(Pointer<Void> nativeSurface) =>
-      _setSurfaceHandle(_ptr, nativeSurface);
+  void setSurfaceHandle(Pointer<Void> nativeSurface) => _setSurfaceHandle(_ptr, nativeSurface);
+
+  // Video processing methods
+  void setRotation(String degrees) {
+    int degreesInt;
+    switch (degrees) {
+      case "0":
+        degreesInt = 0;
+        break;
+      case "90":
+        degreesInt = 90;
+        break;
+      case "180":
+        degreesInt = 180;
+        break;
+      case "270":
+        degreesInt = 270;
+        break;
+      default:
+        throw ArgumentError('Invalid rotation degrees: $degrees. Use "0", "90", "180", or "270".');
+    }
+    _setRotation(_ptr, degreesInt);
+  }
+
+  void setVisualEffect(VisualEffectType effect) {
+    _setVisualEffect(_ptr, effect.index);
+  }
+
+  Future<void> exportVideo(String outputPath) async {
+    final completer = Completer<void>();
+
+    NativeCallable<_StringUpdateCallback> exportCallback =
+        NativeCallable<_StringUpdateCallback>.listener((Pointer<Void> ptr, Pointer<Utf8> error) {
+      String errorMessage = error.toDartString();
+      if (errorMessage.isEmpty) {
+        completer.complete();
+      } else {
+        completer.completeError(Exception('Export failed: $errorMessage'));
+      }
+    });
+
+    _exportVideo(_ptr, outputPath.toNativeUtf8(), exportCallback.nativeFunction);
+
+    try {
+      await completer.future;
+    } finally {
+      exportCallback.close();
+    }
+  }
 
   // Expose native pointer address for PlatformView handoff
   int get nativeHandle => _ptr.address;
 
   void setProgressHandler(void Function(double normalized) callback) {
     _progressCallback?.close();
-    _progressCallback = NativeCallable<_FloatCallback>.listener(
-        (Pointer<Void> ptr, double value) {
+    _progressCallback = NativeCallable<_FloatCallback>.listener((Pointer<Void> ptr, double value) {
       // Update local state
       _duration = getDuration();
       _currentPosition = value * _duration;
@@ -178,8 +234,7 @@ class GstPlayerController {
 
   void setStateUpdateHandler(void Function(String state) callback) {
     _stateCallback?.close();
-    _stateCallback = NativeCallable<_StringUpdateCallback>.listener(
-        (Pointer<Void> ptr, Pointer<Utf8> cstr) {
+    _stateCallback = NativeCallable<_StringUpdateCallback>.listener((Pointer<Void> ptr, Pointer<Utf8> cstr) {
       callback(cstr.toDartString());
     });
     _onStateUpdate(_ptr, _stateCallback!.nativeFunction);
@@ -187,8 +242,7 @@ class GstPlayerController {
 
   void setErrorHandler(void Function(String error) callback) {
     _errorCallback?.close();
-    _errorCallback = NativeCallable<_StringUpdateCallback>.listener(
-        (Pointer<Void> ptr, Pointer<Utf8> cstr) {
+    _errorCallback = NativeCallable<_StringUpdateCallback>.listener((Pointer<Void> ptr, Pointer<Utf8> cstr) {
       callback(cstr.toDartString());
     });
     _onError(_ptr, _errorCallback!.nativeFunction);
