@@ -24,14 +24,32 @@ final class GstVideoPlayerView: NSObject, FlutterPlatformView {
     }
     super.init()
 
-    // Pass CALayer pointer up to native when available
+    // Pass UIView pointer to native for GStreamer video overlay
+    // GStreamer's glimagesink on iOS works better with UIView than CALayer
     if playerPtr != 0 {
-      let layerPtr = Unmanaged.passUnretained(self.container.layer).toOpaque()
-      GstPlayer_setSurfaceHandle(UnsafeMutableRawPointer(bitPattern: UInt(playerPtr)), layerPtr)
+      let viewPtr = Unmanaged.passUnretained(self.container).toOpaque()
+      GstPlayer_setSurfaceHandle(UnsafeMutableRawPointer(bitPattern: UInt(playerPtr)), viewPtr)
     }
   }
 
   func view() -> UIView {
     return container
+  }
+
+  deinit {
+    // Clean up the surface handle when the view is deallocated
+    if playerPtr != 0 {
+      GstPlayer_setSurfaceHandle(UnsafeMutableRawPointer(bitPattern: UInt(playerPtr)), nil)
+    }
+  }
+}
+
+final class GstVideoPlayerViewFactory: NSObject, FlutterPlatformViewFactory {
+  func createArgsCodec() -> FlutterMessageCodec & NSObjectProtocol {
+    return FlutterStandardMessageCodec.sharedInstance()
+  }
+
+  func create(withFrame frame: CGRect, viewIdentifier viewId: Int64, arguments args: Any?) -> FlutterPlatformView {
+    return GstVideoPlayerView(frame: frame, viewIdentifier: viewId, arguments: args)
   }
 }
