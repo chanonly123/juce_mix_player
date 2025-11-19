@@ -43,6 +43,7 @@ class VideoPlayerState extends State<VideoPlayerPage> {
 
   void _initializePlayer() {
     player.setProgressHandler((progress) {
+      print("progress=========: $progress");
       if (mounted) {
         setState(() {
           _seekPosition = progress;
@@ -199,11 +200,9 @@ class VideoPlayerState extends State<VideoPlayerPage> {
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.movie_filter,
-                                          size: 64, color: Colors.white12),
+                                      Icon(Icons.movie_filter, size: 64, color: Colors.white12),
                                       const SizedBox(height: 16),
-                                      const Text("No Video Loaded",
-                                          style: TextStyle(color: Colors.white38)),
+                                      const Text("No Video Loaded", style: TextStyle(color: Colors.white38)),
                                     ],
                                   ),
                                 ),
@@ -307,21 +306,19 @@ class VideoPlayerState extends State<VideoPlayerPage> {
               children: [
                 Icon(Icons.circle, size: 8, color: _getStateColor(_playerState)),
                 const SizedBox(width: 6),
-                Text(_playerState,
-                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                Text(_playerState, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
           Row(
             children: [
-               // Load Sample Button
+              // Load Sample Button
               if (_isViewReady)
                 IconButton(
                   icon: const Icon(Icons.smart_display_outlined),
                   tooltip: "Load Sample",
                   onPressed: () async {
-                    final pathL = await AssetHelper.extractAsset(
-                        'assets/media/Fate_of_Ophelia.mp4');
+                    final pathL = await AssetHelper.extractAsset('assets/media/Fate_of_Ophelia.mp4');
                     player.setVideoPath(pathL);
                   },
                 ),
@@ -349,8 +346,7 @@ class VideoPlayerState extends State<VideoPlayerPage> {
           // Time & Seek
           Row(
             children: [
-              Text(TimeUtils.formatDuration(_currentPosition),
-                  style: const TextStyle(fontSize: 12)),
+              Text(TimeUtils.formatDuration(_currentPosition), style: const TextStyle(fontSize: 12)),
               Expanded(
                 child: Slider(
                   value: _seekPosition,
@@ -358,11 +354,10 @@ class VideoPlayerState extends State<VideoPlayerPage> {
                   onChangeEnd: (v) => player.seek(v),
                 ),
               ),
-              Text(TimeUtils.formatDuration(_duration),
-                  style: const TextStyle(fontSize: 12)),
+              Text(TimeUtils.formatDuration(_duration), style: const TextStyle(fontSize: 12)),
             ],
           ),
-          
+
           // Bottom Action Row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -372,7 +367,7 @@ class VideoPlayerState extends State<VideoPlayerPage> {
                 icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
                 onPressed: _hasVideoLoaded ? () => player.togglePlayPause() : null,
               ),
-              
+
               // Toggle Edit Panel Button
               FilledButton.icon(
                 onPressed: _hasVideoLoaded
@@ -412,10 +407,9 @@ class VideoPlayerState extends State<VideoPlayerPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text("VIDEO TOOLS", 
+              const Text("VIDEO TOOLS",
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: Colors.grey)),
-              if (_isExporting)
-                 const SizedBox(height: 14, width: 14, child: CircularProgressIndicator(strokeWidth: 2))
+              if (_isExporting) const SizedBox(height: 14, width: 14, child: CircularProgressIndicator(strokeWidth: 2))
             ],
           ),
           const SizedBox(height: 12),
@@ -439,10 +433,7 @@ class VideoPlayerState extends State<VideoPlayerPage> {
                           selected: isSelected,
                           onSelected: (s) => rotateVideo(deg),
                           selectedColor: Colors.blueAccent.withOpacity(0.3),
-                          labelStyle: TextStyle(
-                            color: isSelected ? Colors.blueAccent : Colors.white,
-                            fontSize: 12
-                          ),
+                          labelStyle: TextStyle(color: isSelected ? Colors.blueAccent : Colors.white, fontSize: 12),
                         ),
                       );
                     }).toList(),
@@ -467,27 +458,20 @@ class VideoPlayerState extends State<VideoPlayerPage> {
                     margin: const EdgeInsets.only(right: 8),
                     decoration: BoxDecoration(
                       color: isSelected ? Colors.purpleAccent.withOpacity(0.2) : Colors.white10,
-                      border: Border.all(
-                        color: isSelected ? Colors.purpleAccent : Colors.transparent
-                      ),
+                      border: Border.all(color: isSelected ? Colors.purpleAccent : Colors.transparent),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.auto_fix_high, 
-                           size: 24, 
-                           color: isSelected ? Colors.purpleAccent : Colors.grey),
+                        Icon(Icons.auto_fix_high, size: 24, color: isSelected ? Colors.purpleAccent : Colors.grey),
                         const SizedBox(height: 4),
                         Text(
                           effect.name.toUpperCase(),
                           textAlign: TextAlign.center,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: isSelected ? Colors.white : Colors.grey
-                          ),
+                          style: TextStyle(fontSize: 10, color: isSelected ? Colors.white : Colors.grey),
                         ),
                       ],
                     ),
@@ -520,12 +504,18 @@ class VideoPlayerState extends State<VideoPlayerPage> {
 
   Color _getStateColor(String state) {
     switch (state.toUpperCase()) {
-      case 'PLAYING': return Colors.greenAccent;
-      case 'PAUSED': return Colors.orangeAccent;
-      case 'STOPPED': return Colors.redAccent;
-      case 'ERROR': return Colors.red;
-      case 'READY': return Colors.blueAccent;
-      default: return Colors.grey;
+      case 'PLAYING':
+        return Colors.greenAccent;
+      case 'PAUSED':
+        return Colors.orangeAccent;
+      case 'STOPPED':
+        return Colors.redAccent;
+      case 'ERROR':
+        return Colors.red;
+      case 'READY':
+        return Colors.blueAccent;
+      default:
+        return Colors.grey;
     }
   }
 }

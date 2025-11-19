@@ -37,7 +37,9 @@ class GstPlayer : private juce::Timer {
 private:
     std::string videoPath;
     bool ready = false;
-    bool playing = false;
+    bool _isPlaying = false;        // User intent to play
+    bool _isPlayingInternal = false; // Actual pipeline state
+    bool _isSeeking = false;        // Prevent progress updates during seek
     bool completed = false;
 
     // Native rendering surface handle (platform-specific)
@@ -46,17 +48,13 @@ private:
     // Normalized progress [0..1]
     float progress = 0.0f;
 
-    // Default assumed duration when real duration unknown
-    const float kDefaultDurationSec = 60.0f;
-
     // Timer / progress update
     double progressUpdateIntervalSec = 0.05; // 50 ms default
     juce::int64 lastTickMs = 0;
+    juce::int64 lastSeekMs = 0; // Track when we last seeked to avoid position reset artifacts
 
     // Video processing state
-    VideoRotation currentRotation = VideoRotation::ROTATE_0;
     VisualEffect currentEffect = VisualEffect::NONE;
-
     // Platform abstraction
     std::unique_ptr<GstPlatform> platform;
 
@@ -78,6 +76,12 @@ private:
     void pollBus();
     void updateProgressFromPipeline();
     void setupVideoProcessingBin();
+
+    // Internal state management (following JuceMixPlayer pattern)
+    void _playInternal();
+    void _pauseInternal(bool stop);
+    void _startProgressTimer();
+    void _stopProgressTimer();
 
     void notifyState(JuceMixPlayerState state);
     void notifyError(const char* message);
