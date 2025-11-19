@@ -23,7 +23,7 @@ public:
     virtual ~GstPlatform() = default;
     
     virtual void initialize() = 0;
-    virtual void cleanup() = 0;
+    // virtual void cleanup() = 0;
     
     // Factory method
     static std::unique_ptr<GstPlatform> create();
@@ -35,7 +35,7 @@ public:
 class GstPlatformIOS : public GstPlatform {
 public:
     void initialize() override;
-    void cleanup() override;
+    // void cleanup() override;
 };
 
 /**
@@ -44,5 +44,5 @@ public:
 class GstPlatformAndroid : public GstPlatform {
 public:
     void initialize() override;
-    void cleanup() override;
+    // void cleanup() override;
 };

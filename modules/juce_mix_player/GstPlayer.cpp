@@ -271,9 +271,9 @@ void GstPlayer::teardownPipeline() {
 
     durationNs = 0;
 
-    if (platform) {
-        platform->cleanup();
-    }
+    // if (platform) {
+    //     platform->cleanup();
+    // }
 }
 
 void GstPlayer::applyOverlayIfAvailable() {
