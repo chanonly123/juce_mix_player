@@ -90,23 +90,3 @@ public:
     
     void cleanup() override;
 };
-
-/**
- * Fallback implementation for unsupported platforms
- */
-class GstPlatformFallback : public GstPlatform {
-public:
-    void initialize() override {}
-    bool isSupported() const override { return false; }
-    
-    GstElement* createPipeline() override { return nullptr; }
-    GstElement* createVideoSink() override { return nullptr; }
-    void setupVideoProcessingBin(GstElement*, GstElement*, GstElement*, GstElement*) override {}
-    
-    void applySurfaceHandle(GstElement*, void*) override {}
-    
-    GstElement* createEffectFilter(VisualEffect) override { return nullptr; }
-    void applyEffectParameters(GstElement*, VisualEffect) override {}
-    
-    void cleanup() override {}
-};

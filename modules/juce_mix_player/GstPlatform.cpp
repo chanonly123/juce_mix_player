@@ -15,8 +15,6 @@ std::unique_ptr<GstPlatform> GstPlatform::create() {
     return std::make_unique<GstPlatformIOS>();
 #elif JUCE_ANDROID
     return std::make_unique<GstPlatformAndroid>();
-#else
-    return std::make_unique<GstPlatformFallback>();
 #endif
 }
 

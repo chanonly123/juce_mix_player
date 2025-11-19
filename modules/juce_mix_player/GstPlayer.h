@@ -47,7 +47,7 @@ private:
     float progress = 0.0f;
 
     // Default assumed duration when real duration unknown
-    const float kDefaultDurationSec = 60.0f;
+    const float kDefaultDurationSec = 0.0f;
 
     // Timer / progress update
     double progressUpdateIntervalSec = 0.05; // 50 ms default
