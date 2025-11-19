@@ -5,6 +5,7 @@
 #include "Logger.h"
 #include "Models.h"
 #include "GstPlatform.h"
+#include "TaskQueue.h"
 #include <mutex>
 #include <map>
 #include <string>
@@ -68,6 +69,9 @@ private:
     gint64 durationNs = 0;
     bool muteEmbedded = true;
 
+    // GStreamer-specific task queue for heavy operations like export
+    TaskQueue gstTaskQueue;
+
     // Pipeline management methods
     void buildPipelineIfNeeded();
     void teardownPipeline();
@@ -119,7 +123,7 @@ public:
     // Video processing methods
     void setRotation(int degrees);
     void setVisualEffect(int effectId);
-    void exportVideo(const char* outputPath, void (*completion)(int));
+    void exportVideo(const char* outputPath, std::function<void(const char*)> completion);
 
     // Placeholders for future phases
     void setMuteEmbeddedAudio(int mute);

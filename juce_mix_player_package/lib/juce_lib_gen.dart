@@ -865,7 +865,9 @@ class JuceLibGen {
   void GstPlayer_exportVideo(
     ffi.Pointer<ffi.Void> ptr,
     ffi.Pointer<pkg_ffi.Utf8> outputPath,
-    ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Int)>> completion,
+    ffi.Pointer<
+            ffi.NativeFunction<ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>
+        completion,
   ) {
     return _GstPlayer_exportVideo(
       ptr,
@@ -880,9 +882,14 @@ class JuceLibGen {
                   ffi.Pointer<ffi.Void>,
                   ffi.Pointer<pkg_ffi.Utf8>,
                   ffi.Pointer<
-                      ffi.NativeFunction<ffi.Void Function(ffi.Int)>>)>>(
+                      ffi.NativeFunction<
+                          ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
       'GstPlayer_exportVideo');
   late final _GstPlayer_exportVideo = _GstPlayer_exportVideoPtr.asFunction<
-      void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>,
-          ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Int)>>)>();
+      void Function(
+          ffi.Pointer<ffi.Void>,
+          ffi.Pointer<pkg_ffi.Utf8>,
+          ffi.Pointer<
+              ffi.NativeFunction<
+                  ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>)>();
 }

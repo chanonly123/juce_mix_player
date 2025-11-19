@@ -286,13 +286,13 @@ static void onPadAdded(GstElement* src, GstPad* pad, gpointer data) {
 }
 
 
-void GstPlayer::exportVideo(const char* outputPath, void (*completion)(int)) {
+void GstPlayer::exportVideo(const char* outputPath, std::function<void(const char*)> completion) {
     if (!ready || videoPath.empty()) {
-        notifyError("No video loaded");
+        completion("No video loaded");
         return;
     }
     if (_isPlayingInternal) {
-        notifyError("Cannot export while playing. Please pause first.");
+        completion("Cannot export while playing. Please pause first.");
         return;
     }
 
@@ -305,7 +305,7 @@ void GstPlayer::exportVideo(const char* outputPath, void (*completion)(int)) {
         g_object_get(videoFlip, "method", &rotationMethod, nullptr);
     }
 
-    std::thread([this, inputPath, outputPathStr, effect, rotationMethod]() {
+    gstTaskQueue.async([this, inputPath, outputPathStr, effect, rotationMethod, completion]() {
         GstElement* pipeline = gst_pipeline_new("export_pipeline");
         GstElement* src = gst_element_factory_make("filesrc", "src");
         GstElement* decodebin = gst_element_factory_make("decodebin", "decodebin");
@@ -325,7 +325,7 @@ void GstPlayer::exportVideo(const char* outputPath, void (*completion)(int)) {
 
         if (!pipeline || !src || !decodebin || !videoQueue || !audioQueue || !balance || !flip || !vconv ||
             !x264enc || !h264parse || !aconv || !aresample || !aacenc || !aacparse || !mp4mux || !sink) {
-            notifyError("Failed to create GStreamer export pipeline");
+            completion("Failed to create GStreamer export pipeline");
             return;
         }
 
@@ -367,20 +367,22 @@ void GstPlayer::exportVideo(const char* outputPath, void (*completion)(int)) {
             if (GST_MESSAGE_TYPE(msg) == GST_MESSAGE_ERROR) {
                 GError* err;
                 gst_message_parse_error(msg, &err, nullptr);
-                notifyError(err->message);
+                completion(err->message);
                 g_error_free(err);
             } else {
-                // Success — optionally notify user or log
-                std::cout << "Export completed: " << outputPathStr << std::endl;
+                // Success
+                completion("");
             }
             gst_message_unref(msg);
+        } else {
+            completion("Export failed - no message received");
         }
 
         gst_object_unref(bus);
         gst_element_set_state(pipeline, GST_STATE_NULL);
         gst_object_unref(pipeline);
         delete decodeTargets;
-    }).detach();
+    });
 }
 
 
