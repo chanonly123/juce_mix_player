@@ -119,7 +119,7 @@ public:
     // Video processing methods
     void setRotation(int degrees);
     void setVisualEffect(int effectId);
-    void exportVideo(const char* outputPath, void (*completion)(const char*));
+    void exportVideo(const char* outputPath, void (*completion)(int));
 
     // Placeholders for future phases
     void setMuteEmbeddedAudio(int mute);

@@ -16,6 +16,7 @@ enum VisualEffectType {
 // Native function typedefs
 typedef _StringUpdateCallback = Void Function(Pointer<Void>, Pointer<Utf8>);
 typedef _FloatCallback = Void Function(Pointer<Void>, Float);
+typedef _Int32Callback = Void Function(Int32);
 
 typedef _init_t = Pointer<Void> Function();
 typedef _deinit_t = Void Function(Pointer<Void>);
@@ -59,9 +60,8 @@ typedef _setRotation_t = Void Function(Pointer<Void>, Int32);
 typedef _setRotation_dart_t = void Function(Pointer<Void>, int);
 typedef _setVisualEffect_t = Void Function(Pointer<Void>, Int32);
 typedef _setVisualEffect_dart_t = void Function(Pointer<Void>, int);
-typedef _exportVideo_t = Void Function(Pointer<Void>, Pointer<Utf8>, Pointer<NativeFunction<_StringUpdateCallback>>);
-typedef _exportVideo_dart_t = void Function(
-    Pointer<Void>, Pointer<Utf8>, Pointer<NativeFunction<_StringUpdateCallback>>);
+typedef _exportVideo_t = Void Function(Pointer<Void>, Pointer<Utf8>, Pointer<NativeFunction<_Int32Callback>>);
+typedef _exportVideo_dart_t = void Function(Pointer<Void>, Pointer<Utf8>, Pointer<NativeFunction<_Int32Callback>>);
 
 class GstPlayerController {
   // Open the same native library as JuceMixPlayer uses
@@ -196,27 +196,32 @@ class GstPlayerController {
     _setVisualEffect(_ptr, effect.index);
   }
 
-  Future<void> exportVideo(String outputPath) async {
-    final completer = Completer<void>();
+ Future<void> exportVideo(String outputPath) async {
+  final completer = Completer<void>();
 
-    NativeCallable<_StringUpdateCallback> exportCallback =
-        NativeCallable<_StringUpdateCallback>.listener((Pointer<Void> ptr, Pointer<Utf8> error) {
-      String errorMessage = error.toDartString();
-      if (errorMessage.isEmpty) {
+  final callback = NativeCallable<_Int32Callback>.listener(
+    (int result) {
+      if (result == 0) {
         completer.complete();
       } else {
-        completer.completeError(Exception('Export failed: $errorMessage'));
+        completer.completeError(Exception('Export failed with code $result'));
       }
-    });
+    },
+  );
 
-    _exportVideo(_ptr, outputPath.toNativeUtf8(), exportCallback.nativeFunction);
+  _exportVideo(
+    _ptr,
+    outputPath.toNativeUtf8(),
+    callback.nativeFunction,
+  );
 
-    try {
-      await completer.future;
-    } finally {
-      exportCallback.close();
-    }
+  try {
+    await completer.future;
+  } finally {
+    callback.close();
   }
+}
+
 
   // Expose native pointer address for PlatformView handoff
   int get nativeHandle => _ptr.address;

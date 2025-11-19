@@ -827,4 +827,62 @@ class JuceLibGen {
   late final _GstPlayer_setMuteEmbeddedAudio =
       _GstPlayer_setMuteEmbeddedAudioPtr.asFunction<
           void Function(ffi.Pointer<ffi.Void>, int)>();
+
+  void GstPlayer_setRotation(
+    ffi.Pointer<ffi.Void> ptr,
+    int degrees,
+  ) {
+    return _GstPlayer_setRotation(
+      ptr,
+      degrees,
+    );
+  }
+
+  late final _GstPlayer_setRotationPtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Int)>>(
+      'GstPlayer_setRotation');
+  late final _GstPlayer_setRotation = _GstPlayer_setRotationPtr.asFunction<
+      void Function(ffi.Pointer<ffi.Void>, int)>();
+
+  void GstPlayer_setVisualEffect(
+    ffi.Pointer<ffi.Void> ptr,
+    int effectId,
+  ) {
+    return _GstPlayer_setVisualEffect(
+      ptr,
+      effectId,
+    );
+  }
+
+  late final _GstPlayer_setVisualEffectPtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Int)>>(
+      'GstPlayer_setVisualEffect');
+  late final _GstPlayer_setVisualEffect = _GstPlayer_setVisualEffectPtr
+      .asFunction<void Function(ffi.Pointer<ffi.Void>, int)>();
+
+  void GstPlayer_exportVideo(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<pkg_ffi.Utf8> outputPath,
+    ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Int)>> completion,
+  ) {
+    return _GstPlayer_exportVideo(
+      ptr,
+      outputPath,
+      completion,
+    );
+  }
+
+  late final _GstPlayer_exportVideoPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(
+                  ffi.Pointer<ffi.Void>,
+                  ffi.Pointer<pkg_ffi.Utf8>,
+                  ffi.Pointer<
+                      ffi.NativeFunction<ffi.Void Function(ffi.Int)>>)>>(
+      'GstPlayer_exportVideo');
+  late final _GstPlayer_exportVideo = _GstPlayer_exportVideoPtr.asFunction<
+      void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>,
+          ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Int)>>)>();
 }

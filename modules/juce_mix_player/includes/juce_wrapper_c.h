@@ -88,4 +88,4 @@ EXPORT_C_FUNC void GstPlayer_setMuteEmbeddedAudio(void* ptr, int mute);
 // Video processing functions
 EXPORT_C_FUNC void GstPlayer_setRotation(void* ptr, int degrees);
 EXPORT_C_FUNC void GstPlayer_setVisualEffect(void* ptr, int effectId);
-EXPORT_C_FUNC void GstPlayer_exportVideo(void* ptr, const char* outputPath, void (*completion)(const char*));
+EXPORT_C_FUNC void GstPlayer_exportVideo(void* ptr, const char* outputPath, void (*completion)(int));

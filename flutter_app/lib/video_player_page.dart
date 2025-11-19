@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_app/asset_helper.dart';
 import 'package:flutter_app/utils.dart';
@@ -5,6 +7,7 @@ import 'package:juce_mix_player/gst_video_player.dart';
 import 'package:juce_mix_player/gst_video_view.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:photo_manager/photo_manager.dart';
 
 class VideoPlayerPage extends StatefulWidget {
   const VideoPlayerPage({super.key});
@@ -43,7 +46,6 @@ class VideoPlayerState extends State<VideoPlayerPage> {
 
   void _initializePlayer() {
     player.setProgressHandler((progress) {
-      print("progress=========: $progress");
       if (mounted) {
         setState(() {
           _seekPosition = progress;
@@ -136,12 +138,40 @@ class VideoPlayerState extends State<VideoPlayerPage> {
 
   Future<void> exportVideo() async {
     if (!_hasVideoLoaded) return;
+    player.pause();
     setState(() => _isExporting = true);
     try {
       final directory = await getApplicationDocumentsDirectory();
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final outputPath = '${directory.path}/exported_video_$timestamp.mp4';
       await player.exportVideo(outputPath);
+
+      print("Export completed: $outputPath");
+      //Implement Give option to Save the exported video to device
+      //Show a dialog to confirm saving the video
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Save Video'),
+          content: const Text('Do you want to save the exported video?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ).then((saveConfirmed) async {
+        if (saveConfirmed == true) {
+          await PhotoManager.editor.saveVideo(File(outputPath));
+        }
+      });
+
+      print("FLuueExport completed: $outputPath");
       _showSnack('Exported to: $outputPath');
     } catch (e) {
       _showSnack('Export failed: $e', isError: true);

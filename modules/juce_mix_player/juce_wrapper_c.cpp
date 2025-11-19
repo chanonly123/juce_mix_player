@@ -198,7 +198,7 @@ void GstPlayer_setVisualEffect(void* ptr, int effectId) {
     static_cast<GstPlayer*>(ptr)->setVisualEffect(effectId);
 }
 
-void GstPlayer_exportVideo(void* ptr, const char* outputPath, void (*completion)(const char*)) {
+void GstPlayer_exportVideo(void* ptr, const char* outputPath, void (*completion)(int)) {
     static_cast<GstPlayer*>(ptr)->exportVideo(outputPath, completion);
 }
 
