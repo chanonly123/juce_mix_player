@@ -220,13 +220,8 @@ void GstPlayer::setRotation(int degrees) {
             notifyError("Invalid rotation angle. Use 0, 90, 180, or 270 degrees.");
             return;
     }
-
-    if (currentRotation == newRotation) return;
-
-    currentRotation = newRotation;
-
     if (videoFlip) {
-        g_object_set(videoFlip, "method", static_cast<int>(currentRotation), nullptr);
+        g_object_set(videoFlip, "method", static_cast<int>(newRotation), nullptr);
     }
     std::cout << "ROTATION APPLIED: " << degrees << std::endl;
 }
@@ -268,31 +263,10 @@ void GstPlayer::exportVideo(const char* outputPath, void (*completion)(const cha
 
 void GstPlayer::timerCallback() {
     pollBus();
-    updateProgressFromPipeline();
-    
-    if (!playing) return;
 
-    // If duration unknown or pipeline not active, simulate minimal progress updates
-    auto nowMs = juce::Time::getMillisecondCounter();
-    auto deltaMs = nowMs - lastTickMs;
-    lastTickMs = nowMs;
-
-    bool shouldSimulateProgress = true;
-    if (durationNs > 0) {
-        shouldSimulateProgress = false; // Real progress is handled by updateProgressFromPipeline
-    }
-
-    if (shouldSimulateProgress) {
-        float deltaSec = float(deltaMs) / 1000.0f;
-        float deltaNorm = deltaSec / kDefaultDurationSec;
-        progress = juce::jmin(1.0f, progress + deltaNorm);
-        if (onProgressCallback) onProgressCallback(this, progress);
-        if (progress >= 1.0f) {
-            playing = false;
-            stopTimer();
-            completed = true;
-            notifyState(JuceMixPlayerState::COMPLETED);
-        }
+    // Only update progress when not seeking and actually playing
+    if (!_isSeeking && _isPlayingInternal && _isPlaying) {
+        updateProgressFromPipeline();
     }
 }
 
@@ -456,64 +430,6 @@ GstElement* GstPlayer::makeVideoSink() {
     if (sink) {
         g_object_set(sink, "force-aspect-ratio", TRUE, nullptr);
     }
-    return sink;
-}
-
-GstElement* GstPlayer::makeEffectFilter(VisualEffect effect) {
-    const char* filterName = "identity";
-    switch (effect) {
-        case VisualEffect::NONE:
-            filterName = "identity";
-            break;
-        case VisualEffect::GRAINY:
-        case VisualEffect::GRITTY:
-        case VisualEffect::HYPER:
-            filterName = "videobalance";
-            break;
-    }
-    return gst_element_factory_make(filterName, "effectfilter");
-}
-
-void GstPlayer::applyEffectParams(GstElement* effectFilter, VisualEffect effect) {
-    if (!effectFilter) return;
-    if (effect == VisualEffect::NONE) return;
-    GstElementFactory* factory = gst_element_get_factory(effectFilter);
-    if (!factory) return;
-    const gchar* factoryName = gst_plugin_feature_get_name(GST_PLUGIN_FEATURE(factory));
-    if (g_strcmp0(factoryName, "videobalance") != 0) return;
-    std::map<std::string, std::string> params;
-    switch (effect) {
-        case VisualEffect::GRAINY:
-            params["brightness"] = "-0.05";
-            params["contrast"]   = "0.75";
-            params["saturation"] = "0.9";
-            params["hue"]        = "0.0";
-            break;
-        case VisualEffect::GRITTY:
-            params["brightness"] = "-0.10";
-            params["contrast"]   = "1.35";
-            params["saturation"] = "0.55";
-            params["hue"]        = "0.0";
-            break;
-        case VisualEffect::HYPER:
-            params["brightness"] = "0.10";
-            params["contrast"]   = "1.5";
-            params["saturation"] = "1.8";
-            params["hue"]        = "0.06";
-            break;
-        default:
-            break;
-    }
-    for (const auto& p : params) {
-        g_object_set(effectFilter, p.first.c_str(), std::stod(p.second), nullptr);
-    }
-}
-
-GstElement* GstPlayer::makeVideoSink() {
-    GstElement* sink = gst_element_factory_make("glimagesink", "videosink");
-    // if (sink) {
-    //     g_object_set(sink, "force-aspect-ratio", TRUE, nullptr);
-    // }
     return sink;
 }
 
