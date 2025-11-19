@@ -76,6 +76,9 @@ private:
     void pollBus();
     void updateProgressFromPipeline();
     void setupVideoProcessingBin();
+    GstElement* makeVideoSink();
+    GstElement* makeEffectFilter(VisualEffect effect);
+    void applyEffectParams(GstElement* effectFilter, VisualEffect effect);
 
     // Internal state management (following JuceMixPlayer pattern)
     void _playInternal();

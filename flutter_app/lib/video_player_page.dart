@@ -23,7 +23,7 @@ class VideoPlayerState extends State<VideoPlayerPage> {
   bool _isPlaying = false;
   bool _isMuted = true;
   String _playerState = "IDLE";
-  double _progressUpdateInterval = 0.05;
+  // double _progressUpdateInterval = 0.05;
   bool _hasVideoLoaded = false;
   bool _showPreview = false;
 
