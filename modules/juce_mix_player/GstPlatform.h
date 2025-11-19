@@ -22,24 +22,7 @@ class GstPlatform {
 public:
     virtual ~GstPlatform() = default;
     
-    // Platform initialization
     virtual void initialize() = 0;
-    virtual bool isSupported() const = 0;
-    
-    // Pipeline management
-    virtual GstElement* createPipeline() = 0;
-    virtual GstElement* createVideoSink() = 0;
-    virtual void setupVideoProcessingBin(GstElement* videoBin, GstElement* videoFlip, 
-                                       GstElement* effectFilter, GstElement* videoSink) = 0;
-    
-    // Surface/window handling
-    virtual void applySurfaceHandle(GstElement* videoSink, void* surfaceHandle) = 0;
-    
-    // Effect management
-    virtual GstElement* createEffectFilter(VisualEffect effect) = 0;
-    virtual void applyEffectParameters(GstElement* effectFilter, VisualEffect effect) = 0;
-    
-    // Platform-specific cleanup
     virtual void cleanup() = 0;
     
     // Factory method
@@ -52,22 +35,7 @@ public:
 class GstPlatformIOS : public GstPlatform {
 public:
     void initialize() override;
-    bool isSupported() const override;
-    
-    GstElement* createPipeline() override;
-    GstElement* createVideoSink() override;
-    void setupVideoProcessingBin(GstElement* videoBin, GstElement* videoFlip, 
-                               GstElement* effectFilter, GstElement* videoSink) override;
-    
-    void applySurfaceHandle(GstElement* videoSink, void* surfaceHandle) override;
-    
-    GstElement* createEffectFilter(VisualEffect effect) override;
-    void applyEffectParameters(GstElement* effectFilter, VisualEffect effect) override;
-    
     void cleanup() override;
-
-private:
-    std::map<std::string, std::string> getEffectParameters(VisualEffect effect);
 };
 
 /**
@@ -76,17 +44,5 @@ private:
 class GstPlatformAndroid : public GstPlatform {
 public:
     void initialize() override;
-    bool isSupported() const override;
-    
-    GstElement* createPipeline() override;
-    GstElement* createVideoSink() override;
-    void setupVideoProcessingBin(GstElement* videoBin, GstElement* videoFlip, 
-                               GstElement* effectFilter, GstElement* videoSink) override;
-    
-    void applySurfaceHandle(GstElement* videoSink, void* surfaceHandle) override;
-    
-    GstElement* createEffectFilter(VisualEffect effect) override;
-    void applyEffectParameters(GstElement* effectFilter, VisualEffect effect) override;
-    
     void cleanup() override;
 };

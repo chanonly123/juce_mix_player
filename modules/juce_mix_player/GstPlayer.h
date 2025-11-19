@@ -78,6 +78,9 @@ private:
     void pollBus();
     void updateProgressFromPipeline();
     void setupVideoProcessingBin();
+    GstElement* makeVideoSink();
+    GstElement* makeEffectFilter(VisualEffect effect);
+    void applyEffectParams(GstElement* effectFilter, VisualEffect effect);
 
     void notifyState(JuceMixPlayerState state);
     void notifyError(const char* message);

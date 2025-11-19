@@ -2,12 +2,7 @@
 #include "Logger.h"
 
 GstPlayer::GstPlayer() : platform(GstPlatform::create()) {
-    if (platform && platform->isSupported()) {
-        platform->initialize();
-        PRINT("GstPlayer: created with platform support")
-    } else {
-        PRINT("GstPlayer: created without platform support (fallback mode)")
-    }
+    platform->initialize();
 }
 
 GstPlayer::~GstPlayer() {
@@ -17,9 +12,7 @@ GstPlayer::~GstPlayer() {
 void GstPlayer::dispose() {
     stopTimer();
     playing = false;
-    if (platform && platform->isSupported()) {
-        teardownPipeline();
-    }
+    teardownPipeline();
 }
 
 void GstPlayer::notifyState(JuceMixPlayerState state) {
@@ -45,20 +38,18 @@ void GstPlayer::setVideoPath(const char* path) {
     progress = 0.0f;
     completed = false;
 
-    if (platform && platform->isSupported()) {
-        buildPipelineIfNeeded();
-        // set URI
-        GError* err = nullptr;
-        gchar* uri = gst_filename_to_uri(videoPath.c_str(), &err);
-        if (err) {
-            notifyError(err->message);
-            g_error_free(err);
-        } else if (pipeline) {
-            g_object_set(pipeline, "uri", uri, nullptr);
-            g_free(uri);
-        }
-        applyOverlayIfAvailable();
+    buildPipelineIfNeeded();
+    // set URI
+    GError* err = nullptr;
+    gchar* uri = gst_filename_to_uri(videoPath.c_str(), &err);
+    if (err) {
+        notifyError(err->message);
+        g_error_free(err);
+    } else if (pipeline) {
+        g_object_set(pipeline, "uri", uri, nullptr);
+        g_free(uri);
     }
+    applyOverlayIfAvailable();
     notifyState(JuceMixPlayerState::READY);
 }
 
@@ -70,16 +61,12 @@ void GstPlayer::play() {
     if (completed) {
         progress = 0.0f;
         completed = false;
-        if (platform && platform->isSupported() && pipeline) {
-            gst_element_seek_simple(pipeline, GST_FORMAT_TIME,
-                                    GstSeekFlags(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT),
-                                    0);
-        }
+        gst_element_seek_simple(pipeline, GST_FORMAT_TIME,
+                                GstSeekFlags(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT),
+                                0);
     }
     playing = true;
-    if (platform && platform->isSupported() && pipeline) {
-        gst_element_set_state(pipeline, GST_STATE_PLAYING);
-    }
+    gst_element_set_state(pipeline, GST_STATE_PLAYING);
     lastTickMs = juce::Time::getMillisecondCounter();
     startTimer(int(progressUpdateIntervalSec * 1000.0));
     notifyState(JuceMixPlayerState::PLAYING);
@@ -88,9 +75,7 @@ void GstPlayer::play() {
 void GstPlayer::pause() {
     if (!playing) return;
     playing = false;
-    if (platform && platform->isSupported() && pipeline) {
-        gst_element_set_state(pipeline, GST_STATE_PAUSED);
-    }
+    gst_element_set_state(pipeline, GST_STATE_PAUSED);
     stopTimer();
     notifyState(JuceMixPlayerState::PAUSED);
 }
@@ -100,16 +85,14 @@ void GstPlayer::stop() {
     stopTimer();
     progress = 0.0f;
     completed = false;
-    if (platform && platform->isSupported() && pipeline) {
-        gst_element_set_state(pipeline, GST_STATE_READY);
-    }
+    gst_element_set_state(pipeline, GST_STATE_READY);
     notifyState(JuceMixPlayerState::STOPPED);
 }
 
 void GstPlayer::seek(float normalized) {
     if (normalized < 0.0f) normalized = 0.0f;
     if (normalized > 1.0f) normalized = 1.0f;
-    if (platform && platform->isSupported() && pipeline && durationNs > 0) {
+    if (durationNs > 0) {
         gint64 target = (gint64)(normalized * (double) durationNs);
         gst_element_seek_simple(pipeline, GST_FORMAT_TIME,
                                 GstSeekFlags(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT),
@@ -125,7 +108,7 @@ int GstPlayer::isPlaying() {
 }
 
 float GstPlayer::getDuration() {
-    if (platform && platform->isSupported() && durationNs > 0) {
+    if (durationNs > 0) {
         return (float)((double)durationNs / 1e9);
     }
     return 0.0f;
@@ -139,17 +122,14 @@ void GstPlayer::setProgressUpdateInterval(float seconds) {
 
 void GstPlayer::setMuteEmbeddedAudio(int mute) {
     muteEmbedded = (mute != 0);
-    if (platform && platform->isSupported() && pipeline) {
-        g_object_set(pipeline, "mute", muteEmbedded ? TRUE : FALSE, nullptr);
-        g_object_set(pipeline, "volume", muteEmbedded ? 0.0 : 1.0, nullptr);
-    }
+    g_object_set(pipeline, "mute", muteEmbedded ? TRUE : FALSE, nullptr);
+    g_object_set(pipeline, "volume", muteEmbedded ? 0.0 : 1.0, nullptr);
 }
 
 void GstPlayer::setSurfaceHandle(void* handle) {
     surfaceHandle = handle;
-    if (platform && platform->isSupported()) {
-        applyOverlayIfAvailable();
-    }
+    applyOverlayIfAvailable();
+
 }
 
 void GstPlayer::setRotation(int degrees) {
@@ -168,7 +148,7 @@ void GstPlayer::setRotation(int degrees) {
 
     currentRotation = newRotation;
 
-    if (platform && platform->isSupported() && videoFlip) {
+    if (videoFlip) {
         g_object_set(videoFlip, "method", static_cast<int>(currentRotation), nullptr);
     }
     std::cout << "ROTATION APPLIED: " << degrees << std::endl;
@@ -191,9 +171,7 @@ void GstPlayer::setVisualEffect(int effectId) {
 
     currentEffect = newEffect;
 
-    if (platform && platform->isSupported()) {
-        safelyReplaceEffectFilter();
-    }
+    safelyReplaceEffectFilter();
     std::cout << "VIDEO FILTER APPLIED: " << effectId << std::endl;
 }
 
@@ -208,34 +186,14 @@ void GstPlayer::exportVideo(const char* outputPath, void (*completion)(const cha
         return;
     }
 
-    if (platform && platform->isSupported()) {
-        // For now, implement a simple export by copying the file with transformations
-        // This is a simplified version - a full implementation would use GStreamer's
-        // encoding pipeline to apply effects and save the result
-
-        // Create a simple file copy with current transformations applied
-        // In a real implementation, this would:
-        // 1. Create an encoding pipeline with filesink
-        // 2. Apply current rotation and effects
-        // 3. Encode to the output format
-        // 4. Monitor progress and call completion when done
-
-        PRINT("Exporting video with rotation: " << static_cast<int>(currentRotation)
-              << " and effect: " << static_cast<int>(currentEffect));
-
-        // For this implementation, we'll simulate export success
-        // TODO: Implement actual GStreamer encoding pipeline
-        completion("");
-    } else {
-        completion("Export not supported on this platform");
-    }
+    // TODO: Implement actual GStreamer encoding pipeline
+    completion("");
 }
 
 void GstPlayer::timerCallback() {
-    if (platform && platform->isSupported()) {
-        pollBus();
-        updateProgressFromPipeline();
-    }
+    pollBus();
+    updateProgressFromPipeline();
+    
     if (!playing) return;
 
     // If duration unknown or pipeline not active, simulate minimal progress updates
@@ -244,7 +202,7 @@ void GstPlayer::timerCallback() {
     lastTickMs = nowMs;
 
     bool shouldSimulateProgress = true;
-    if (platform && platform->isSupported() && durationNs > 0) {
+    if (durationNs > 0) {
         shouldSimulateProgress = false; // Real progress is handled by updateProgressFromPipeline
     }
 
@@ -263,9 +221,9 @@ void GstPlayer::timerCallback() {
 }
 
 void GstPlayer::buildPipelineIfNeeded() {
-    if (pipeline || !platform || !platform->isSupported()) return;
+    if (pipeline) return;
 
-    pipeline = platform->createPipeline();
+    pipeline = gst_element_factory_make("playbin", "playbin");
     if (!pipeline) {
         notifyError("Failed to create playbin");
         return;
@@ -319,54 +277,52 @@ void GstPlayer::teardownPipeline() {
 }
 
 void GstPlayer::applyOverlayIfAvailable() {
-    if (platform && platform->isSupported() && videoSink && surfaceHandle) {
-        platform->applySurfaceHandle(videoSink, surfaceHandle);
+    if (!videoSink || !surfaceHandle) return;
+    if (GST_IS_VIDEO_OVERLAY(videoSink)) {
+        gst_video_overlay_set_window_handle(GST_VIDEO_OVERLAY(videoSink), (guintptr) surfaceHandle);
     }
 }
 
 void GstPlayer::setupVideoProcessingBin() {
-    if (!platform || !platform->isSupported()) return;
-
-    // Create a bin to hold video processing elements
     videoBin = gst_bin_new("video-processing-bin");
     if (!videoBin) {
         notifyError("Failed to create video processing bin");
         return;
     }
-
-    // Create video flip element for rotation
     videoFlip = gst_element_factory_make("videoflip", "videoflip");
     if (!videoFlip) {
         notifyError("Failed to create videoflip element");
         return;
     }
-
-    // Create effect filter using platform abstraction
-    effectFilter = platform->createEffectFilter(currentEffect);
+    effectFilter = makeEffectFilter(currentEffect);
     if (!effectFilter) {
         notifyError("Failed to create effect filter");
         return;
     }
-
-    // Create video sink using platform abstraction
-    videoSink = platform->createVideoSink();
+    videoSink = makeVideoSink();
     if (!videoSink) {
         notifyError("Failed to create video sink");
         return;
     }
-
-    // Use platform-specific setup
-    platform->setupVideoProcessingBin(videoBin, videoFlip, effectFilter, videoSink);
-
-    // Apply initial effect parameters
-    platform->applyEffectParameters(effectFilter, currentEffect);
-
-    // Set initial rotation
+    GstElement* converter = gst_element_factory_make("videoconvert", "effect-converter");
+    if (!converter) {
+        notifyError("Failed to create videoconvert element");
+        return;
+    }
+    gst_bin_add_many(GST_BIN(videoBin), videoFlip, converter, effectFilter, videoSink, nullptr);
+    if (!gst_element_link_many(videoFlip, converter, effectFilter, videoSink, nullptr)) {
+        notifyError("Failed to link video processing elements");
+        return;
+    }
+    GstPad* sinkPad = gst_element_get_static_pad(videoFlip, "sink");
+    gst_element_add_pad(videoBin, gst_ghost_pad_new("sink", sinkPad));
+    gst_object_unref(sinkPad);
+    applyEffectParams(effectFilter, currentEffect);
     g_object_set(videoFlip, "method", static_cast<int>(currentRotation), nullptr);
 }
 
 void GstPlayer::safelyReplaceEffectFilter() {
-    if (!pipeline || !videoBin || !platform || !platform->isSupported()) return;
+    if (!pipeline || !videoBin) return;
 
     bool wasPlaying = playing;
     float currentProgress = progress;
@@ -398,8 +354,7 @@ void GstPlayer::safelyReplaceEffectFilter() {
         gst_bin_remove(GST_BIN(videoBin), effectFilter);
         effectFilter = nullptr;
 
-        // Create new effect filter
-        effectFilter = platform->createEffectFilter(currentEffect);
+        effectFilter = makeEffectFilter(currentEffect);
         if (!effectFilter) {
             notifyError("Failed to create new effect filter");
             return;
@@ -408,8 +363,7 @@ void GstPlayer::safelyReplaceEffectFilter() {
         // Add to bin
         gst_bin_add(GST_BIN(videoBin), effectFilter);
 
-        // Apply effect parameters (this will handle NONE case properly)
-        platform->applyEffectParameters(effectFilter, currentEffect);
+        applyEffectParams(effectFilter, currentEffect);
 
         // Relink: converter -> effectFilter -> videoSink
         if (converter) {
@@ -437,6 +391,64 @@ void GstPlayer::safelyReplaceEffectFilter() {
         if (currentProgress > 0.0f) {
             seek(currentProgress);
         }
+    }
+}
+
+GstElement* GstPlayer::makeVideoSink() {
+    GstElement* sink = gst_element_factory_make("glimagesink", "videosink");
+    // if (sink) {
+    //     g_object_set(sink, "force-aspect-ratio", TRUE, nullptr);
+    // }
+    return sink;
+}
+
+GstElement* GstPlayer::makeEffectFilter(VisualEffect effect) {
+    const char* filterName = "identity";
+    switch (effect) {
+        case VisualEffect::NONE:
+            filterName = "identity";
+            break;
+        case VisualEffect::GRAINY:
+        case VisualEffect::GRITTY:
+        case VisualEffect::HYPER:
+            filterName = "videobalance";
+            break;
+    }
+    return gst_element_factory_make(filterName, "effectfilter");
+}
+
+void GstPlayer::applyEffectParams(GstElement* effectFilter, VisualEffect effect) {
+    if (!effectFilter) return;
+    if (effect == VisualEffect::NONE) return;
+    GstElementFactory* factory = gst_element_get_factory(effectFilter);
+    if (!factory) return;
+    const gchar* factoryName = gst_plugin_feature_get_name(GST_PLUGIN_FEATURE(factory));
+    if (g_strcmp0(factoryName, "videobalance") != 0) return;
+    std::map<std::string, std::string> params;
+    switch (effect) {
+        case VisualEffect::GRAINY:
+            params["brightness"] = "-0.05";
+            params["contrast"]   = "0.75";
+            params["saturation"] = "0.9";
+            params["hue"]        = "0.0";
+            break;
+        case VisualEffect::GRITTY:
+            params["brightness"] = "-0.10";
+            params["contrast"]   = "1.35";
+            params["saturation"] = "0.55";
+            params["hue"]        = "0.0";
+            break;
+        case VisualEffect::HYPER:
+            params["brightness"] = "0.10";
+            params["contrast"]   = "1.5";
+            params["saturation"] = "1.8";
+            params["hue"]        = "0.06";
+            break;
+        default:
+            break;
+    }
+    for (const auto& p : params) {
+        g_object_set(effectFilter, p.first.c_str(), std::stod(p.second), nullptr);
     }
 }
 
