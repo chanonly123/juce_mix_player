@@ -204,6 +204,8 @@ void GstPlayer::seek(float normalizedPos) {
     
     if (!result) {
         PRINT("Seek failed");
+        // Make sure we don't get stuck in a permanent "seeking" state
+        _isSeeking = false;
         return;
     }
     
@@ -216,6 +218,9 @@ void GstPlayer::seek(float normalizedPos) {
         nullptr,
         GST_CLOCK_TIME_NONE
     );
+
+    // Seek finished – re‑enable progress updates
+    _isSeeking = false;
 
     return;
 }

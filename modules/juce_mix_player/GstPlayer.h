@@ -50,10 +50,7 @@ private:
     float progress = 0.0f;
 
     // Timer / progress update
-    double progressUpdateIntervalSec = 0.05; // 50 ms default
-    juce::int64 lastTickMs = 0;
-    juce::int64 lastSeekMs = 0; // Track when we last seeked to avoid position reset artifacts
-
+    double progressUpdateIntervalSec = 1.0; // 50 ms default
     // Video processing state
     VisualEffect currentEffect = VisualEffect::NONE;
     // Platform abstraction
