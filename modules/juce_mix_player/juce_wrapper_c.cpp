@@ -167,7 +167,7 @@ int GstPlayer_isPlaying(void* ptr) {
 }
 
 float GstPlayer_getDuration(void* ptr) {
-    return static_cast<GstPlayer*>(ptr)->getDuration();
+    return static_cast<GstPlayer*>(ptr)->getDurationInSecs();
 }
 
 void GstPlayer_onStateUpdate(void* ptr, void (*callback)(void*, const char*)) {

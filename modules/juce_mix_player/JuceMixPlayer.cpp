@@ -65,9 +65,7 @@ JuceMixPlayer::JuceMixPlayer() {
         deviceManager->addAudioCallback(this);
         deviceManager->addChangeListener(this);
         deviceManager->initialise(0, 2, nullptr, true, {}, nullptr);
-
-        //        setDefaultSampleRate();
-
+        // setDefaultSampleRate();
         inputLevelMeter = deviceManager->getInputLevelGetter();
         PRINT("JuceMixPlayer initialized");
     });
@@ -82,6 +80,7 @@ void JuceMixPlayer::dispose() {
         stop();
         stopRecorder();
         std::thread thread([&]{
+            recWriteTaskQueue.stopQueue();
             taskQueue.stopQueue();
             heavyTaskQueue.stopQueue();
             juce::Thread::sleep(5000);

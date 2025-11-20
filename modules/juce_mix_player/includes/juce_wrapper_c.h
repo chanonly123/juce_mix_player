@@ -24,7 +24,7 @@ EXPORT_C_FUNC void JuceMixPlayer_setSettings(void* ptr, const char* json);
 EXPORT_C_FUNC void JuceMixPlayer_onStateUpdate(void* ptr, void (*JuceMixPlayerCallbackString)(void*, const char*));
 
 /// callback with progress value range 0 to 1
-EXPORT_C_FUNC void JuceMixPlayer_onProgress(void* ptr, void (*onProgress)(void*, float));
+EXPORT_C_FUNC void JuceπMixPlayer_onProgress(void* ptr, void (*onProgress)(void*, float));
 
 EXPORT_C_FUNC void JuceMixPlayer_onError(void* ptr, void (*onError)(void*, const char*));
 

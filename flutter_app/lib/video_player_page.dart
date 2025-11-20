@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_app/asset_helper.dart';
 import 'package:flutter_app/utils.dart';
@@ -7,7 +5,6 @@ import 'package:juce_mix_player/gst_video_player.dart';
 import 'package:juce_mix_player/gst_video_view.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:photo_manager/photo_manager.dart';
 
 class VideoPlayerPage extends StatefulWidget {
   const VideoPlayerPage({super.key});
@@ -26,9 +23,7 @@ class VideoPlayerState extends State<VideoPlayerPage> {
   bool _isPlaying = false;
   bool _isMuted = true;
   String _playerState = "IDLE";
-  double _progressUpdateInterval = 0.05;
   bool _hasVideoLoaded = false;
-  bool _showPreview = false;
 
   // Processing State
   String _currentRotation = "0";
@@ -49,8 +44,7 @@ class VideoPlayerState extends State<VideoPlayerPage> {
       if (mounted) {
         setState(() {
           _seekPosition = progress;
-          _currentPosition = progress * player.getDuration();
-          _duration = player.getDuration();
+          _currentPosition = progress * _duration;
         });
       }
     });
@@ -61,17 +55,14 @@ class VideoPlayerState extends State<VideoPlayerPage> {
           _playerState = state;
           _isPlaying = player.isPlaying();
 
-          if (state == "READY" && !_showPreview) {
-            _showPreview = true;
+          if (state == "READY") {
             _hasVideoLoaded = true;
-            _duration = player.getDuration();
-            Future.delayed(const Duration(milliseconds: 100), () {
-              player.seek(0.0);
-            });
+            double dur = player.getDuration();
+            print("READY $dur");
+            _duration = dur;
           }
 
           if (state == "STOPPED" || state == "ERROR" || state == "IDLE") {
-            _showPreview = false;
             _hasVideoLoaded = false;
             _duration = 0.0;
             _currentPosition = 0.0;
@@ -106,7 +97,6 @@ class VideoPlayerState extends State<VideoPlayerPage> {
     if (video != null) {
       setState(() {
         _hasVideoLoaded = false;
-        _showPreview = false;
       });
       player.setVideoPath(video.path);
       _showSnack('Video loaded: ${video.name}');
@@ -138,40 +128,12 @@ class VideoPlayerState extends State<VideoPlayerPage> {
 
   Future<void> exportVideo() async {
     if (!_hasVideoLoaded) return;
-    player.pause();
     setState(() => _isExporting = true);
     try {
       final directory = await getApplicationDocumentsDirectory();
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final outputPath = '${directory.path}/exported_video_$timestamp.mp4';
       await player.exportVideo(outputPath);
-
-      print("Export completed: $outputPath");
-      //Implement Give option to Save the exported video to device
-      //Show a dialog to confirm saving the video
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Save Video'),
-          content: const Text('Do you want to save the exported video?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Save'),
-            ),
-          ],
-        ),
-      ).then((saveConfirmed) async {
-        if (saveConfirmed == true) {
-          await PhotoManager.editor.saveVideo(File(outputPath));
-        }
-      });
-
-      print("FLuueExport completed: $outputPath");
       _showSnack('Exported to: $outputPath');
     } catch (e) {
       _showSnack('Export failed: $e', isError: true);

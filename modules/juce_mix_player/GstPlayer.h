@@ -66,7 +66,7 @@ private:
     GstElement* effectFilter = nullptr;
     GstElement* videoBin = nullptr;
     GstBus* bus = nullptr;
-    gint64 durationNs = 0;
+    gint64 durationMs = 0;
     bool muteEmbedded = true;
 
     // GStreamer-specific task queue for heavy operations like export
@@ -78,7 +78,6 @@ private:
     void safelyReplaceEffectFilter();
     void applyOverlayIfAvailable();
     void pollBus();
-    void updateProgressFromPipeline();
     void setupVideoProcessingBin();
     GstElement* makeVideoSink();
     GstElement* makeEffectFilter(VisualEffect effect);
@@ -89,6 +88,7 @@ private:
     void _pauseInternal(bool stop);
     void _startProgressTimer();
     void _stopProgressTimer();
+    gint64 _getDurationInternal();
 
     void notifyState(JuceMixPlayerState state);
     void notifyError(const char* message);
@@ -116,7 +116,7 @@ public:
     int isPlaying();
 
     // In seconds if known, 0 if unknown in this phase
-    float getDuration();
+    float getDurationInSecs();
 
     void setProgressUpdateInterval(float seconds);
 

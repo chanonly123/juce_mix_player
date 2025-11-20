@@ -3,23 +3,36 @@
 #include <gst/gst.h>
 #include <thread>
 #include <cstring>
+#include <algorithm>
 
 // Constructor: initialize platform
 GstPlayer::GstPlayer() : platform(GstPlatform::create()) {
+    PRINT("GstPlayer()");
+    gstTaskQueue.name = "gstTaskQueue";
     platform->initialize();
 }
 
 // Destructor: ensure resources are freed
 GstPlayer::~GstPlayer() {
-    dispose();
+    PRINT("~GstPlayer");
 }
 
 void GstPlayer::dispose() {
     // Stop any running timers and reset state
-    _stopProgressTimer();
+    PRINT("GstPlayer::dispose");
     _isPlaying = false;
     _isPlayingInternal = false;
-    teardownPipeline();
+    
+    juce::MessageManager::getInstanceWithoutCreating()->callAsync([&]{
+        stop();
+        teardownPipeline();
+        std::thread thread([&]{
+            gstTaskQueue.stopQueue();
+            juce::Thread::sleep(5000);
+            delete this;
+        });
+        thread.detach();
+    });
 }
 
 void GstPlayer::notifyState(JuceMixPlayerState state) {
@@ -40,51 +53,69 @@ void GstPlayer::setVideoPath(const char* path) {
         notifyError("Invalid video path");
         return;
     }
-
-    // Stop current playback and tear down the existing pipeline to start clean
-    _isPlaying = false;
-    _isPlayingInternal = false;
-    _isSeeking = false;
-    _stopProgressTimer();
-    teardownPipeline();
-
-    videoPath = path;
-    progress    = 0.0f;
-    completed   = false;
-    durationNs  = 0;
-    ready       = false;
-
-    buildPipelineIfNeeded();
-    if (!pipeline) {
-        notifyError("Failed to initialize video pipeline");
-        return;
-    }
-
-    // Set media URI for playbin
-    GError* err = nullptr;
-    gchar* uri  = gst_filename_to_uri(videoPath.c_str(), &err);
-    if (err != nullptr) {
-        notifyError(err->message);
-        g_error_free(err);
+    gstTaskQueue.async([&, path]{
+        // Stop current playback and tear down the existing pipeline to start clean
+        _isPlaying = false;
+        _isPlayingInternal = false;
+        _isSeeking = false;
+        _stopProgressTimer();
         teardownPipeline();
-        return;
-    }
-    g_object_set(pipeline, "uri", uri, nullptr);
-    g_free(uri);
 
-    // Apply video overlay (window handle) if available
-    applyOverlayIfAvailable();
+        videoPath  = path;
+        progress   = 0.0f;
+        completed  = false;
+        durationMs = 0;
+        ready      = false;
 
-    ready = true;
-    notifyState(JuceMixPlayerState::READY);
+        buildPipelineIfNeeded();
+        if (!pipeline) {
+            notifyError("Failed to initialize video pipeline");
+            return;
+        }
+
+        // Set media URI for playbin
+        GError* err = nullptr;
+        gchar* uri  = gst_filename_to_uri(videoPath.c_str(), &err);
+        if (err != nullptr) {
+            notifyError(err->message);
+            g_error_free(err);
+            teardownPipeline();
+            return;
+        }
+        
+        g_object_set(pipeline, "uri", uri, nullptr);
+        g_free(uri);
+        
+        applyOverlayIfAvailable();
+        gst_element_set_state(pipeline, GST_STATE_PAUSED);
+
+        GstStateChangeReturn ret = gst_element_get_state(
+            pipeline,
+            nullptr, nullptr,
+            GST_CLOCK_TIME_NONE
+        );
+
+        if (ret != GST_STATE_CHANGE_SUCCESS && ret != GST_STATE_CHANGE_NO_PREROLL) {
+            PRINT("Pipeline failed to reach PAUSED");
+            return;
+        }
+        
+        durationMs = _getDurationInternal();
+        ready = true;
+
+        notifyState(JuceMixPlayerState::READY);
+     });
 }
 
 void GstPlayer::play() {
+    PRINT("GstPlayer::play");
     if (!ready || !pipeline) {
         notifyError("Video not ready");
         return;
     }
-    _playInternal();
+    gstTaskQueue.async([&]{
+        _playInternal();
+    });
 }
 
 void GstPlayer::_playInternal() {
@@ -102,89 +133,116 @@ void GstPlayer::_playInternal() {
         _isPlaying        = true;
         _isPlayingInternal = true;
         gst_element_set_state(pipeline, GST_STATE_PLAYING);
-        lastTickMs = juce::Time::getMillisecondCounter();
+
         _startProgressTimer();
         notifyState(JuceMixPlayerState::PLAYING);
     }
 }
 
 void GstPlayer::pause() {
-    _pauseInternal(false);
+    PRINT("GstPlayer::pause");
+    gstTaskQueue.async([&]{
+        _pauseInternal(false);
+    });
 }
 
 void GstPlayer::stop() {
-    _pauseInternal(true);
+    PRINT("GstPlayer::stop");
+    gstTaskQueue.async([&]{
+        _pauseInternal(true);
+    });
 }
 
 void GstPlayer::_pauseInternal(bool stop) {
     // Always set pipeline to the appropriate state (PAUSED or READY) when pausing/stopping
-    if (pipeline) {
-        gst_element_set_state(pipeline, stop ? GST_STATE_READY : GST_STATE_PAUSED);
+    if (_isPlaying) {
+        _isPlaying = false;
+        _isPlayingInternal = false;
+        _stopProgressTimer();
+        if (pipeline) {
+            gst_element_change_state(pipeline, GST_STATE_CHANGE_PLAYING_TO_PAUSED);
+        }
     }
-    _stopProgressTimer();
-
-    _isPlaying = false;
-    _isPlayingInternal = false;
+    
     if (stop) {
-        // Reset progress on stop
-        progress  = 0.0f;
-        completed = false;
-        notifyState(JuceMixPlayerState::STOPPED);
+        // TODO:
+//          if (pipeline) {
+//              gst_element_change_state(pipeline,  GST_STATE_CHANGE_PAUSED_TO_READY);
+//          }
+// //        progress  = 0.0f;
+    //    completed = false;
+//         notifyState(JuceMixPlayerState::STOPPED);
     } else {
         notifyState(JuceMixPlayerState::PAUSED);
     }
 }
 
-void GstPlayer::seek(float normalized) {
-    std::cout << "seek: " << normalized << std::endl;
-    if (normalized < 0.0f) normalized = 0.0f;
-    if (normalized > 1.0f) normalized = 1.0f;
-    if (!pipeline) {
+void GstPlayer::seek(float normalizedPos) {
+    std::cout << "GstPlayer::seek: " << normalizedPos << std::endl;
+    if (!pipeline || !ready) {
         return;
     }
-
+    
+    normalizedPos = std::clamp(normalizedPos, 0.0f, 1.0f);
     _isSeeking = true;
+    
+    // Target timestamp
+    gint64 target = static_cast<gint64>(durationMs * normalizedPos) * 1000000; // convert ms to ns
+    std::cout << "GstPlayer::seek: target ns: " << target << std::endl;
 
-    // Ensure duration is known (query if not cached) so we can seek to an absolute target
-    gint64 dur = 0;
-    if (gst_element_query_duration(pipeline, GST_FORMAT_TIME, &dur) && dur > 0) {
-        durationNs = dur;
-    } else {
-        durationNs = 0; // fallback
+    // Build seek event
+    bool result = gst_element_seek(
+        pipeline,
+        1.0,                     // playback rate
+        GST_FORMAT_TIME,
+        (GstSeekFlags)(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE),
+        GST_SEEK_TYPE_SET,       // start type
+        target,                  // start position
+        GST_SEEK_TYPE_NONE,      // end type
+        GST_CLOCK_TIME_NONE      // end position
+    );
+    
+    if (!result) {
+        PRINT("Seek failed");
+        return;
     }
-    if (durationNs > 0) {
-        gint64 target = (gint64)((double)durationNs * normalized);
-        gst_element_seek_simple(
-            pipeline, GST_FORMAT_TIME,
-            GstSeekFlags(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT),
-            target);
-    }
+    
+    PRINT("SEEK SUCCESS");
 
-    // Immediately update our progress value and notify
-    progress   = normalized;
-    lastTickMs = juce::Time::getMillisecondCounter();
-    std::cout << "onProgressCallback: " << progress << std::endl;
-    if (onProgressCallback) {
-        onProgressCallback(this, progress);
-    }
+    // After accurate seek, pipeline must resume properly
+    gst_element_get_state(
+        pipeline,
+        nullptr,
+        nullptr,
+        GST_CLOCK_TIME_NONE
+    );
 
-    // Clear the seeking flag after a brief delay to allow the pipeline to settle
-    juce::Timer::callAfterDelay(100, [this]() {
-        _isSeeking = false;
-    });
-
+    return;
 }
 
 int GstPlayer::isPlaying() {
     return _isPlaying ? 1 : 0;
 }
 
-float GstPlayer::getDuration() {
-    if (durationNs > 0) {
-        // Convert nanoseconds to seconds
-        return (float)((double)durationNs / 1e9);
+float GstPlayer::getDurationInSecs() {
+    PRINT("GstPlayer::getDurationInSecs");
+    return (float)((double)durationMs / 1000.0);
+}
+
+gint64 GstPlayer::_getDurationInternal() {
+    PRINT("GstPlayer::_getDurationInternal");
+    
+    if (!pipeline) {
+        return 0.0f;
     }
-    return 0.0f;
+     
+    gint64 duration = GST_CLOCK_TIME_NONE;
+    if (!gst_element_query_duration(pipeline, GST_FORMAT_TIME, &duration) || duration == GST_CLOCK_TIME_NONE) {
+        PRINT("GstPlayer::getDuration - no duration");
+        return 0.0f;
+    }
+    // Convert nanoseconds to milliseconds
+    return (float)((double)duration / 1e6);;
 }
 
 void GstPlayer::setProgressUpdateInterval(float seconds) {
@@ -388,17 +446,33 @@ void GstPlayer::exportVideo(const char* outputPath, std::function<void(const cha
 
 
 void GstPlayer::timerCallback() {
-    // Poll the bus for messages (error, EOS, etc.)
-    pollBus();
-    // Update progress periodically if playing and not currently seeking
-    if (!_isSeeking && _isPlayingInternal && _isPlaying) {
-        updateProgressFromPipeline();
-    }
+    gstTaskQueue.async([&] {
+
+        pollBus();
+
+        if (!_isSeeking && _isPlayingInternal && _isPlaying && durationMs > 0) {
+            gint64 posNs = 0;
+
+            if (gst_element_query_position(pipeline, GST_FORMAT_TIME, &posNs)) {
+
+                double posMs = (double)posNs / 1000000.0;  // ns → ms
+                progress = (float)(posMs / (double)durationMs);
+
+                // Clamp to 0–1
+                progress = std::clamp(progress, 0.0f, 1.0f);
+
+                if (onProgressCallback) {
+                    std::cout << "PROGRESS: " << progress << std::endl;
+                    onProgressCallback(this, progress);
+                }
+            }
+        }
+    });
 }
 
-void GstPlayer::buildPipelineIfNeeded() {
-    if (pipeline) return;  // pipeline already built
 
+void GstPlayer::buildPipelineIfNeeded() {
+    if (pipeline) return;
     pipeline = gst_element_factory_make("playbin", "playbin");
     if (!pipeline) {
         notifyError("Failed to create playbin");
@@ -458,7 +532,7 @@ void GstPlayer::teardownPipeline() {
         pipeline = nullptr;
     }
 
-    durationNs = 0;
+    durationMs = 0;
 }
 
 void GstPlayer::applyOverlayIfAvailable() {
@@ -521,7 +595,6 @@ GstElement* GstPlayer::makeVideoSink() {
     // Use OpenGL video sink for rendering (adjust as needed per platform, e.g., glimagesink for iOS/Android)
     GstElement* sink = gst_element_factory_make("glimagesink", "videosink");
     if (sink) {
-        // Maintain aspect ratio
         g_object_set(sink, "force-aspect-ratio", TRUE, nullptr);
     }
     return sink;
@@ -605,6 +678,7 @@ void GstPlayer::pollBus() {
                 _stopProgressTimer();
                 notifyState(JuceMixPlayerState::STOPPED);
             } break;
+                
             case GST_MESSAGE_EOS: {
                 // End-of-stream reached
                 _isPlaying = false;
@@ -615,9 +689,9 @@ void GstPlayer::pollBus() {
                 if (onProgressCallback) {
                     onProgressCallback(this, progress);
                 }
-                // std::cout << "pollBus: onProgressCallback: " << progress << std::endl;
                 notifyState(JuceMixPlayerState::COMPLETED);
             } break;
+            
             default:
                 // Other messages (STATE_CHANGED, etc.) can be handled if needed
                 break;
@@ -625,27 +699,3 @@ void GstPlayer::pollBus() {
         gst_message_unref(msg);
     }
 }
-
-void GstPlayer::updateProgressFromPipeline() {
-    if (!pipeline) return;
-    gint64 pos = 0;
-    if (!gst_element_query_position(pipeline, GST_FORMAT_TIME, &pos)) {
-        return;
-    }
-    // Update cached duration if possible
-    gint64 dur = 0;
-    if (gst_element_query_duration(pipeline, GST_FORMAT_TIME, &dur)) {
-        durationNs = dur;
-    }
-    
-    if (durationNs > 0) {
-        double norm = (double)pos / (double)durationNs;
-        // Clamp norm between 0 and 1
-        progress = (float) juce::jlimit(0.0, 1.0, norm);
-        if (onProgressCallback) {
-            onProgressCallback(this, progress);
-        }
-        std::cout << "updateProgressFromPipeline: " << progress << std::endl;
-    }
-}
-
