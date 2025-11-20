@@ -26,7 +26,7 @@ typedef _pause_t = Void Function(Pointer<Void>);
 typedef _stop_t = Void Function(Pointer<Void>);
 typedef _seek_t = Void Function(Pointer<Void>, Float);
 typedef _isPlaying_t = Int32 Function(Pointer<Void>);
-typedef _getDuration_t = Float Function(Pointer<Void>);
+typedef _getDurationInSecs_t = Float Function(Pointer<Void>);
 
 typedef _onStateUpdate_t = Void Function(Pointer<Void>, Pointer<NativeFunction<_StringUpdateCallback>>);
 typedef _onProgress_t = Void Function(Pointer<Void>, Pointer<NativeFunction<_FloatCallback>>);
@@ -47,7 +47,7 @@ typedef _pause_dart_t = void Function(Pointer<Void>);
 typedef _stop_dart_t = void Function(Pointer<Void>);
 typedef _seek_dart_t = void Function(Pointer<Void>, double);
 typedef _isPlaying_dart_t = int Function(Pointer<Void>);
-typedef _getDuration_dart_t = double Function(Pointer<Void>);
+typedef _getDurationInSecs_dart_t = double Function(Pointer<Void>);
 
 typedef _onStateUpdate_dart_t = void Function(Pointer<Void>, Pointer<NativeFunction<_StringUpdateCallback>>);
 typedef _onProgress_dart_t = void Function(Pointer<Void>, Pointer<NativeFunction<_FloatCallback>>);
@@ -72,10 +72,10 @@ class GstPlayerController {
 
   late final Pointer<Void> _ptr;
 
-  // Local state tracking since native functions don't exist yet
+  // Local state tracking
   bool _isMuted = false;
+  // Normalized position [0..1] from native progress callback
   double _currentPosition = 0.0;
-  double _duration = 0.0;
 
   // native function lookups
   late final _init_t _init;
@@ -86,7 +86,7 @@ class GstPlayerController {
   late final _stop_dart_t _stop;
   late final _seek_dart_t _seek;
   late final _isPlaying_dart_t _isPlaying;
-  late final _getDuration_dart_t _getDuration;
+  late final _getDurationInSecs_dart_t _getDurationInSecs;
 
   late final _onStateUpdate_dart_t _onStateUpdate;
   late final _onProgress_dart_t _onProgress;
@@ -114,7 +114,8 @@ class GstPlayerController {
     _stop = _lib.lookupFunction<_stop_t, _stop_dart_t>('GstPlayer_stop');
     _seek = _lib.lookupFunction<_seek_t, _seek_dart_t>('GstPlayer_seek');
     _isPlaying = _lib.lookupFunction<_isPlaying_t, _isPlaying_dart_t>('GstPlayer_isPlaying');
-    _getDuration = _lib.lookupFunction<_getDuration_t, _getDuration_dart_t>('GstPlayer_getDuration');
+    _getDurationInSecs =
+        _lib.lookupFunction<_getDurationInSecs_t, _getDurationInSecs_dart_t>('GstPlayer_getDurationInSecs');
     _onStateUpdate = _lib.lookupFunction<_onStateUpdate_t, _onStateUpdate_dart_t>('GstPlayer_onStateUpdate');
     _onProgress = _lib.lookupFunction<_onProgress_t, _onProgress_dart_t>('GstPlayer_onProgress');
     _onError = _lib.lookupFunction<_onError_t, _onError_dart_t>('GstPlayer_onError');
@@ -144,7 +145,7 @@ class GstPlayerController {
 
   bool isPlaying() => _isPlaying(_ptr) == 1;
 
-  double getDuration() => _getDuration(_ptr);
+  double getDurationInSecs() => _getDurationInSecs(_ptr);
 
   double getCurrentPosition() => _currentPosition;
 
@@ -229,9 +230,8 @@ class GstPlayerController {
   void setProgressHandler(void Function(double normalized) callback) {
     _progressCallback?.close();
     _progressCallback = NativeCallable<_FloatCallback>.listener((Pointer<Void> ptr, double value) {
-      // Update local state
-      _duration = getDuration();
-      _currentPosition = value * _duration;
+      // Store normalized progress directly; Flutter side handles conversion
+      _currentPosition = value;
       callback(value);
     });
     _onProgress(_ptr, _progressCallback!.nativeFunction);

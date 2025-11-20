@@ -57,7 +57,7 @@ class VideoPlayerState extends State<VideoPlayerPage> {
 
           if (state == "READY") {
             _hasVideoLoaded = true;
-            double dur = player.getDuration();
+            double dur = player.getDurationInSecs();
             print("READY $dur");
             _duration = dur;
           }

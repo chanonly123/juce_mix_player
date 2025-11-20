@@ -18,7 +18,6 @@ GstPlayer::~GstPlayer() {
 }
 
 void GstPlayer::dispose() {
-    // Stop any running timers and reset state
     PRINT("GstPlayer::dispose");
     _isPlaying = false;
     _isPlayingInternal = false;
@@ -237,7 +236,6 @@ int GstPlayer::isPlaying() {
 }
 
 float GstPlayer::getDurationInSecs() {
-    PRINT("GstPlayer::getDurationInSecs");
     return (float)((double)durationMs / 1000.0);
 }
 
@@ -459,24 +457,15 @@ void GstPlayer::exportVideo(const char* outputPath, std::function<void(const cha
 
 void GstPlayer::timerCallback() {
     gstTaskQueue.async([&] {
-
         pollBus();
-
         if (!_isSeeking && _isPlayingInternal && _isPlaying && durationMs > 0) {
             gint64 posNs = 0;
-
+            
             if (gst_element_query_position(pipeline, GST_FORMAT_TIME, &posNs)) {
-
                 double posMs = (double)posNs / 1000000.0;  // ns → ms
                 progress = (float)(posMs / (double)durationMs);
-                std::cout << "gst_element_query_position: " << posMs << std::endl;
-
-                // Clamp to 0–1
                 progress = std::clamp(progress, 0.0f, 1.0f);
-
 	                if (onProgressCallback) {
-	                    // Recompute progress on an absolute timeline to avoid
-	                    // apparent jumps back to 0 after a flushed seek.
 	                    double segMs = (double)posNs / 1000000.0;  // ns to ms
 	                    double absoluteMs = segMs;
 	                    if (durationMs > 0 && lastSeekMs > 0) {
@@ -492,9 +481,7 @@ void GstPlayer::timerCallback() {
 	                    float corrected = (float)(absoluteMs / (double)durationMs);
 	                    corrected = std::clamp(corrected, 0.0f, 1.0f);
 	                    progress = corrected;
-	
-	                    std::cout << "PROGRESS: " << progress << std::endl;
-	                    onProgressCallback(this, progress);
+		                onProgressCallback(this, progress);
 	                }
             }
         }

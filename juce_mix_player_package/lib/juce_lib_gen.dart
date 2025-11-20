@@ -689,19 +689,19 @@ class JuceLibGen {
   late final _GstPlayer_isPlaying =
       _GstPlayer_isPlayingPtr.asFunction<int Function(ffi.Pointer<ffi.Void>)>();
 
-  double GstPlayer_getDuration(
+  double GstPlayer_getDurationInSecs(
     ffi.Pointer<ffi.Void> ptr,
   ) {
-    return _GstPlayer_getDuration(
+    return _GstPlayer_getDurationInSecs(
       ptr,
     );
   }
 
-  late final _GstPlayer_getDurationPtr =
+  late final _GstPlayer_getDurationInSecsPtr =
       _lookup<ffi.NativeFunction<ffi.Float Function(ffi.Pointer<ffi.Void>)>>(
-          'GstPlayer_getDuration');
-  late final _GstPlayer_getDuration = _GstPlayer_getDurationPtr.asFunction<
-      double Function(ffi.Pointer<ffi.Void>)>();
+          'GstPlayer_getDurationInSecs');
+  late final _GstPlayer_getDurationInSecs = _GstPlayer_getDurationInSecsPtr
+      .asFunction<double Function(ffi.Pointer<ffi.Void>)>();
 
   void GstPlayer_onStateUpdate(
     ffi.Pointer<ffi.Void> ptr,

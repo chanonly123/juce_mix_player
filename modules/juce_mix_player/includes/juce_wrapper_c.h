@@ -24,7 +24,7 @@ EXPORT_C_FUNC void JuceMixPlayer_setSettings(void* ptr, const char* json);
 EXPORT_C_FUNC void JuceMixPlayer_onStateUpdate(void* ptr, void (*JuceMixPlayerCallbackString)(void*, const char*));
 
 /// callback with progress value range 0 to 1
-EXPORT_C_FUNC void JuceπMixPlayer_onProgress(void* ptr, void (*onProgress)(void*, float));
+EXPORT_C_FUNC void JuceMixPlayer_onProgress(void* ptr, void (*onProgress)(void*, float));
 
 EXPORT_C_FUNC void JuceMixPlayer_onError(void* ptr, void (*onError)(void*, const char*));
 
@@ -76,7 +76,7 @@ EXPORT_C_FUNC void GstPlayer_stop(void* ptr);
 EXPORT_C_FUNC void GstPlayer_seek(void* ptr, float normalized);
 EXPORT_C_FUNC int GstPlayer_isPlaying(void* ptr);
 // seconds if known, 0 if unknown (phase 1)
-EXPORT_C_FUNC float GstPlayer_getDuration(void* ptr);
+EXPORT_C_FUNC float GstPlayer_getDurationInSecs(void* ptr);
 // callbacks
 EXPORT_C_FUNC void GstPlayer_onStateUpdate(void* ptr, void (*callback)(void*, const char*));
 EXPORT_C_FUNC void GstPlayer_onProgress(void* ptr, void (*callback)(void*, float));
@@ -84,7 +84,6 @@ EXPORT_C_FUNC void GstPlayer_onError(void* ptr, void (*callback)(void*, const ch
 // placeholders
 EXPORT_C_FUNC void GstPlayer_setSurfaceHandle(void* ptr, void* nativeSurface);
 EXPORT_C_FUNC void GstPlayer_setMuteEmbeddedAudio(void* ptr, int mute);
-
 // Video processing functions
 EXPORT_C_FUNC void GstPlayer_setRotation(void* ptr, int degrees);
 EXPORT_C_FUNC void GstPlayer_setVisualEffect(void* ptr, int effectId);
