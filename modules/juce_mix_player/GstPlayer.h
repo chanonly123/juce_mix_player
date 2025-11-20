@@ -50,7 +50,7 @@ private:
     float progress = 0.0f;
 
     // Timer / progress update
-    double progressUpdateIntervalSec = 1.0; // 50 ms default
+    double progressUpdateIntervalSec = 0.10; // 100 ms default
     // Video processing state
     VisualEffect currentEffect = VisualEffect::NONE;
     // Platform abstraction
@@ -65,6 +65,7 @@ private:
     GstBus* bus = nullptr;
     gint64 durationMs = 0;
     bool muteEmbedded = true;
+    double lastSeekMs = 0;
 
     // GStreamer-specific task queue for heavy operations like export
     TaskQueue gstTaskQueue;

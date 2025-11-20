@@ -66,6 +66,7 @@ void GstPlayer::setVideoPath(const char* path) {
         completed  = false;
         durationMs = 0;
         ready      = false;
+        lastSeekMs = 0; // reset any seek offset for the new media
 
         buildPipelineIfNeeded();
         if (!pipeline) {
@@ -186,8 +187,14 @@ void GstPlayer::seek(float normalizedPos) {
     normalizedPos = std::clamp(normalizedPos, 0.0f, 1.0f);
     _isSeeking = true;
     
+    // Remember the absolute target position in milliseconds so that we
+    // can correct for GStreamer "segment" time, which often resets the
+    // reported position to 0 after a flushed seek.
+    gint64 targetMs = static_cast<gint64>(durationMs * normalizedPos);
+    lastSeekMs = targetMs;
+    
     // Target timestamp
-    gint64 target = static_cast<gint64>(durationMs * normalizedPos) * 1000000; // convert ms to ns
+    gint64 target = targetMs * 1000000; // convert ms to ns
     std::cout << "GstPlayer::seek: target ns: " << target << std::endl;
 
     // Build seek event
@@ -462,14 +469,33 @@ void GstPlayer::timerCallback() {
 
                 double posMs = (double)posNs / 1000000.0;  // ns → ms
                 progress = (float)(posMs / (double)durationMs);
+                std::cout << "gst_element_query_position: " << posMs << std::endl;
 
                 // Clamp to 0–1
                 progress = std::clamp(progress, 0.0f, 1.0f);
 
-                if (onProgressCallback) {
-                    std::cout << "PROGRESS: " << progress << std::endl;
-                    onProgressCallback(this, progress);
-                }
+	                if (onProgressCallback) {
+	                    // Recompute progress on an absolute timeline to avoid
+	                    // apparent jumps back to 0 after a flushed seek.
+	                    double segMs = (double)posNs / 1000000.0;  // ns to ms
+	                    double absoluteMs = segMs;
+	                    if (durationMs > 0 && lastSeekMs > 0) {
+	                        double targetMs = (double) lastSeekMs;
+	                        // If GStreamer is reporting a small time that is
+	                        // clearly before the last seek target, treat segMs
+	                        // as an offset from that target on the full
+	                        // timeline (segment-relative position).
+	                        if (segMs + 1.0 < targetMs) {
+	                            absoluteMs = targetMs + segMs;
+	                        }
+	                    }
+	                    float corrected = (float)(absoluteMs / (double)durationMs);
+	                    corrected = std::clamp(corrected, 0.0f, 1.0f);
+	                    progress = corrected;
+	
+	                    std::cout << "PROGRESS: " << progress << std::endl;
+	                    onProgressCallback(this, progress);
+	                }
             }
         }
     });
