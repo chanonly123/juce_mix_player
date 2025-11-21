@@ -1,4 +1,4 @@
-
+// GstPlayer.h
 #pragma once
 
 #include <JuceHeader.h>
@@ -10,6 +10,7 @@
 #include <map>
 #include <string>
 #include <memory>
+#include <atomic>
 
 extern "C" {
 #include <gst/gst.h>
@@ -32,31 +33,27 @@ enum class VisualEffect {
     HYPER = 3
 };
 
-
-// Phase 1 placeholder video player, upgraded to real pipeline on iOS.
 class GstPlayer : private juce::Timer {
 private:
     std::string videoPath;
     bool ready = false;
-    bool _isPlaying = false;        // User intent to play
-    bool _isPlayingInternal = false; // Actual pipeline state
-    bool _isSeeking = false;        // Prevent progress updates during seek
+    bool _isPlaying = false;
+    bool _isPlayingInternal = false;
+    bool _isSeeking = false;
     bool completed = false;
 
-    // Native rendering surface handle (platform-specific)
     void* surfaceHandle = nullptr;
 
-    // Normalized progress [0..1]
+    // NEW: atomic copy for bus sync thread
+    std::atomic<guintptr> surfaceHandleAtomic { 0 };
+
     float progress = 0.0f;
 
-    // Timer / progress update
-    double progressUpdateIntervalSec = 0.10; // 100 ms default
-    // Video processing state
+    double progressUpdateIntervalSec = 0.10;
+
     VisualEffect currentEffect = VisualEffect::NONE;
-    // Platform abstraction
     std::unique_ptr<GstPlatform> platform;
 
-    // GStreamer elements (now cross-platform)
     GstElement* pipeline = nullptr;
     GstElement* videoSink = nullptr;
     GstElement* videoFlip = nullptr;
@@ -67,10 +64,8 @@ private:
     bool muteEmbedded = true;
     double lastSeekMs = 0;
 
-    // GStreamer-specific task queue for heavy operations like export
     TaskQueue gstTaskQueue;
 
-    // Pipeline management methods
     void buildPipelineIfNeeded();
     void teardownPipeline();
     void safelyReplaceEffectFilter();
@@ -81,7 +76,6 @@ private:
     GstElement* makeEffectFilter(VisualEffect effect);
     void applyEffectParams(GstElement* effectFilter, VisualEffect effect);
 
-    // Internal state management (following JuceMixPlayer pattern)
     void _playInternal();
     void _pauseInternal(bool stop);
     void _startProgressTimer();
@@ -91,8 +85,10 @@ private:
     void notifyState(JuceMixPlayerState state);
     void notifyError(const char* message);
 
+    // NEW: bus sync handler (static member can access private)
+    static GstBusSyncReply bus_sync_cb(GstBus* bus, GstMessage* msg, gpointer user_data);
+
 public:
-    // Callbacks (set from C wrappers)
     JuceMixPlayerCallbackFloat onProgressCallback = nullptr;
     JuceMixPlayerCallbackString onStateUpdateCallback = nullptr;
     JuceMixPlayerCallbackString onErrorCallback = nullptr;
@@ -101,32 +97,20 @@ public:
     ~GstPlayer();
 
     void dispose();
-
     void setVideoPath(const char* path);
-
     void play();
     void pause();
     void stop();
-
-    // value range 0..1
     void seek(float normalized);
-
     int isPlaying();
-
-    // In seconds if known, 0 if unknown in this phase
     float getDurationInSecs();
-
     void setProgressUpdateInterval(float seconds);
-
-    // Video processing methods
     void setRotation(int degrees);
     void setVisualEffect(int effectId);
     void exportVideo(const char* outputPath, std::function<void(const char*)> completion);
-
-    // Placeholders for future phases
     void setMuteEmbeddedAudio(int mute);
     void setSurfaceHandle(void* handle);
 
-    // juce::Timer
     void timerCallback() override;
 };
+

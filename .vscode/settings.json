@@ -59,6 +59,7 @@
         "random": "cpp",
         "format": "cpp",
         "queue": "cpp",
-        "stack": "cpp"
+        "stack": "cpp",
+        "ranges": "cpp"
     },
 }

@@ -5,6 +5,8 @@
 #include <cstring>
 #include <algorithm>
 
+static const guint64 SHUTDOWN_TIMEOUT = 4 * GST_SECOND;
+
 // Constructor: initialize platform
 GstPlayer::GstPlayer() : platform(GstPlatform::create()) {
     PRINT("GstPlayer()");
@@ -27,7 +29,7 @@ void GstPlayer::dispose() {
         teardownPipeline();
         std::thread thread([&]{
             gstTaskQueue.stopQueue();
-            juce::Thread::sleep(5000);
+            juce::Thread::sleep(2000);
             delete this;
         });
         thread.detach();
@@ -47,66 +49,6 @@ void GstPlayer::notifyError(const char* message) {
     }
 }
 
-void GstPlayer::setVideoPath(const char* path) {
-    if (path == nullptr || std::strlen(path) == 0) {
-        notifyError("Invalid video path");
-        return;
-    }
-    gstTaskQueue.async([&, path]{
-        // Stop current playback and tear down the existing pipeline to start clean
-        _isPlaying = false;
-        _isPlayingInternal = false;
-        _isSeeking = false;
-        _stopProgressTimer();
-        teardownPipeline();
-
-        videoPath  = path;
-        progress   = 0.0f;
-        completed  = false;
-        durationMs = 0;
-        ready      = false;
-        lastSeekMs = 0; // reset any seek offset for the new media
-
-        buildPipelineIfNeeded();
-        if (!pipeline) {
-            notifyError("Failed to initialize video pipeline");
-            return;
-        }
-
-        // Set media URI for playbin
-        GError* err = nullptr;
-        gchar* uri  = gst_filename_to_uri(videoPath.c_str(), &err);
-        if (err != nullptr) {
-            notifyError(err->message);
-            g_error_free(err);
-            teardownPipeline();
-            return;
-        }
-        
-        g_object_set(pipeline, "uri", uri, nullptr);
-        g_free(uri);
-        
-        applyOverlayIfAvailable();
-        gst_element_set_state(pipeline, GST_STATE_PAUSED);
-
-        GstStateChangeReturn ret = gst_element_get_state(
-            pipeline,
-            nullptr, nullptr,
-            GST_CLOCK_TIME_NONE
-        );
-
-        if (ret != GST_STATE_CHANGE_SUCCESS && ret != GST_STATE_CHANGE_NO_PREROLL) {
-            PRINT("Pipeline failed to reach PAUSED");
-            return;
-        }
-        
-        durationMs = _getDurationInternal();
-        ready = true;
-
-        notifyState(JuceMixPlayerState::READY);
-     });
-}
-
 void GstPlayer::play() {
     PRINT("GstPlayer::play");
     if (!ready || !pipeline) {
@@ -120,7 +62,6 @@ void GstPlayer::play() {
 
 void GstPlayer::_playInternal() {
     if (!_isPlaying) {
-        // If playback had completed previously, restart from beginning
         if (completed) {
             completed = false;
             progress  = 0.0f;
@@ -130,10 +71,9 @@ void GstPlayer::_playInternal() {
                 0);
         }
 
-        _isPlaying        = true;
+        _isPlaying = true;
         _isPlayingInternal = true;
         gst_element_set_state(pipeline, GST_STATE_PLAYING);
-
         _startProgressTimer();
         notifyState(JuceMixPlayerState::PLAYING);
     }
@@ -154,7 +94,6 @@ void GstPlayer::stop() {
 }
 
 void GstPlayer::_pauseInternal(bool stop) {
-    // Always set pipeline to the appropriate state (PAUSED or READY) when pausing/stopping
     if (_isPlaying) {
         _isPlaying = false;
         _isPlayingInternal = false;
@@ -172,6 +111,22 @@ void GstPlayer::_pauseInternal(bool stop) {
 // //        progress  = 0.0f;
     //    completed = false;
 //         notifyState(JuceMixPlayerState::STOPPED);
+        if (!bus) bus = gst_element_get_bus(pipeline);
+        gst_bus_set_flushing(bus, TRUE);
+       
+
+        gst_element_set_state(pipeline, GST_STATE_NULL);
+        GstStateChangeReturn sret =
+            gst_element_get_state(pipeline, nullptr, nullptr, GST_CLOCK_TIME_NONE);
+
+        if (sret != GST_STATE_CHANGE_SUCCESS) {
+            notifyError("Failed to stop old pipeline.");
+            gst_bus_set_flushing(bus, FALSE);
+            return;
+        }
+
+        gst_bus_set_flushing(bus, FALSE);
+        notifyState(JuceMixPlayerState::STOPPED);
     } else {
         notifyState(JuceMixPlayerState::PAUSED);
     }
@@ -183,52 +138,47 @@ void GstPlayer::seek(float normalizedPos) {
         return;
     }
     
-    normalizedPos = std::clamp(normalizedPos, 0.0f, 1.0f);
-    _isSeeking = true;
+    gstTaskQueue.async([&]{
     
-    // Remember the absolute target position in milliseconds so that we
-    // can correct for GStreamer "segment" time, which often resets the
-    // reported position to 0 after a flushed seek.
-    gint64 targetMs = static_cast<gint64>(durationMs * normalizedPos);
-    lastSeekMs = targetMs;
-    
-    // Target timestamp
-    gint64 target = targetMs * 1000000; // convert ms to ns
-    std::cout << "GstPlayer::seek: target ns: " << target << std::endl;
+        normalizedPos = std::clamp(normalizedPos, 0.0f, 1.0f);
+        _isSeeking = true;
+        gint64 targetMs = static_cast<gint64>(durationMs * normalizedPos);
+        lastSeekMs = targetMs;
+        
+        // Target timestamp
+        gint64 target = targetMs * 1000000; // convert ms to ns
+        std::cout << "GstPlayer::seek: target ns: " << target << std::endl;
 
-    // Build seek event
-    bool result = gst_element_seek(
-        pipeline,
-        1.0,                     // playback rate
-        GST_FORMAT_TIME,
-        (GstSeekFlags)(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE),
-        GST_SEEK_TYPE_SET,       // start type
-        target,                  // start position
-        GST_SEEK_TYPE_NONE,      // end type
-        GST_CLOCK_TIME_NONE      // end position
-    );
-    
-    if (!result) {
-        PRINT("Seek failed");
-        // Make sure we don't get stuck in a permanent "seeking" state
+        bool result = gst_element_seek(
+            pipeline,
+            1.0,                     // playback rate
+            GST_FORMAT_TIME,
+            (GstSeekFlags)(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE),
+            GST_SEEK_TYPE_SET,       // start type
+            target,                  // start position
+            GST_SEEK_TYPE_NONE,      // end type
+            GST_CLOCK_TIME_NONE      // end position
+        );
+        
+        if (!result) {
+            PRINT("Seek failed");
+            _isSeeking = false;
+            return;
+        }
+        
+        PRINT("SEEK SUCCESS");
+
+        gst_element_get_state(
+            pipeline,
+            nullptr,
+            nullptr,
+            GST_CLOCK_TIME_NONE
+        );
+
+        // Seek finished – re‑enable progress updates
         _isSeeking = false;
         return;
-    }
-    
-    PRINT("SEEK SUCCESS");
-
-    // After accurate seek, pipeline must resume properly
-    gst_element_get_state(
-        pipeline,
-        nullptr,
-        nullptr,
-        GST_CLOCK_TIME_NONE
-    );
-
-    // Seek finished – re‑enable progress updates
-    _isSeeking = false;
-
-    return;
+    });
 }
 
 int GstPlayer::isPlaying() {
@@ -284,11 +234,6 @@ void GstPlayer::setMuteEmbeddedAudio(int mute) {
                      "volume", muteEmbedded ? 0.0  : 1.0, 
                      nullptr);
     }
-}
-
-void GstPlayer::setSurfaceHandle(void* handle) {
-    surfaceHandle = handle;
-    applyOverlayIfAvailable();
 }
 
 void GstPlayer::setRotation(int degrees) {
@@ -489,62 +434,143 @@ void GstPlayer::timerCallback() {
 }
 
 
-void GstPlayer::buildPipelineIfNeeded() {
+
+void GstPlayer::setVideoPath(const char* path)
+{
+    if (!path || std::strlen(path) == 0) {
+        notifyError("Invalid video path");
+        return;
+    }
+
+    gstTaskQueue.async([this, path] {
+
+        // Stop current playback and reset flags
+        _isPlaying = false;
+        _isPlayingInternal = false;
+        _isSeeking = false;
+        _stopProgressTimer();
+
+        teardownPipeline();  // ✅ safe teardown (fixed below)
+
+        videoPath  = path;
+        progress   = 0.0f;
+        completed  = false;
+        durationMs = 0;
+        ready      = false;
+        lastSeekMs = 0;
+
+        buildPipelineIfNeeded();
+        if (!pipeline) {
+            notifyError("Failed to initialize video pipeline");
+            return;
+        }
+
+        // Set URI
+        GError* err = nullptr;
+        gchar* uri = gst_filename_to_uri(videoPath.c_str(), &err);
+        if (err) {
+            notifyError(err->message);
+            g_error_free(err);
+            if (uri) g_free(uri);
+            teardownPipeline();
+            return;
+        }
+
+        g_object_set(pipeline, "uri", uri, nullptr);
+        g_free(uri);
+
+        // Go PAUSED and WAIT for preroll
+        gst_element_set_state(pipeline, GST_STATE_PAUSED);
+
+        GstStateChangeReturn ret =
+            gst_element_get_state(pipeline, nullptr, nullptr, GST_CLOCK_TIME_NONE);
+
+        if (ret != GST_STATE_CHANGE_SUCCESS &&
+            ret != GST_STATE_CHANGE_NO_PREROLL)
+        {
+            PRINT("Pipeline failed to reach PAUSED");
+            teardownPipeline();
+            return;
+        }
+
+        // Duration is valid after preroll
+        durationMs = _getDurationInternal();
+        ready = true;
+
+        notifyState(JuceMixPlayerState::READY);
+    });
+}
+
+void GstPlayer::setSurfaceHandle(void* handle)
+{
+    gstTaskQueue.async([this, handle] {
+        surfaceHandle = handle;
+        surfaceHandleAtomic.store((guintptr)handle);
+        applyOverlayIfAvailable();
+    });
+}
+
+void GstPlayer::buildPipelineIfNeeded()
+{
     if (pipeline) return;
+
     pipeline = gst_element_factory_make("playbin", "playbin");
     if (!pipeline) {
         notifyError("Failed to create playbin");
         return;
     }
 
-    // Set up the custom video output bin (with rotation & effect filter)
     setupVideoProcessingBin();
-    if (!videoBin) {
-        // setupVideoProcessingBin already reported the error
-        return;
-    }
+    if (!videoBin) return;
 
-    // Instruct playbin to use our video bin as the video output sink
     g_object_set(pipeline, "video-sink", videoBin, nullptr);
-    // Apply initial audio mute/volume settings
-    g_object_set(pipeline, 
+    g_object_set(pipeline,
                  "mute",   muteEmbedded ? TRUE : FALSE,
-                 "volume", muteEmbedded ? 0.0  : 1.0, 
+                 "volume", muteEmbedded ? 0.0  : 1.0,
                  nullptr);
 
-    // Get the message bus for this pipeline
     bus = gst_element_get_bus(pipeline);
+    gst_bus_set_sync_handler(bus, GstPlayer::bus_sync_cb, this, nullptr);
 }
 
-void GstPlayer::teardownPipeline() {
+void GstPlayer::teardownPipeline()
+{
+    // Stop pipeline
     if (pipeline) {
-        // Stop pipeline: set to NULL state (this will also internally stop playback threads)
+        if (bus) gst_bus_set_flushing(bus, TRUE);
+
         gst_element_set_state(pipeline, GST_STATE_NULL);
-        // Wait for state change to complete, but with a timeout to avoid hanging indefinitely
+
         GstState state;
-        GstStateChangeReturn ret = gst_element_get_state(pipeline, &state, nullptr, 2 * GST_SECOND);
+        GstStateChangeReturn ret =
+            gst_element_get_state(pipeline, &state, nullptr, SHUTDOWN_TIMEOUT);
+
         if (ret == GST_STATE_CHANGE_ASYNC) {
-            // If still ASYNC after timeout, we proceed regardless (to avoid hang)
-            std::cerr << "Warning: Pipeline did not shut down within timeout, forcing teardown." << std::endl;
+            std::cerr << "Warning: Pipeline did not shut down within timeout.\n";
         }
     }
 
-    // Release bus and pipeline elements
     if (bus) {
         gst_object_unref(bus);
         bus = nullptr;
     }
+
+    // Only unref the BIN. It owns children (videoSink/videoFlip/effect/etc).
     if (videoBin) {
-        // Optionally, detach video overlay before destroying videoSink (not strictly required)
+        // Detach overlay handle (safe while sink still alive)
         if (videoSink && GST_IS_VIDEO_OVERLAY(videoSink)) {
-            gst_video_overlay_set_window_handle(GST_VIDEO_OVERLAY(videoSink), (guintptr)nullptr);
+            gst_video_overlay_set_window_handle(GST_VIDEO_OVERLAY(videoSink), 0);
         }
+
         gst_object_unref(videoBin);
-        videoBin    = nullptr;
-        videoSink   = nullptr;
-        videoFlip   = nullptr;
-        effectFilter = nullptr;
+        videoBin = nullptr;
     }
+
+    // Null out child pointers (they were freed by unref(videoBin))
+    videoSink    = nullptr;
+    videoFlip    = nullptr;
+    effectFilter = nullptr;
+
     if (pipeline) {
         gst_object_unref(pipeline);
         pipeline = nullptr;
@@ -553,64 +579,57 @@ void GstPlayer::teardownPipeline() {
     durationMs = 0;
 }
 
-void GstPlayer::applyOverlayIfAvailable() {
-    if (!videoSink || !surfaceHandle) return;
+void GstPlayer::applyOverlayIfAvailable()
+{
+    if (!videoSink) return;
+
+    guintptr handle = surfaceHandleAtomic.load();
+    if (handle == 0) return;
+
     if (GST_IS_VIDEO_OVERLAY(videoSink)) {
-        // Inform the video sink about the rendering surface (window) to draw on
-        gst_video_overlay_set_window_handle(GST_VIDEO_OVERLAY(videoSink), (guintptr)surfaceHandle);
+        gst_video_overlay_set_window_handle(
+            GST_VIDEO_OVERLAY(videoSink),
+            handle
+        );
     }
 }
 
-void GstPlayer::setupVideoProcessingBin() {
-    // Create an empty bin to hold video processing elements
+void GstPlayer::setupVideoProcessingBin()
+{
     videoBin = gst_bin_new("video-processing-bin");
     if (!videoBin) {
         notifyError("Failed to create video processing bin");
         return;
     }
-    // Create video flip (rotation) element
-    videoFlip = gst_element_factory_make("videoflip", "videoflip");
-    if (!videoFlip) {
-        notifyError("Failed to create videoflip element");
-        return;
-    }
-    // Create effect filter (always use videobalance for all effects)
-    effectFilter = makeEffectFilter(currentEffect);
-    if (!effectFilter) {
-        notifyError("Failed to create effect filter");
-        return;
-    }
-    // Create video sink (OpenGL/GLES sink for rendering to screen)
-    videoSink = makeVideoSink();
-    if (!videoSink) {
-        notifyError("Failed to create video sink");
-        return;
-    }
-    // Create a converter to ensure compatibility between videoflip and videobalance
-    GstElement* converter = gst_element_factory_make("videoconvert", "effect-converter");
-    if (!converter) {
-        notifyError("Failed to create videoconvert element");
-        return;
-    }
 
-    // Add and link all video processing elements: flip -> convert -> effect -> sink
+    videoFlip = gst_element_factory_make("videoflip", "videoflip");
+    if (!videoFlip) { notifyError("Failed to create videoflip"); gst_object_unref(videoBin); videoBin=nullptr; return; }
+
+    effectFilter = makeEffectFilter(currentEffect);
+    if (!effectFilter) { notifyError("Failed to create effect filter"); gst_object_unref(videoBin); videoBin=nullptr; return; }
+
+    videoSink = makeVideoSink();
+    if (!videoSink) { notifyError("Failed to create video sink"); gst_object_unref(videoBin); videoBin=nullptr; return; }
+
+    GstElement* converter = gst_element_factory_make("videoconvert", "effect-converter");
+    if (!converter) { notifyError("Failed to create videoconvert"); gst_object_unref(videoBin); videoBin=nullptr; return; }
+
     gst_bin_add_many(GST_BIN(videoBin), videoFlip, converter, effectFilter, videoSink, nullptr);
+
     if (!gst_element_link_many(videoFlip, converter, effectFilter, videoSink, nullptr)) {
         notifyError("Failed to link video processing elements");
+        gst_object_unref(videoBin); videoBin=nullptr;
         return;
     }
 
-    // Add a ghost pad to the bin to act as a single sink pad for the whole videoBin
     GstPad* sinkPad = gst_element_get_static_pad(videoFlip, "sink");
     gst_element_add_pad(videoBin, gst_ghost_pad_new("sink", sinkPad));
     gst_object_unref(sinkPad);
-
-    // Initialize effect parameters (e.g., ensure default/none effect has neutral settings)
     applyEffectParams(effectFilter, currentEffect);
 }
 
-GstElement* GstPlayer::makeVideoSink() {
-    // Use OpenGL video sink for rendering (adjust as needed per platform, e.g., glimagesink for iOS/Android)
+GstElement* GstPlayer::makeVideoSink()
+{
     GstElement* sink = gst_element_factory_make("glimagesink", "videosink");
     if (sink) {
         g_object_set(sink, "force-aspect-ratio", TRUE, nullptr);
@@ -618,25 +637,22 @@ GstElement* GstPlayer::makeVideoSink() {
     return sink;
 }
 
-GstElement* GstPlayer::makeEffectFilter(VisualEffect effect) {
-    // Always create a videobalance element. We will adjust its properties for different effects.
+GstElement* GstPlayer::makeEffectFilter(VisualEffect /*effect*/)
+{
     return gst_element_factory_make("videobalance", "effectfilter");
 }
 
 void GstPlayer::applyEffectParams(GstElement* filter, VisualEffect effect) {
     if (!filter) return;
-    // We expect the filter to be videobalance; confirm the factory name
     GstElementFactory* factory = gst_element_get_factory(filter);
     if (!factory) return;
     const gchar* factoryName = gst_plugin_feature_get_name(GST_PLUGIN_FEATURE(factory));
     if (g_strcmp0(factoryName, "videobalance") != 0) {
-        return;  // If it's not a videobalance (unexpected), do nothing
+        return;
     }
 
-    // Set videobalance properties based on the selected effect
     switch (effect) {
         case VisualEffect::NONE:
-            // No effect: reset to neutral values
             g_object_set(filter,
                          "brightness", 0.0,
                          "contrast",   1.0,
@@ -669,7 +685,6 @@ void GstPlayer::applyEffectParams(GstElement* filter, VisualEffect effect) {
                          nullptr);
             break;
     }
-    // The videobalance element will immediately start applying these new settings to the video stream:contentReference[oaicite:4]{index=4}:contentReference[oaicite:5]{index=5}.
 }
 
 void GstPlayer::pollBus() {
@@ -716,4 +731,31 @@ void GstPlayer::pollBus() {
         }
         gst_message_unref(msg);
     }
+}
+
+
+GstBusSyncReply GstPlayer::bus_sync_cb(GstBus* /*bus*/, GstMessage* msg, gpointer user_data)
+{
+    auto* self = static_cast<GstPlayer*>(user_data);
+    if (!self) return GST_BUS_PASS;
+
+    if (GST_MESSAGE_TYPE(msg) == GST_MESSAGE_ELEMENT) {
+        const GstStructure* s = gst_message_get_structure(msg);
+        if (s && gst_structure_has_name(s, "prepare-window-handle")) {
+
+            GstElement* sink = GST_ELEMENT(GST_MESSAGE_SRC(msg));
+            if (sink && GST_IS_VIDEO_OVERLAY(sink)) {
+                guintptr handle = self->surfaceHandleAtomic.load();
+
+                if (handle != 0) {
+                    gst_video_overlay_set_window_handle(
+                        GST_VIDEO_OVERLAY(sink),
+                        handle
+                    );
+                }
+            }
+            return GST_BUS_DROP; // handled; don't forward
+        }
+    }
+    return GST_BUS_PASS;
 }
