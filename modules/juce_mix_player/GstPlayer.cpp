@@ -197,25 +197,45 @@ void GstPlayer::_stopProgressTimer() {
 
 void GstPlayer::setMuteEmbeddedAudio(int mute) {
   _muteEmbedded = (mute != 0);
-  if (pipeline) {
-    g_object_set(pipeline, "mute", _muteEmbedded ? TRUE : FALSE, "volume",
+
+  // Control the volume element if it exists
+  if (audioVolume) {
+    g_object_set(audioVolume, "mute", _muteEmbedded ? TRUE : FALSE, "volume",
                  _muteEmbedded ? 0.0 : 1.0, nullptr);
+    PRINT(std::string("Audio mute set to: ") +
+          (_muteEmbedded ? "true" : "false"));
+  } else {
+    PRINT("Warning: audioVolume element not available");
   }
 }
 
 void GstPlayer::setRotation(int degree) {
-  if (degree < 0 || degree > 359) {
-    notifyError("Invalid rotation angle. Use 0 - 359 degrees.");
+  if (degree != 0 && degree != 90 && degree != 180 && degree != 270) {
+    notifyError("Invalid rotation angle. Use 0, 90, 180, or 270 degrees.");
     return;
   }
   if (_currentRotation == degree) {
     return;
   }
-
   _currentRotation = degree;
 
   if (videoFlip) {
-    g_object_set(videoFlip, "method", static_cast<int>(newRotation), nullptr);
+    int method = 0;
+    switch (degree) {
+    case 0:
+      method = 0;
+      break; // identity
+    case 90:
+      method = 1;
+      break; // 90 degrees clockwise
+    case 180:
+      method = 2;
+      break; // 180 degrees
+    case 270:
+      method = 3;
+      break; // 90 degrees counter-clockwise
+    }
+    g_object_set(videoFlip, "method", method, nullptr);
   }
   std::cout << "ROTATION APPLIED: " << degree << std::endl;
 }
@@ -247,7 +267,7 @@ void GstPlayer::setVisualEffect(int effectId) {
 
   // Apply new effect parameters to the existing filter in real-time
   if (videoBalance) {
-    applyEffectParams(videoBalance, _currentEffect);
+    applyEffectParams(_currentEffect);
   }
   std::cout << "VIDEO FILTER APPLIED: " << effectId << std::endl;
 }
@@ -274,7 +294,8 @@ static void onPadAdded(GstElement *src, GstPad *pad, gpointer data) {
     gst_object_unref(sinkPad);
 }
 
-void GstPlayer::exportVideo(const char *outputPath, std::function<void(const char *)> completion) {
+void GstPlayer::exportVideo(const char *outputPath,
+                            std::function<void(const char *)> completion) {
   if (!_isReady || _videoPath.empty()) {
     completion("No video loaded");
     return;
@@ -324,7 +345,7 @@ void GstPlayer::exportVideo(const char *outputPath, std::function<void(const cha
     g_object_set(sink, "location", outputPathStr.c_str(), "sync", FALSE,
                  nullptr);
     g_object_set(flip, "method", rotationMethod, nullptr);
-    applyEffectParams(balance, effect);
+    applyEffectParams(_currentEffect);
 
     gst_bin_add_many(GST_BIN(pipeline), src, decodebin, videoQueue, balance,
                      flip, vconv, x264enc, h264parse, audioQueue, aconv,
@@ -390,8 +411,8 @@ void GstPlayer::timerCallback() {
 
       if (gst_element_query_position(pipeline, GST_FORMAT_TIME, &posNs)) {
         double posMs = (double)posNs / 1000000.0; // ns → ms
-        progress = (float)(posMs / (double)_durationMs);
-        progress = std::clamp(progress, 0.0f, 1.0f);
+        _progress = (float)(posMs / (double)_durationMs);
+        _progress = std::clamp(_progress, 0.0f, 1.0f);
         if (onProgressCallback) {
           double segMs = (double)posNs / 1000000.0; // ns to ms
           double absoluteMs = segMs;
@@ -407,8 +428,8 @@ void GstPlayer::timerCallback() {
           }
           float corrected = (float)(absoluteMs / (double)_durationMs);
           corrected = std::clamp(corrected, 0.0f, 1.0f);
-          progress = corrected;
-          onProgressCallback(this, progress);
+          _progress = corrected;
+          onProgressCallback(this, _progress);
         }
       }
     }
@@ -421,62 +442,378 @@ void GstPlayer::setVideoPath(const char *path) {
     return;
   }
 
-  gstTaskQueue.async([this, path] {
-    // TODO: Implement video path setting
-    notifyError("Video path setting not implemented");
+  gstTaskQueue.async([this, pathStr = std::string(path)] {
+    PRINT("GstPlayer::setVideoPath: " + pathStr);
+
+    // Check if file exists
+    juce::File videoFile(pathStr);
+    if (!videoFile.existsAsFile()) {
+      notifyError("Video file does not exist");
+      return;
+    }
+
+    // Stop current playback if active
+    if (_isPlaying || _isPlayingInternal) {
+      _pauseInternal(true);
+    }
+
+    // Clean up old pipeline
+    teardownPipeline();
+
+    // Store new path
+    _videoPath = pathStr;
+    _isReady = false;
+    _isCompleted = false;
+    _progress = 0.0f;
+
+    // Build new pipeline
+    buildPipeline();
+
+    if (!pipeline) {
+      notifyError("Failed to create pipeline");
+      return;
+    }
+
+    // Query duration
+    _durationMs = _getDurationInternal();
+    PRINT("Duration: " + std::to_string(_durationMs) + " ms");
+
+    // Mark as ready
+    _isReady = true;
+    notifyState(JuceMixPlayerState::READY);
   });
 }
 
 void GstPlayer::setSurfaceHandle(void *handle) {
-  // TODO: Implement surface handle setting
+  PRINT("GstPlayer::setSurfaceHandle");
+
+  // Store handle atomically
+  surfaceHandleAtomic.store(reinterpret_cast<guintptr>(handle),
+                            std::memory_order_release);
+  surfaceHandle = handle;
+
+  // Apply overlay if pipeline and video sink are ready
+  gstTaskQueue.async([this] {
+    if (videoSink && pipeline) {
+      applyOverlay();
+    }
+  });
 }
 
 void GstPlayer::buildPipeline() {
-  // TODO: Implement pipeline building  
+  PRINT("GstPlayer::buildPipeline");
+
+  if (_videoPath.empty()) {
+    notifyError("No video path set");
+    return;
+  }
+
+  // Create main pipeline
+  pipeline = gst_pipeline_new("video_player");
+  if (!pipeline) {
+    notifyError("Failed to create pipeline");
+    return;
+  }
+
+  // Create source element
+  source = gst_element_factory_make("filesrc", "source");
+  if (!source) {
+    notifyError("Failed to create filesrc");
+    gst_object_unref(pipeline);
+    pipeline = nullptr;
+    return;
+  }
+  g_object_set(source, "location", _videoPath.c_str(), nullptr);
+
+  // Create decodebin for automatic demuxing and decoding
+  decodebin = gst_element_factory_make("decodebin", "decoder");
+  if (!decodebin) {
+    notifyError("Failed to create decodebin");
+    gst_object_unref(source);
+    gst_object_unref(pipeline);
+    source = nullptr;
+    pipeline = nullptr;
+    return;
+  }
+
+  // Create video processing bin (includes effects, rotation, and sink)
+  setupVideoProcessingBin();
+  if (!videoBin) {
+    notifyError("Failed to create video processing bin");
+    gst_object_unref(decodebin);
+    gst_object_unref(source);
+    gst_object_unref(pipeline);
+    decodebin = nullptr;
+    source = nullptr;
+    pipeline = nullptr;
+    return;
+  }
+
+  // Create audio processing chain with volume control
+  // audioconvert → volume → autoaudiosink
+  audioConvert = gst_element_factory_make("audioconvert", "audio_convert");
+  audioVolume = gst_element_factory_make("volume", "audio_volume");
+  audioSink = gst_element_factory_make("autoaudiosink", "audio_sink");
+
+  if (!audioConvert || !audioVolume || !audioSink) {
+    PRINT("Warning: Failed to create audio elements, continuing without audio");
+    // Clean up any that were created
+    if (audioConvert)
+      gst_object_unref(audioConvert);
+    if (audioVolume)
+      gst_object_unref(audioVolume);
+    if (audioSink)
+      gst_object_unref(audioSink);
+    audioConvert = nullptr;
+    audioVolume = nullptr;
+    audioSink = nullptr;
+  } else {
+    // Set initial mute state
+    g_object_set(audioVolume, "mute", _muteEmbedded ? TRUE : FALSE, "volume",
+                 _muteEmbedded ? 0.0 : 1.0, nullptr);
+  }
+
+  // Add elements to pipeline
+  gst_bin_add_many(GST_BIN(pipeline), source, decodebin, videoBin, nullptr);
+  if (audioConvert && audioVolume && audioSink) {
+    gst_bin_add_many(GST_BIN(pipeline), audioConvert, audioVolume, audioSink,
+                     nullptr);
+
+    // Link audio chain
+    if (!gst_element_link_many(audioConvert, audioVolume, audioSink, nullptr)) {
+      PRINT("Warning: Failed to link audio chain");
+    }
+  }
+
+  // Link source to decodebin
+  if (!gst_element_link(source, decodebin)) {
+    notifyError("Failed to link source to decodebin");
+    teardownPipeline();
+    return;
+  }
+
+  // Connect decodebin pad-added signal for dynamic linking
+  // Audio pads will connect to audioConvert (first element in audio chain)
+  decodebinPadData =
+      new std::pair<GstElement *, GstElement *>(videoBin, audioConvert);
+  g_signal_connect(decodebin, "pad-added", G_CALLBACK(onPadAdded),
+                   decodebinPadData);
+
+  // Get bus for message handling
+  bus = gst_element_get_bus(pipeline);
+
+  // Apply overlay if surface handle is already set
+  if (surfaceHandle) {
+    applyOverlay();
+  }
+
+  // Set pipeline to PAUSED state to preroll
+  GstStateChangeReturn ret = gst_element_set_state(pipeline, GST_STATE_PAUSED);
+  if (ret == GST_STATE_CHANGE_FAILURE) {
+    notifyError("Failed to set pipeline to PAUSED state");
+    teardownPipeline(); // teardownPipeline will clean up decodebinPadData
+    return;
+  }
+
+  // Wait for preroll to complete
+  ret = gst_element_get_state(pipeline, nullptr, nullptr, 5 * GST_SECOND);
+  if (ret == GST_STATE_CHANGE_FAILURE) {
+    notifyError("Pipeline preroll failed");
+    teardownPipeline(); // teardownPipeline will clean up decodebinPadData
+    return;
+  }
+
+  PRINT("Pipeline built successfully");
 }
 
 void GstPlayer::teardownPipeline() {
-  // TODO: Implement pipeline teardown
+  PRINT("GstPlayer::teardownPipeline");
+
+  // Stop progress timer
+  _stopProgressTimer();
+
+  if (!pipeline) {
+    // Nothing to tear down
+    return;
+  }
+
+  // Set pipeline to NULL state
+  gst_element_set_state(pipeline, GST_STATE_NULL);
+
+  // Wait for state change with timeout
+  GstStateChangeReturn ret =
+      gst_element_get_state(pipeline, nullptr, nullptr, SHUTDOWN_TIMEOUT);
+  if (ret == GST_STATE_CHANGE_FAILURE) {
+    PRINT("Warning: Pipeline failed to transition to NULL state");
+  }
+
+  // Unref bus if it exists
+  if (bus) {
+    gst_object_unref(bus);
+    bus = nullptr;
+  }
+
+  // Unref pipeline (this will also unref all child elements)
+  gst_object_unref(pipeline);
+
+  // Clear all element pointers (they're already unreffed via pipeline)
+  pipeline = nullptr;
+  source = nullptr;
+  decodebin = nullptr;
+  videoBin = nullptr;
+  videoSink = nullptr;
+  videoFlip = nullptr;
+  videoBalance = nullptr;
+  videoQueue = nullptr;
+  videoConvert = nullptr;
+  audioConvert = nullptr;
+  audioVolume = nullptr;
+  audioSink = nullptr;
+
+  // Clean up dynamically allocated pad data
+  if (decodebinPadData) {
+    delete decodebinPadData;
+    decodebinPadData = nullptr;
+  }
+
+  // Reset state
+  _isReady = false;
+  _durationMs = 0;
+  _progress = 0.0f;
+
+  PRINT("Pipeline teardown complete");
 }
 
 void GstPlayer::applyOverlay() {
-  // TODO: Implement overlay application
+  PRINT("GstPlayer::applyOverlay");
+
+  if (!videoSink) {
+    PRINT("Warning: No video sink available for overlay");
+    return;
+  }
+
+  // Check if video sink supports GstVideoOverlay interface
+  if (!GST_IS_VIDEO_OVERLAY(videoSink)) {
+    PRINT("Warning: Video sink does not support GstVideoOverlay interface");
+    return;
+  }
+
+  // Get surface handle atomically
+  void *handle = reinterpret_cast<void *>(
+      surfaceHandleAtomic.load(std::memory_order_acquire));
+
+  if (!handle) {
+    PRINT("Warning: No surface handle set");
+    return;
+  }
+
+  PRINT("Applying video overlay with handle");
+
+  // Set the window handle for video rendering
+  // On iOS, this is a UIView* pointer that glimagesink will use
+  gst_video_overlay_set_window_handle(GST_VIDEO_OVERLAY(videoSink),
+                                      reinterpret_cast<guintptr>(handle));
+
+  PRINT("Video overlay applied successfully");
 }
 
 void GstPlayer::setupVideoProcessingBin() {
-//  TODO: Implement video processing bin setup
+  PRINT("GstPlayer::setupVideoProcessingBin");
+
+  // Create a bin to hold all video processing elements
+  videoBin = gst_bin_new("video_processing");
+  if (!videoBin) {
+    notifyError("Failed to create video processing bin");
+    return;
+  }
+
+  // Create video processing elements
+  videoQueue = gst_element_factory_make("queue", "video_queue");
+  GstElement *videoConvert1 =
+      gst_element_factory_make("videoconvert", "video_convert1");
+  GstElement *videoScale =
+      gst_element_factory_make("videoscale", "video_scale");
+  videoBalance = gst_element_factory_make("videobalance", "video_balance");
+  videoFlip = gst_element_factory_make("videoflip", "video_flip");
+  videoConvert = gst_element_factory_make("videoconvert", "video_convert2");
+
+  // Create video sink - glimagesink for iOS with OpenGL rendering
+  videoSink = gst_element_factory_make("glimagesink", "video_sink");
+
+  if (!videoQueue || !videoConvert1 || !videoScale || !videoBalance ||
+      !videoFlip || !videoConvert || !videoSink) {
+    notifyError("Failed to create video processing elements");
+    if (videoBin)
+      gst_object_unref(videoBin);
+    videoBin = nullptr;
+    return;
+  }
+
+  // Configure video sink properties
+  g_object_set(videoSink, "sync",
+               TRUE, // Sync to clock for proper playback speed
+               nullptr);
+
+  // Add all elements to the bin
+  gst_bin_add_many(GST_BIN(videoBin), videoQueue, videoConvert1, videoScale,
+                   videoBalance, videoFlip, videoConvert, videoSink, nullptr);
+
+  // Link all elements in the video processing chain
+  if (!gst_element_link_many(videoQueue, videoConvert1, videoScale,
+                             videoBalance, videoFlip, videoConvert, videoSink,
+                             nullptr)) {
+    notifyError("Failed to link video processing elements");
+    gst_object_unref(videoBin);
+    videoBin = nullptr;
+    return;
+  }
+
+  // Create a ghost pad for the bin's sink (input from decodebin)
+  GstPad *sinkPad = gst_element_get_static_pad(videoQueue, "sink");
+  GstPad *ghostSink = gst_ghost_pad_new("sink", sinkPad);
+  gst_element_add_pad(videoBin, ghostSink);
+  gst_object_unref(sinkPad);
+
+  // Set initial effect parameters (NONE)
+  applyEffectParams(VisualEffect::NONE);
+
+  // Set initial rotation (0 degrees)
+  g_object_set(videoFlip, "method", 0, nullptr); // 0 = identity (no rotation)
+
+  PRINT("Video processing bin setup complete");
 }
 
 void GstPlayer::applyEffectParams(VisualEffect effect) {
   if (!videoBalance)
     return;
-  
+
   GstElementFactory *factory = gst_element_get_factory(videoBalance);
   if (!factory)
     return;
-  
-  const gchar *factoryName = gst_plugin_feature_get_name(GST_PLUGIN_FEATURE(factory));
-  
+
+  const gchar *factoryName =
+      gst_plugin_feature_get_name(GST_PLUGIN_FEATURE(factory));
+
   if (g_strcmp0(factoryName, "videobalance") != 0) {
     return;
   }
 
   switch (effect) {
   case VisualEffect::NONE:
-    g_object_set(videoBalance, "brightness", 0.0, "contrast", 1.0, "saturation", 1.0,
-                 "hue", 0.0, nullptr);
+    g_object_set(videoBalance, "brightness", 0.0, "contrast", 1.0, "saturation",
+                 1.0, "hue", 0.0, nullptr);
     break;
   case VisualEffect::GRAINY:
-    g_object_set(videoBalance, "brightness", -0.05, "contrast", 0.75, "saturation",
-                 0.9, "hue", 0.0, nullptr);
+    g_object_set(videoBalance, "brightness", -0.05, "contrast", 0.75,
+                 "saturation", 0.9, "hue", 0.0, nullptr);
     break;
   case VisualEffect::GRITTY:
-    g_object_set(videoBalance, "brightness", -0.10, "contrast", 1.35, "saturation",
-                 0.55, "hue", 0.0, nullptr);
+    g_object_set(videoBalance, "brightness", -0.10, "contrast", 1.35,
+                 "saturation", 0.55, "hue", 0.0, nullptr);
     break;
   case VisualEffect::HYPER:
-    g_object_set(videoBalance, "brightness", 0.10, "contrast", 1.5, "saturation", 1.8,
-                 "hue", 0.06, nullptr);
+    g_object_set(videoBalance, "brightness", 0.10, "contrast", 1.5,
+                 "saturation", 1.8, "hue", 0.06, nullptr);
     break;
   }
 }

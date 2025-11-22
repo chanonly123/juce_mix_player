@@ -18,7 +18,12 @@ extern "C" {
 }
 
 // Visual effects enum
-enum class VisualEffect { NONE = 0, GRAINY = 1, GRITTY = 2, HYPER = 3, };
+enum class VisualEffect {
+  NONE = 0,
+  GRAINY = 1,
+  GRITTY = 2,
+  HYPER = 3,
+};
 
 class GstPlayer : private juce::Timer {
 private:
@@ -43,12 +48,21 @@ private:
   double progressUpdateIntervalSec = 0.10;
 
   GstElement *pipeline = nullptr;
+  GstElement *source = nullptr;
+  GstElement *decodebin = nullptr;
+  GstElement *videoQueue = nullptr;
+  GstElement *videoConvert = nullptr;
   GstElement *videoSink = nullptr;
   GstElement *videoFlip = nullptr;
   GstElement *videoBalance = nullptr;
   GstElement *videoBin = nullptr;
+  GstElement *audioConvert = nullptr;
+  GstElement *audioVolume = nullptr;
+  GstElement *audioSink = nullptr;
   GstBus *bus = nullptr;
 
+  // Track dynamically allocated data for cleanup
+  std::pair<GstElement *, GstElement *> *decodebinPadData = nullptr;
 
   void buildPipeline();
   void teardownPipeline();
@@ -86,7 +100,8 @@ public:
   void setProgressUpdateInterval(float seconds);
   void setRotation(int degrees);
   void setVisualEffect(int effectId);
-  void exportVideo(const char *outputPath, std::function<void(const char *)> completion);
+  void exportVideo(const char *outputPath,
+                   std::function<void(const char *)> completion);
   void setMuteEmbeddedAudio(int mute);
   void setSurfaceHandle(void *handle);
   void timerCallback() override;
