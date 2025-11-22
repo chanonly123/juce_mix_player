@@ -29,6 +29,7 @@ class VideoPlayerState extends State<VideoPlayerPage> {
   String _currentRotation = "0";
   VisualEffectType _currentEffect = VisualEffectType.none;
   bool _isExporting = false;
+  bool _isDragging = false;
 
   // --- UI State Variables ---
   bool _isToolsPanelOpen = false; // Controls the visibility of the edit tray
@@ -43,7 +44,9 @@ class VideoPlayerState extends State<VideoPlayerPage> {
     player.setProgressHandler((progress) {
       if (mounted) {
         setState(() {
-          _seekPosition = progress;
+          if (!_isDragging) {
+             _seekPosition = progress;
+          }
           _currentPosition = progress * _duration;
         });
       }
@@ -342,8 +345,12 @@ class VideoPlayerState extends State<VideoPlayerPage> {
               Expanded(
                 child: Slider(
                   value: _seekPosition,
+                  onChangeStart: (_) => setState(() => _isDragging = true),
                   onChanged: (v) => setState(() => _seekPosition = v),
-                  onChangeEnd: (v) => player.seek(v),
+                  onChangeEnd: (v) {
+                    setState(() => _isDragging = false);
+                    player.seek(v);
+                  },
                 ),
               ),
               Text(TimeUtils.formatDuration(_duration), style: const TextStyle(fontSize: 12)),

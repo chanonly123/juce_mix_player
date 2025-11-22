@@ -5,7 +5,6 @@
 #if JUCE_IOS
 #include "gst_ios_init.h"
 #include <mutex>
-
 static std::once_flag gGstInitOnce;
 #endif
 
@@ -26,12 +25,6 @@ void GstPlatformIOS::initialize() {
         gst_ios_init();
     });
 }
-
-
-
-// void GstPlatformIOS::cleanup() {
-//     // iOS-specific cleanup if needed
-// }
 #endif
 
 // Android Implementation (Placeholder)
@@ -40,8 +33,4 @@ void GstPlatformAndroid::initialize() {
     PRINT("GstPlatformAndroid: TODO - implement Android GStreamer initialization")
     gst_init(nullptr, nullptr);
 }
-
-// void GstPlatformAndroid::cleanup() {
-//     // TODO: Android-specific cleanup
-// }
 #endif

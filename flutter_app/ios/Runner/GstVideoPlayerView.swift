@@ -15,8 +15,11 @@ final class GstVideoPlayerView: NSObject, FlutterPlatformView {
 
   init(frame: CGRect, viewIdentifier viewId: Int64, arguments args: Any?) {
     self.viewId = viewId
-    self.container = UIView(frame: frame)
+    self.container = GstView(frame: frame)
     self.container.backgroundColor = .black
+    // Set content scale factor for retina displays
+    self.container.contentScaleFactor = UIScreen.main.scale
+    
     if let dict = args as? [String: Any], let ptr = dict["playerPtr"] as? NSNumber {
       self.playerPtr = ptr.uint64Value
     } else {
@@ -31,6 +34,31 @@ final class GstVideoPlayerView: NSObject, FlutterPlatformView {
       GstPlayer_setSurfaceHandle(UnsafeMutableRawPointer(bitPattern: UInt(playerPtr)), viewPtr)
     }
   }
+
+
+
+  // NEW: Required for GStreamer glimagesink to render on iOS
+  class GstView: UIView {
+      override class var layerClass: AnyClass {
+          return CAEAGLLayer.self
+      }
+      
+      override init(frame: CGRect) {
+          super.init(frame: frame)
+          if let layer = self.layer as? CAEAGLLayer {
+              layer.isOpaque = true
+              layer.drawableProperties = [
+                  kEAGLDrawablePropertyRetainedBacking: false,
+                  kEAGLDrawablePropertyColorFormat: kEAGLColorFormatRGBA8
+              ]
+          }
+      }
+      
+      required init?(coder: NSCoder) {
+          fatalError("init(coder:) has not been implemented")
+      }
+  }
+
 
   func view() -> UIView {
     return container
