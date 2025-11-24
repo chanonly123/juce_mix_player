@@ -101,27 +101,25 @@ UnifiedAVPlayer::UnifiedAVPlayer() {
   PRINT("UnifiedAVPlayer initialized");
 }
 
-// Destructor
-UnifiedAVPlayer::~UnifiedAVPlayer() {
-  PRINT("~UnifiedAVPlayer");
-}
-
 void UnifiedAVPlayer::dispose() {
   PRINT("UnifiedAVPlayer::dispose");
-  const juce::ScopedLock scopedLock(lock);
+  isPlaying = false;
+  isDisposed = true;
   stopTimer();
-  stop();
 
   if (audioPlayer) {
     audioPlayer->dispose();
-    audioPlayer.reset();
+    audioPlayer.release();
   }
 
   if (videoPlayer) {
     videoPlayer->dispose();
-    videoPlayer.reset();
+    videoPlayer.release();
   }
 }
+
+// Destructor
+UnifiedAVPlayer::~UnifiedAVPlayer() { PRINT("~UnifiedAVPlayer"); }
 
 // MARK: Unified Playback Controls
 void UnifiedAVPlayer::play() {
@@ -133,10 +131,8 @@ void UnifiedAVPlayer::play() {
     return;
   }
 
-  // Play audio first (master)
   audioPlayer->play();
 
-  // If video is loaded, sync it to start playing
   if (hasVideo && videoPlayer) {
     _ensureVideoSyncOnPlay();
   }
@@ -147,7 +143,6 @@ void UnifiedAVPlayer::play() {
 void UnifiedAVPlayer::pause() {
   PRINT("UnifiedAVPlayer::pause");
   const juce::ScopedLock scopedLock(lock);
-
   isPlaying = false;
 
   // Pause both simultaneously
@@ -162,11 +157,12 @@ void UnifiedAVPlayer::pause() {
 
 void UnifiedAVPlayer::stop() {
   PRINT("UnifiedAVPlayer::stop");
-  const juce::ScopedLock scopedLock(lock);
-
+  if (isDisposed)
+    return;
+  
+    const juce::ScopedLock scopedLock(lock);
   isPlaying = false;
 
-  // Stop both simultaneously
   if (audioPlayer) {
     audioPlayer->stop();
   }
@@ -181,17 +177,16 @@ void UnifiedAVPlayer::stop() {
 
 void UnifiedAVPlayer::seek(float normalizedPos) {
   PRINT("UnifiedAVPlayer::seek: " << normalizedPos);
+  if (isDisposed)
+    return;
   const juce::ScopedLock scopedLock(lock);
 
-  // Clamp value
   float value = std::min(1.0f, std::max(normalizedPos, 0.0f));
 
-  // Seek audio first (master)
   if (audioPlayer) {
     audioPlayer->seek(value);
   }
 
-  // Sync video to same position
   if (hasVideo && videoPlayer) {
     // Calculate video position considering possible trim/pad
     float videoPos = value;
@@ -352,7 +347,6 @@ float UnifiedAVPlayer::getCurrentTime() {
 
 bool UnifiedAVPlayer::getIsPlaying() { return isPlaying; }
 
-
 std::string UnifiedAVPlayer::getCurrentState() {
   if (audioPlayer) {
     return audioPlayer->getCurrentState();
@@ -361,7 +355,6 @@ std::string UnifiedAVPlayer::getCurrentState() {
 }
 
 bool UnifiedAVPlayer::hasVideoLoaded() { return hasVideo; }
-
 
 // MARK: Internal Synchronization
 

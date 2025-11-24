@@ -75,8 +75,11 @@ void JuceMixPlayer::dispose() {
     juce::MessageManager::getInstanceWithoutCreating()->callAsync([&]{
         PRINT("JuceMixPlayer::dispose");
         _stopProgressTimer();
-        deviceManager->removeAudioCallback(this);
-        deviceManager->removeChangeListener(this);
+        if (deviceManager) {
+            deviceManager->removeAudioCallback(this);
+            deviceManager->removeChangeListener(this);
+            deviceManager->closeAudioDevice();
+        }
         stop();
         stopRecorder();
         std::thread thread([&]{

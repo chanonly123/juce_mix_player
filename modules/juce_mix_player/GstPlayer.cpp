@@ -91,14 +91,18 @@ void GstPlayer::_pauseInternal(bool stop) {
   }
 
   if (stop) {
-    gst_element_set_state(pipeline, GST_STATE_NULL);
-    GstStateChangeReturn sret =
-        gst_element_get_state(pipeline, nullptr, nullptr, GST_CLOCK_TIME_NONE);
+    if (pipeline) {
+      gst_element_set_state(pipeline, GST_STATE_NULL);
+      GstStateChangeReturn sret = gst_element_get_state(
+          pipeline, nullptr, nullptr, GST_CLOCK_TIME_NONE);
 
-    if (sret != GST_STATE_CHANGE_SUCCESS) {
-      notifyError("Failed to stop old pipeline.");
-      gst_bus_set_flushing(bus, FALSE);
-      return;
+      if (sret != GST_STATE_CHANGE_SUCCESS) {
+        notifyError("Failed to stop old pipeline.");
+        if (bus) {
+          gst_bus_set_flushing(bus, FALSE);
+        }
+        return;
+      }
     }
 
     notifyState(JuceMixPlayerState::STOPPED);

@@ -39,12 +39,13 @@ private:
   // Synchronization state
   std::atomic<bool> hasVideo{false};
   std::atomic<bool> isPlaying{false};
+  std::atomic<bool> isDisposed{false};
   std::string videoPath;
   float audioDuration = 0.0f;
   float videoDuration = 0.0f;
 
   // Drift correction
-  const float SYNC_THRESHOLD_MS = 80.0f;      // Max acceptable drift
+  const float SYNC_THRESHOLD_MS = 80.0f;       // Max acceptable drift
   const float SYNC_CHECK_INTERVAL_MS = 150.0f; // How often to check sync
   float lastAudioProgress = 0.0f;
   float lastVideoProgress = 0.0f;
