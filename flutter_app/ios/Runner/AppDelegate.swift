@@ -13,6 +13,11 @@ import UIKit
     if let registrar = self.registrar(forPlugin: "gst-video-view") {
       registrar.register(GstVideoPlayerViewFactory(), withId: "gst-video-view")
     }
+    
+    // Register UnifiedAVPlayer video view
+    if let registrar = self.registrar(forPlugin: "unified-video-view") {
+      registrar.register(UnifiedVideoViewFactory(), withId: "unified-video-view")
+    }
 
     GeneratedPluginRegistrant.register(with: self)
 

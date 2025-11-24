@@ -44,8 +44,8 @@ private:
   float videoDuration = 0.0f;
 
   // Drift correction
-  const float SYNC_THRESHOLD_MS = 100.0f;      // Max acceptable drift
-  const float SYNC_CHECK_INTERVAL_MS = 200.0f; // How often to check sync
+  const float SYNC_THRESHOLD_MS = 50.0f;      // Max acceptable drift
+  const float SYNC_CHECK_INTERVAL_MS = 100.0f; // How often to check sync
   float lastAudioProgress = 0.0f;
   float lastVideoProgress = 0.0f;
 
@@ -111,26 +111,12 @@ public:
   std::string getCurrentState();
   bool hasVideoLoaded();
 
-  // Get internal video player pointer (for native video view integration)
-  void *getVideoPlayerPtr();
-
   // Callbacks (unified - driven by audio timeline)
   JuceMixPlayerCallbackFloat onProgressCallback = nullptr;
   JuceMixPlayerCallbackString onStateUpdateCallback = nullptr;
   JuceMixPlayerCallbackString onErrorCallback = nullptr;
 
-  // Recording support (audio only)
-  void prepareRecorder(const char *file);
-  void startRecorder();
-  void stopRecorder();
-  JuceMixPlayerCallbackFloat onRecLevelCallback = nullptr;
-  JuceMixPlayerCallbackFloat onRecProgressCallback = nullptr;
-  JuceMixPlayerCallbackString onRecStateUpdateCallback = nullptr;
-  JuceMixPlayerCallbackString onRecErrorCallback = nullptr;
-
   // Device management (audio only)
-  void setUpdatedDevices(const char *json);
-  const char *getDeviceLatencyInfo();
   JuceMixPlayerCallbackString onDeviceUpdateCallback = nullptr;
 
   // Timer callback for drift correction

@@ -2,7 +2,7 @@
     "editor.formatOnSave": true,
     "dart.openDevTools": "never",
     "editor.rulers": [
-        120
+        160
     ],
     "editor.codeActionsOnSave": {
         "quickfix.insertSemicolon": "always",

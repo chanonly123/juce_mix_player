@@ -1,21 +1,12 @@
 #include "includes/juce_wrapper_c.h"
 #include "JuceMixPlayer.h"
 #include "Logger.h"
-// #include "GstPlayer.h"
 #include "GstPlayer.h"
 #include "Models.h"
 #include "UnifiedAVPlayer.h"
-// Global bridge for the single GstPlayer instance used by the Flutter video
-// POC. This lets iOS (Swift) provide a UIView* as the window handle for the
-// GStreamer video sink.
-// static GstPlayer* g_globalGstPlayer = nullptr;
-// static void* g_globalNativeView = nullptr;
 
 void juce_init() {
-  // JUCE message loop for the existing audio engine.
   juce::MessageManager::getInstance();
-  // NOTE: GStreamer for video is now initialized lazily by GstPlayer
-  // on iOS via gst_ios_init(), so we don't block app startup here.
 }
 
 void Java_com_rmsl_juce_Native_juceMessageManagerInit() { juce_init(); }
@@ -51,9 +42,7 @@ void JuceMixPlayer_setSettings(void *ptr, const char *json) {
   static_cast<JuceMixPlayer *>(ptr)->setSettings(json);
 }
 
-void JuceMixPlayer_onStateUpdate(void *ptr,
-                                 void (*onStateUpdate)(void *ptr,
-                                                       const char *)) {
+void JuceMixPlayer_onStateUpdate(void *ptr, void (*onStateUpdate)(void *ptr, const char *)) {
   static_cast<JuceMixPlayer *>(ptr)->onStateUpdateCallback = onStateUpdate;
 }
 
@@ -61,8 +50,7 @@ void JuceMixPlayer_onProgress(void *ptr, void (*onProgress)(void *ptr, float)) {
   static_cast<JuceMixPlayer *>(ptr)->onProgressCallback = onProgress;
 }
 
-void JuceMixPlayer_onError(void *ptr,
-                           void (*onError)(void *ptr, const char *)) {
+void JuceMixPlayer_onError(void *ptr, void (*onError)(void *ptr, const char *)) {
   static_cast<JuceMixPlayer *>(ptr)->onErrorCallback = onError;
 }
 
@@ -90,19 +78,15 @@ void JuceMixPlayer_stopRecorder(void *ptr) {
   static_cast<JuceMixPlayer *>(ptr)->stopRecorder();
 }
 
-void JuceMixPlayer_onRecStateUpdate(void *ptr,
-                                    void (*onStateUpdate)(void *ptr,
-                                                          const char *)) {
+void JuceMixPlayer_onRecStateUpdate(void *ptr, void (*onStateUpdate)(void *ptr, const char *)) {
   static_cast<JuceMixPlayer *>(ptr)->onRecStateUpdateCallback = onStateUpdate;
 }
 
-void JuceMixPlayer_onRecProgress(void *ptr,
-                                 void (*onProgress)(void *ptr, float)) {
+void JuceMixPlayer_onRecProgress(void *ptr, void (*onProgress)(void *ptr, float)) {
   static_cast<JuceMixPlayer *>(ptr)->onRecProgressCallback = onProgress;
 }
 
-void JuceMixPlayer_onRecError(void *ptr,
-                              void (*onError)(void *ptr, const char *)) {
+void JuceMixPlayer_onRecError(void *ptr, void (*onError)(void *ptr, const char *)) {
   static_cast<JuceMixPlayer *>(ptr)->onRecErrorCallback = onError;
 }
 
@@ -110,9 +94,7 @@ void JuceMixPlayer_onRecLevel(void *ptr, void (*onLevel)(void *ptr, float)) {
   static_cast<JuceMixPlayer *>(ptr)->onRecLevelCallback = onLevel;
 }
 
-void JuceMixPlayer_onDeviceUpdate(void *ptr,
-                                  void (*onDeviceUpdate)(void *ptr,
-                                                         const char *)) {
+void JuceMixPlayer_onDeviceUpdate(void *ptr, void (*onDeviceUpdate)(void *ptr, const char *)) {
   static_cast<JuceMixPlayer *>(ptr)->onDeviceUpdateCallback = onDeviceUpdate;
 }
 
@@ -124,10 +106,8 @@ const char *JuceMixPlayer_getDeviceLatencyInfo(void *ptr) {
   return static_cast<JuceMixPlayer *>(ptr)->getDeviceLatencyInfo();
 }
 
-void JuceMixPlayer_export(void *ptr, const char *outputPath,
-                          void (*completion)(const char *)) {
-  return static_cast<JuceMixPlayer *>(ptr)->exportToFile(outputPath,
-                                                         completion);
+void JuceMixPlayer_export(void *ptr, const char *outputPath, void (*completion)(const char *)) {
+  return static_cast<JuceMixPlayer *>(ptr)->exportToFile(outputPath, completion);
 }
 
 // Utility methods
@@ -136,7 +116,7 @@ int JuceMixPlayer_fileExists(const char *filePath) {
   return file.exists() ? 1 : 0;
 }
 
-// MARK: GstPlayer (Phase 1 skeleton)
+// MARK: GstPlayer
 void *GstPlayer_init() { return new GstPlayer(); }
 
 void GstPlayer_deinit(void *ptr) { delete static_cast<GstPlayer *>(ptr); }
@@ -163,8 +143,7 @@ float GstPlayer_getDurationInSecs(void *ptr) {
   return static_cast<GstPlayer *>(ptr)->getDurationInSecs();
 }
 
-void GstPlayer_onStateUpdate(void *ptr,
-                             void (*callback)(void *, const char *)) {
+void GstPlayer_onStateUpdate(void *ptr, void (*callback)(void *, const char *)) {
   static_cast<GstPlayer *>(ptr)->onStateUpdateCallback = callback;
 }
 
@@ -192,8 +171,7 @@ void GstPlayer_setVisualEffect(void *ptr, int effectId) {
   static_cast<GstPlayer *>(ptr)->setVisualEffect(effectId);
 }
 
-void GstPlayer_exportVideo(void *ptr, const char *outputPath,
-                           void (*completion)(const char *)) {
+void GstPlayer_exportVideo(void *ptr, const char *outputPath, void (*completion)(const char *)) {
   static_cast<GstPlayer *>(ptr)->exportVideo(outputPath, completion);
 }
 
@@ -241,8 +219,7 @@ void UnifiedAVPlayer_resetAudioPlayBuffer(void *ptr) {
   static_cast<UnifiedAVPlayer *>(ptr)->resetAudioPlayBuffer();
 }
 
-void UnifiedAVPlayer_exportAudio(void *ptr, const char *outputPath,
-                                 void (*completion)(const char *)) {
+void UnifiedAVPlayer_exportAudio(void *ptr, const char *outputPath, void (*completion)(const char *)) {
   static_cast<UnifiedAVPlayer *>(ptr)->exportToFile(outputPath, completion);
 }
 
@@ -263,8 +240,7 @@ void UnifiedAVPlayer_setVideoVisualEffect(void *ptr, int effectId) {
   static_cast<UnifiedAVPlayer *>(ptr)->setVideoVisualEffect(effectId);
 }
 
-void UnifiedAVPlayer_exportVideo(void *ptr, const char *outputPath,
-                                 void (*completion)(const char *)) {
+void UnifiedAVPlayer_exportVideo(void *ptr, const char *outputPath, void (*completion)(const char *)) {
   static_cast<UnifiedAVPlayer *>(ptr)->exportVideo(outputPath, completion);
 }
 
@@ -290,66 +266,19 @@ int UnifiedAVPlayer_hasVideoLoaded(void *ptr) {
   return static_cast<UnifiedAVPlayer *>(ptr)->hasVideoLoaded() ? 1 : 0;
 }
 
-void *UnifiedAVPlayer_getVideoPlayerPtr(void *ptr) {
-  return static_cast<UnifiedAVPlayer *>(ptr)->getVideoPlayerPtr();
-}
-
 // Callbacks (unified - driven by audio timeline)
 void UnifiedAVPlayer_onProgress(void *ptr, void (*callback)(void *, float)) {
   static_cast<UnifiedAVPlayer *>(ptr)->onProgressCallback = callback;
 }
 
-void UnifiedAVPlayer_onStateUpdate(void *ptr,
-                                   void (*callback)(void *, const char *)) {
+void UnifiedAVPlayer_onStateUpdate(void *ptr, void (*callback)(void *, const char *)) {
   static_cast<UnifiedAVPlayer *>(ptr)->onStateUpdateCallback = callback;
 }
 
-void UnifiedAVPlayer_onError(void *ptr,
-                             void (*callback)(void *, const char *)) {
+void UnifiedAVPlayer_onError(void *ptr, void (*callback)(void *, const char *)) {
   static_cast<UnifiedAVPlayer *>(ptr)->onErrorCallback = callback;
 }
 
-// Recording support (audio only)
-void UnifiedAVPlayer_prepareRecorder(void *ptr, const char *file) {
-  static_cast<UnifiedAVPlayer *>(ptr)->prepareRecorder(file);
-}
-
-void UnifiedAVPlayer_startRecorder(void *ptr) {
-  static_cast<UnifiedAVPlayer *>(ptr)->startRecorder();
-}
-
-void UnifiedAVPlayer_stopRecorder(void *ptr) {
-  static_cast<UnifiedAVPlayer *>(ptr)->stopRecorder();
-}
-
-void UnifiedAVPlayer_onRecLevel(void *ptr, void (*callback)(void *, float)) {
-  static_cast<UnifiedAVPlayer *>(ptr)->onRecLevelCallback = callback;
-}
-
-void UnifiedAVPlayer_onRecProgress(void *ptr, void (*callback)(void *, float)) {
-  static_cast<UnifiedAVPlayer *>(ptr)->onRecProgressCallback = callback;
-}
-
-void UnifiedAVPlayer_onRecStateUpdate(void *ptr,
-                                      void (*callback)(void *, const char *)) {
-  static_cast<UnifiedAVPlayer *>(ptr)->onRecStateUpdateCallback = callback;
-}
-
-void UnifiedAVPlayer_onRecError(void *ptr,
-                                void (*callback)(void *, const char *)) {
-  static_cast<UnifiedAVPlayer *>(ptr)->onRecErrorCallback = callback;
-}
-
-// Device management (audio only)
-void UnifiedAVPlayer_setUpdatedDevices(void *ptr, const char *json) {
-  static_cast<UnifiedAVPlayer *>(ptr)->setUpdatedDevices(json);
-}
-
-const char *UnifiedAVPlayer_getDeviceLatencyInfo(void *ptr) {
-  return static_cast<UnifiedAVPlayer *>(ptr)->getDeviceLatencyInfo();
-}
-
-void UnifiedAVPlayer_onDeviceUpdate(void *ptr,
-                                    void (*callback)(void *, const char *)) {
+void UnifiedAVPlayer_onDeviceUpdate(void *ptr, void (*callback)(void *, const char *)) {
   static_cast<UnifiedAVPlayer *>(ptr)->onDeviceUpdateCallback = callback;
 }

@@ -19,16 +19,10 @@ class UnifiedAVPlayerController {
   NativeCallable<FloatCallback>? _progressCallbackNativeCallable;
   NativeCallable<StringUpdateCallback>? _stateUpdateNativeCallable;
   NativeCallable<StringUpdateCallback>? _errorUpdateNativeCallable;
-  
-  // Recording callbacks
-  NativeCallable<FloatCallback>? _recInputlevelCallbackNativeCallable;
-  NativeCallable<FloatCallback>? _recProgressCallbackNativeCallable;
-  NativeCallable<StringUpdateCallback>? _recStateUpdateNativeCallable;
-  NativeCallable<StringUpdateCallback>? _recErrorUpdateNativeCallable;
-  
+
   // Device callbacks
   NativeCallable<StringUpdateCallback>? _deviceUpdateNativeCallable;
-  
+
   // Export callbacks
   NativeCallable<StringUpdateCallback2>? _exportAudioUpdateNativeCallable;
   NativeCallable<StringUpdateCallback2>? _exportVideoUpdateNativeCallable;
@@ -36,9 +30,8 @@ class UnifiedAVPlayerController {
   static var libname = 'libjuce_jni.so';
 
   static void juce_init() {
-    _juceLib = JuceLibGen(defaultTargetPlatform == TargetPlatform.iOS
-        ? DynamicLibrary.process()
-        : DynamicLibrary.open(libname));
+    _juceLib = JuceLibGen(
+        defaultTargetPlatform == TargetPlatform.iOS ? DynamicLibrary.process() : DynamicLibrary.open(libname));
     _juceLib.juce_init();
   }
 
@@ -56,9 +49,8 @@ class UnifiedAVPlayerController {
 
   /// Create UnifiedAVPlayer instance (singleton pattern)
   UnifiedAVPlayerController() {
-    _juceLib = JuceLibGen(defaultTargetPlatform == TargetPlatform.iOS
-        ? DynamicLibrary.process()
-        : DynamicLibrary.open(libname));
+    _juceLib = JuceLibGen(
+        defaultTargetPlatform == TargetPlatform.iOS ? DynamicLibrary.process() : DynamicLibrary.open(libname));
 
     _ptr = _juceLib.UnifiedAVPlayer_getInstance();
   }
@@ -121,10 +113,9 @@ class UnifiedAVPlayerController {
     };
 
     _exportAudioUpdateNativeCallable?.close();
-    _exportAudioUpdateNativeCallable =
-        NativeCallable<StringUpdateCallback2>.listener(closure);
-    _juceLib.UnifiedAVPlayer_exportAudio(_ptr, outputPath.toNativeUtf8(),
-        _exportAudioUpdateNativeCallable!.nativeFunction);
+    _exportAudioUpdateNativeCallable = NativeCallable<StringUpdateCallback2>.listener(closure);
+    _juceLib.UnifiedAVPlayer_exportAudio(
+        _ptr, outputPath.toNativeUtf8(), _exportAudioUpdateNativeCallable!.nativeFunction);
 
     return completer.future;
   }
@@ -160,10 +151,9 @@ class UnifiedAVPlayerController {
     };
 
     _exportVideoUpdateNativeCallable?.close();
-    _exportVideoUpdateNativeCallable =
-        NativeCallable<StringUpdateCallback2>.listener(closure);
-    _juceLib.UnifiedAVPlayer_exportVideo(_ptr, outputPath.toNativeUtf8(),
-        _exportVideoUpdateNativeCallable!.nativeFunction);
+    _exportVideoUpdateNativeCallable = NativeCallable<StringUpdateCallback2>.listener(closure);
+    _juceLib.UnifiedAVPlayer_exportVideo(
+        _ptr, outputPath.toNativeUtf8(), _exportVideoUpdateNativeCallable!.nativeFunction);
 
     return completer.future;
   }
@@ -189,12 +179,6 @@ class UnifiedAVPlayerController {
   bool hasVideoLoaded() {
     return _juceLib.UnifiedAVPlayer_hasVideoLoaded(_ptr) == 1;
   }
-  
-  // Get internal video player pointer (for GstVideoView integration)
-  int getVideoPlayerNativeHandle() {
-    final ptr = _juceLib.UnifiedAVPlayer_getVideoPlayerPtr(_ptr);
-    return ptr.address;
-  }
 
   // ========== Callbacks (Unified - Audio Timeline Driven) ==========
 
@@ -203,10 +187,8 @@ class UnifiedAVPlayerController {
       callback(progress);
     };
     _progressCallbackNativeCallable?.close();
-    _progressCallbackNativeCallable =
-        NativeCallable<FloatCallback>.listener(closure);
-    _juceLib.UnifiedAVPlayer_onProgress(
-        _ptr, _progressCallbackNativeCallable!.nativeFunction);
+    _progressCallbackNativeCallable = NativeCallable<FloatCallback>.listener(closure);
+    _juceLib.UnifiedAVPlayer_onProgress(_ptr, _progressCallbackNativeCallable!.nativeFunction);
   }
 
   void setStateUpdateHandler(void Function(JuceMixPlayerState state) callback) {
@@ -214,10 +196,8 @@ class UnifiedAVPlayerController {
       callback(JuceMixPlayerState.values.byName(cstring.toDartString()));
     };
     _stateUpdateNativeCallable?.close();
-    _stateUpdateNativeCallable =
-        NativeCallable<StringUpdateCallback>.listener(closure);
-    _juceLib.UnifiedAVPlayer_onStateUpdate(
-        _ptr, _stateUpdateNativeCallable!.nativeFunction);
+    _stateUpdateNativeCallable = NativeCallable<StringUpdateCallback>.listener(closure);
+    _juceLib.UnifiedAVPlayer_onStateUpdate(_ptr, _stateUpdateNativeCallable!.nativeFunction);
   }
 
   void setErrorHandler(void Function(String error) callback) {
@@ -225,99 +205,18 @@ class UnifiedAVPlayerController {
       callback(cstring.toDartString());
     };
     _errorUpdateNativeCallable?.close();
-    _errorUpdateNativeCallable =
-        NativeCallable<StringUpdateCallback>.listener(closure);
-    _juceLib.UnifiedAVPlayer_onError(
-        _ptr, _errorUpdateNativeCallable!.nativeFunction);
+    _errorUpdateNativeCallable = NativeCallable<StringUpdateCallback>.listener(closure);
+    _juceLib.UnifiedAVPlayer_onError(_ptr, _errorUpdateNativeCallable!.nativeFunction);
   }
 
-  // ========== Recording Support (Audio Only) ==========
-
-  void prepareRecording(String path) {
-    _juceLib.UnifiedAVPlayer_prepareRecorder(_ptr, path.toNativeUtf8());
-  }
-
-  void startRecording() {
-    _juceLib.UnifiedAVPlayer_startRecorder(_ptr);
-  }
-
-  void stopRecording() {
-    _juceLib.UnifiedAVPlayer_stopRecorder(_ptr);
-  }
-
-  void setRecLevelHandler(void Function(double level) callback) {
-    FloatCallbackDart closure = (ptr, level) {
-      callback(level);
-    };
-    _recInputlevelCallbackNativeCallable?.close();
-    _recInputlevelCallbackNativeCallable =
-        NativeCallable<FloatCallback>.listener(closure);
-    _juceLib.UnifiedAVPlayer_onRecLevel(
-        _ptr, _recInputlevelCallbackNativeCallable!.nativeFunction);
-  }
-
-  void setRecProgressHandler(void Function(double progress) callback) {
-    FloatCallbackDart closure = (ptr, progress) {
-      callback(progress);
-    };
-    _recProgressCallbackNativeCallable?.close();
-    _recProgressCallbackNativeCallable =
-        NativeCallable<FloatCallback>.listener(closure);
-    _juceLib.UnifiedAVPlayer_onRecProgress(
-        _ptr, _recProgressCallbackNativeCallable!.nativeFunction);
-  }
-
-  void setRecStateUpdateHandler(void Function(JuceMixRecState state) callback) {
+  void setDeviceUpdateHandler(void Function(MixerDeviceList deviceList) callback) {
     NativeStringCallbackDart closure = (ptr, cstring) {
-      callback(JuceMixRecState.values.byName(cstring.toDartString()));
-    };
-    _recStateUpdateNativeCallable?.close();
-    _recStateUpdateNativeCallable =
-        NativeCallable<StringUpdateCallback>.listener(closure);
-    _juceLib.UnifiedAVPlayer_onRecStateUpdate(
-        _ptr, _recStateUpdateNativeCallable!.nativeFunction);
-  }
-
-  void setRecErrorHandler(void Function(String error) callback) {
-    NativeStringCallbackDart closure = (ptr, cstring) {
-      callback(cstring.toDartString());
-    };
-    _recErrorUpdateNativeCallable?.close();
-    _recErrorUpdateNativeCallable =
-        NativeCallable<StringUpdateCallback>.listener(closure);
-    _juceLib.UnifiedAVPlayer_onRecError(
-        _ptr, _recErrorUpdateNativeCallable!.nativeFunction);
-  }
-
-  // ========== Device Management (Audio Only) ==========
-
-  void setUpdatedDevices(MixerDeviceList devices) {
-    final jsonStr = json.encode(devices.toJson());
-    _juceLib.UnifiedAVPlayer_setUpdatedDevices(_ptr, jsonStr.toNativeUtf8());
-  }
-
-  String getDeviceLatencyInfo() {
-    return _juceLib.UnifiedAVPlayer_getDeviceLatencyInfo(_ptr).toDartString();
-  }
-
-  LatencyInfo getDeviceLatencyInfoObject() {
-    var str = _juceLib.UnifiedAVPlayer_getDeviceLatencyInfo(_ptr).toDartString();
-    LatencyInfo info = LatencyInfo.fromJson(json.decode(str));
-    return info;
-  }
-
-  void setDeviceUpdateHandler(
-      void Function(MixerDeviceList deviceList) callback) {
-    NativeStringCallbackDart closure = (ptr, cstring) {
-      MixerDeviceList data =
-          MixerDeviceList.fromJson(json.decode(cstring.toDartString()));
+      MixerDeviceList data = MixerDeviceList.fromJson(json.decode(cstring.toDartString()));
       callback(data);
     };
     _deviceUpdateNativeCallable?.close();
-    _deviceUpdateNativeCallable =
-        NativeCallable<StringUpdateCallback>.listener(closure);
-    _juceLib.UnifiedAVPlayer_onDeviceUpdate(
-        _ptr, _deviceUpdateNativeCallable!.nativeFunction);
+    _deviceUpdateNativeCallable = NativeCallable<StringUpdateCallback>.listener(closure);
+    _juceLib.UnifiedAVPlayer_onDeviceUpdate(_ptr, _deviceUpdateNativeCallable!.nativeFunction);
   }
 
   // ========== Cleanup ==========
@@ -330,12 +229,6 @@ class UnifiedAVPlayerController {
     _deviceUpdateNativeCallable?.close();
     _exportAudioUpdateNativeCallable?.close();
     _exportVideoUpdateNativeCallable?.close();
-
-    // Recording callbacks
-    _recInputlevelCallbackNativeCallable?.close();
-    _recProgressCallbackNativeCallable?.close();
-    _recStateUpdateNativeCallable?.close();
-    _recErrorUpdateNativeCallable?.close();
 
     _juceLib.UnifiedAVPlayer_dispose(_ptr);
   }

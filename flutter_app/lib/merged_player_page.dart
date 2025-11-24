@@ -1,12 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_app/asset_helper.dart';
 import 'package:flutter_app/utils.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:juce_mix_player/unified_av_player.dart';
-import 'package:juce_mix_player/juce_mix_player.dart';
-import 'package:juce_mix_player/gst_video_view.dart';
 import 'package:juce_mix_player/gst_video_player.dart';
+import 'package:juce_mix_player/juce_mix_player.dart';
+import 'package:juce_mix_player/unified_av_player.dart';
+import 'package:juce_mix_player/unified_video_view.dart';
 
 class MergedPlayerPage extends StatefulWidget {
   const MergedPlayerPage({super.key});
@@ -37,7 +38,6 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
   String currentRotation = "0";
   VisualEffectType currentEffect = VisualEffectType.none;
   bool isExporting = false;
-  GstPlayerController? videoController; // Controller for video view
 
   // UI state
   bool isAudioPanelExpanded = true;
@@ -120,13 +120,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
   Future<void> _loadSampleVideo() async {
     final path = await AssetHelper.extractAsset('assets/media/Fate_of_Ophelia.mp4');
     player.setVideoPath(path);
-    setState(() {
-      hasVideoLoaded = true;
-      // Create video controller wrapper for internal player
-      videoController = GstPlayerController.fromNativeHandle(
-        player.getVideoPlayerNativeHandle(),
-      );
-    });
+    setState(() => hasVideoLoaded = true);
     _showSnack('Sample video loaded', isSuccess: true);
   }
 
@@ -135,13 +129,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
     final XFile? video = await picker.pickVideo(source: ImageSource.gallery);
     if (video != null) {
       player.setVideoPath(video.path);
-      setState(() {
-        hasVideoLoaded = true;
-        // Create video controller wrapper for internal player
-        videoController = GstPlayerController.fromNativeHandle(
-          player.getVideoPlayerNativeHandle(),
-        );
-      });
+      setState(() => hasVideoLoaded = true);
       _showSnack('Video loaded: ${video.name}', isSuccess: true);
     }
   }
@@ -336,19 +324,10 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
     );
   }
 
-  // Use existing GstVideoView with stored video controller
+  // Use UnifiedVideoView for direct UnifiedAVPlayer integration
   Widget _buildVideoView() {
-    if (videoController == null) {
-      return const Center(
-        child: Text(
-          'Loading...',
-          style: TextStyle(color: Colors.white54),
-        ),
-      );
-    }
-
-    return GstVideoView(
-      controller: videoController!,
+    return UnifiedVideoView(
+      controller: player,
       onViewReady: () {
         setState(() => isVideoViewReady = true);
       },

@@ -13,8 +13,11 @@ jucer:
 ffi:
 	cd juce_mix_player_package && dart run ffigen
 
-build -an:
+build-an:
 	sh build_android_juce_lib.sh
 
-build -ios:
+build-ios:
 	sh build_ios_juce_lib.sh
+
+clean-all:
+	cd flutter_app && fvm flutter clean && fvm flutter pub get && cd ios && pod deintegrate && pod install

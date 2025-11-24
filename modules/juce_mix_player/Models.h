@@ -230,3 +230,6 @@ struct DeviceLaencyInfo {
                                                 timeDiff,
                                                 sampleRate);
 };
+
+
+// Mark: Video Models

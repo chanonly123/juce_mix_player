@@ -104,13 +104,11 @@ UnifiedAVPlayer::UnifiedAVPlayer() {
 // Destructor
 UnifiedAVPlayer::~UnifiedAVPlayer() {
   PRINT("~UnifiedAVPlayer");
-  stopTimer();
 }
 
 void UnifiedAVPlayer::dispose() {
   PRINT("UnifiedAVPlayer::dispose");
   const juce::ScopedLock scopedLock(lock);
-
   stopTimer();
   stop();
 
@@ -126,7 +124,6 @@ void UnifiedAVPlayer::dispose() {
 }
 
 // MARK: Unified Playback Controls
-
 void UnifiedAVPlayer::play() {
   PRINT("UnifiedAVPlayer::play");
   const juce::ScopedLock scopedLock(lock);
@@ -355,6 +352,7 @@ float UnifiedAVPlayer::getCurrentTime() {
 
 bool UnifiedAVPlayer::getIsPlaying() { return isPlaying; }
 
+
 std::string UnifiedAVPlayer::getCurrentState() {
   if (audioPlayer) {
     return audioPlayer->getCurrentState();
@@ -364,54 +362,6 @@ std::string UnifiedAVPlayer::getCurrentState() {
 
 bool UnifiedAVPlayer::hasVideoLoaded() { return hasVideo; }
 
-void *UnifiedAVPlayer::getVideoPlayerPtr() { return videoPlayer.get(); }
-
-// MARK: Recording Support
-
-void UnifiedAVPlayer::prepareRecorder(const char *file) {
-  PRINT("UnifiedAVPlayer::prepareRecorder");
-  const juce::ScopedLock scopedLock(lock);
-
-  if (audioPlayer) {
-    audioPlayer->prepareRecorder(file);
-  }
-}
-
-void UnifiedAVPlayer::startRecorder() {
-  PRINT("UnifiedAVPlayer::startRecorder");
-  const juce::ScopedLock scopedLock(lock);
-
-  if (audioPlayer) {
-    audioPlayer->startRecorder();
-  }
-}
-
-void UnifiedAVPlayer::stopRecorder() {
-  PRINT("UnifiedAVPlayer::stopRecorder");
-  const juce::ScopedLock scopedLock(lock);
-
-  if (audioPlayer) {
-    audioPlayer->stopRecorder();
-  }
-}
-
-// MARK: Device Management
-
-void UnifiedAVPlayer::setUpdatedDevices(const char *json) {
-  PRINT("UnifiedAVPlayer::setUpdatedDevices");
-  const juce::ScopedLock scopedLock(lock);
-
-  if (audioPlayer) {
-    audioPlayer->setUpdatedDevices(json);
-  }
-}
-
-const char *UnifiedAVPlayer::getDeviceLatencyInfo() {
-  if (audioPlayer) {
-    return audioPlayer->getDeviceLatencyInfo();
-  }
-  return "{}";
-}
 
 // MARK: Internal Synchronization
 
