@@ -313,7 +313,7 @@ class VideoPlayerState extends State<VideoPlayerPage> {
                   icon: const Icon(Icons.smart_display_outlined),
                   tooltip: "Load Sample",
                   onPressed: () async {
-                    final pathL = await AssetHelper.extractAsset('assets/media/Fate_of_Ophelia.mp4');
+                    final pathL = await AssetHelper.extractAsset('assets/media/Fate_of_Ophelia_muted.mp4');
                     player.setVideoPath(pathL);
                   },
                 ),

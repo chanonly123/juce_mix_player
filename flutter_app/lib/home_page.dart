@@ -3,6 +3,7 @@ import 'package:flutter_app/player_page.dart';
 import 'package:flutter_app/recorder_page.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_app/video_player_page.dart';
+import 'package:flutter_app/merged_player_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -17,8 +18,9 @@ class HomePageState extends State<HomePage> {
   // Using a getter instead of static final to create new instances when needed
   List<Widget> get _pages => [
         PlayerPage(),
-        RecorderPage(),
+        // RecorderPage(),
         VideoPlayerPage(),
+        MergedPlayerPage(),
       ];
 
   void _onItemTapped(int index) {
@@ -38,13 +40,17 @@ class HomePageState extends State<HomePage> {
             icon: Icon(Icons.play_arrow),
             label: 'Player',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.mic),
-            label: 'Recorder',
-          ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.mic),
+          //   label: 'Recorder',
+          // ),
           BottomNavigationBarItem(
             icon: Icon(Icons.videocam),
             label: 'Video Player',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.library_music),
+            label: 'Merged AV',
           ),
         ],
         currentIndex: _selectedIndex,

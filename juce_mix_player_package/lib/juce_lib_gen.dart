@@ -892,4 +892,715 @@ class JuceLibGen {
           ffi.Pointer<
               ffi.NativeFunction<
                   ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>)>();
+
+  ffi.Pointer<ffi.Void> UnifiedAVPlayer_getInstance() {
+    return _UnifiedAVPlayer_getInstance();
+  }
+
+  late final _UnifiedAVPlayer_getInstancePtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Void> Function()>>(
+          'UnifiedAVPlayer_getInstance');
+  late final _UnifiedAVPlayer_getInstance = _UnifiedAVPlayer_getInstancePtr
+      .asFunction<ffi.Pointer<ffi.Void> Function()>();
+
+  void UnifiedAVPlayer_destroyInstance() {
+    return _UnifiedAVPlayer_destroyInstance();
+  }
+
+  late final _UnifiedAVPlayer_destroyInstancePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function()>>(
+          'UnifiedAVPlayer_destroyInstance');
+  late final _UnifiedAVPlayer_destroyInstance =
+      _UnifiedAVPlayer_destroyInstancePtr.asFunction<void Function()>();
+
+  void UnifiedAVPlayer_dispose(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _UnifiedAVPlayer_dispose(
+      ptr,
+    );
+  }
+
+  late final _UnifiedAVPlayer_disposePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'UnifiedAVPlayer_dispose');
+  late final _UnifiedAVPlayer_dispose = _UnifiedAVPlayer_disposePtr.asFunction<
+      void Function(ffi.Pointer<ffi.Void>)>();
+
+  void UnifiedAVPlayer_play(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _UnifiedAVPlayer_play(
+      ptr,
+    );
+  }
+
+  late final _UnifiedAVPlayer_playPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'UnifiedAVPlayer_play');
+  late final _UnifiedAVPlayer_play = _UnifiedAVPlayer_playPtr.asFunction<
+      void Function(ffi.Pointer<ffi.Void>)>();
+
+  void UnifiedAVPlayer_pause(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _UnifiedAVPlayer_pause(
+      ptr,
+    );
+  }
+
+  late final _UnifiedAVPlayer_pausePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'UnifiedAVPlayer_pause');
+  late final _UnifiedAVPlayer_pause = _UnifiedAVPlayer_pausePtr.asFunction<
+      void Function(ffi.Pointer<ffi.Void>)>();
+
+  void UnifiedAVPlayer_stop(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _UnifiedAVPlayer_stop(
+      ptr,
+    );
+  }
+
+  late final _UnifiedAVPlayer_stopPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'UnifiedAVPlayer_stop');
+  late final _UnifiedAVPlayer_stop = _UnifiedAVPlayer_stopPtr.asFunction<
+      void Function(ffi.Pointer<ffi.Void>)>();
+
+  void UnifiedAVPlayer_seek(
+    ffi.Pointer<ffi.Void> ptr,
+    double normalizedPos,
+  ) {
+    return _UnifiedAVPlayer_seek(
+      ptr,
+      normalizedPos,
+    );
+  }
+
+  late final _UnifiedAVPlayer_seekPtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>(
+      'UnifiedAVPlayer_seek');
+  late final _UnifiedAVPlayer_seek = _UnifiedAVPlayer_seekPtr.asFunction<
+      void Function(ffi.Pointer<ffi.Void>, double)>();
+
+  void UnifiedAVPlayer_togglePlayPause(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _UnifiedAVPlayer_togglePlayPause(
+      ptr,
+    );
+  }
+
+  late final _UnifiedAVPlayer_togglePlayPausePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'UnifiedAVPlayer_togglePlayPause');
+  late final _UnifiedAVPlayer_togglePlayPause =
+      _UnifiedAVPlayer_togglePlayPausePtr.asFunction<
+          void Function(ffi.Pointer<ffi.Void>)>();
+
+  void UnifiedAVPlayer_setAudioData(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<pkg_ffi.Utf8> json,
+  ) {
+    return _UnifiedAVPlayer_setAudioData(
+      ptr,
+      json,
+    );
+  }
+
+  late final _UnifiedAVPlayer_setAudioDataPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<ffi.Void>,
+              ffi.Pointer<pkg_ffi.Utf8>)>>('UnifiedAVPlayer_setAudioData');
+  late final _UnifiedAVPlayer_setAudioData =
+      _UnifiedAVPlayer_setAudioDataPtr.asFunction<
+          void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>();
+
+  void UnifiedAVPlayer_setAudioSettings(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<pkg_ffi.Utf8> json,
+  ) {
+    return _UnifiedAVPlayer_setAudioSettings(
+      ptr,
+      json,
+    );
+  }
+
+  late final _UnifiedAVPlayer_setAudioSettingsPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<ffi.Void>,
+              ffi.Pointer<pkg_ffi.Utf8>)>>('UnifiedAVPlayer_setAudioSettings');
+  late final _UnifiedAVPlayer_setAudioSettings =
+      _UnifiedAVPlayer_setAudioSettingsPtr.asFunction<
+          void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>();
+
+  void UnifiedAVPlayer_resetAudioPlayBuffer(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _UnifiedAVPlayer_resetAudioPlayBuffer(
+      ptr,
+    );
+  }
+
+  late final _UnifiedAVPlayer_resetAudioPlayBufferPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'UnifiedAVPlayer_resetAudioPlayBuffer');
+  late final _UnifiedAVPlayer_resetAudioPlayBuffer =
+      _UnifiedAVPlayer_resetAudioPlayBufferPtr.asFunction<
+          void Function(ffi.Pointer<ffi.Void>)>();
+
+  void UnifiedAVPlayer_exportAudio(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<pkg_ffi.Utf8> outputPath,
+    ffi.Pointer<
+            ffi.NativeFunction<ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>
+        completion,
+  ) {
+    return _UnifiedAVPlayer_exportAudio(
+      ptr,
+      outputPath,
+      completion,
+    );
+  }
+
+  late final _UnifiedAVPlayer_exportAudioPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(
+                  ffi.Pointer<ffi.Void>,
+                  ffi.Pointer<pkg_ffi.Utf8>,
+                  ffi.Pointer<
+                      ffi.NativeFunction<
+                          ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
+      'UnifiedAVPlayer_exportAudio');
+  late final _UnifiedAVPlayer_exportAudio =
+      _UnifiedAVPlayer_exportAudioPtr.asFunction<
+          void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<pkg_ffi.Utf8>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>)>();
+
+  void UnifiedAVPlayer_setVideoPath(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<pkg_ffi.Utf8> path,
+  ) {
+    return _UnifiedAVPlayer_setVideoPath(
+      ptr,
+      path,
+    );
+  }
+
+  late final _UnifiedAVPlayer_setVideoPathPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<ffi.Void>,
+              ffi.Pointer<pkg_ffi.Utf8>)>>('UnifiedAVPlayer_setVideoPath');
+  late final _UnifiedAVPlayer_setVideoPath =
+      _UnifiedAVPlayer_setVideoPathPtr.asFunction<
+          void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>();
+
+  void UnifiedAVPlayer_setVideoSurfaceHandle(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<ffi.Void> handle,
+  ) {
+    return _UnifiedAVPlayer_setVideoSurfaceHandle(
+      ptr,
+      handle,
+    );
+  }
+
+  late final _UnifiedAVPlayer_setVideoSurfaceHandlePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<ffi.Void>,
+              ffi.Pointer<ffi.Void>)>>('UnifiedAVPlayer_setVideoSurfaceHandle');
+  late final _UnifiedAVPlayer_setVideoSurfaceHandle =
+      _UnifiedAVPlayer_setVideoSurfaceHandlePtr.asFunction<
+          void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
+
+  void UnifiedAVPlayer_setVideoRotation(
+    ffi.Pointer<ffi.Void> ptr,
+    int degrees,
+  ) {
+    return _UnifiedAVPlayer_setVideoRotation(
+      ptr,
+      degrees,
+    );
+  }
+
+  late final _UnifiedAVPlayer_setVideoRotationPtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Int)>>(
+      'UnifiedAVPlayer_setVideoRotation');
+  late final _UnifiedAVPlayer_setVideoRotation =
+      _UnifiedAVPlayer_setVideoRotationPtr.asFunction<
+          void Function(ffi.Pointer<ffi.Void>, int)>();
+
+  void UnifiedAVPlayer_setVideoVisualEffect(
+    ffi.Pointer<ffi.Void> ptr,
+    int effectId,
+  ) {
+    return _UnifiedAVPlayer_setVideoVisualEffect(
+      ptr,
+      effectId,
+    );
+  }
+
+  late final _UnifiedAVPlayer_setVideoVisualEffectPtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Int)>>(
+      'UnifiedAVPlayer_setVideoVisualEffect');
+  late final _UnifiedAVPlayer_setVideoVisualEffect =
+      _UnifiedAVPlayer_setVideoVisualEffectPtr.asFunction<
+          void Function(ffi.Pointer<ffi.Void>, int)>();
+
+  void UnifiedAVPlayer_exportVideo(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<pkg_ffi.Utf8> outputPath,
+    ffi.Pointer<
+            ffi.NativeFunction<ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>
+        completion,
+  ) {
+    return _UnifiedAVPlayer_exportVideo(
+      ptr,
+      outputPath,
+      completion,
+    );
+  }
+
+  late final _UnifiedAVPlayer_exportVideoPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(
+                  ffi.Pointer<ffi.Void>,
+                  ffi.Pointer<pkg_ffi.Utf8>,
+                  ffi.Pointer<
+                      ffi.NativeFunction<
+                          ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
+      'UnifiedAVPlayer_exportVideo');
+  late final _UnifiedAVPlayer_exportVideo =
+      _UnifiedAVPlayer_exportVideoPtr.asFunction<
+          void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<pkg_ffi.Utf8>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>)>();
+
+  double UnifiedAVPlayer_getDuration(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _UnifiedAVPlayer_getDuration(
+      ptr,
+    );
+  }
+
+  late final _UnifiedAVPlayer_getDurationPtr =
+      _lookup<ffi.NativeFunction<ffi.Float Function(ffi.Pointer<ffi.Void>)>>(
+          'UnifiedAVPlayer_getDuration');
+  late final _UnifiedAVPlayer_getDuration = _UnifiedAVPlayer_getDurationPtr
+      .asFunction<double Function(ffi.Pointer<ffi.Void>)>();
+
+  double UnifiedAVPlayer_getCurrentTime(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _UnifiedAVPlayer_getCurrentTime(
+      ptr,
+    );
+  }
+
+  late final _UnifiedAVPlayer_getCurrentTimePtr =
+      _lookup<ffi.NativeFunction<ffi.Float Function(ffi.Pointer<ffi.Void>)>>(
+          'UnifiedAVPlayer_getCurrentTime');
+  late final _UnifiedAVPlayer_getCurrentTime =
+      _UnifiedAVPlayer_getCurrentTimePtr.asFunction<
+          double Function(ffi.Pointer<ffi.Void>)>();
+
+  int UnifiedAVPlayer_isPlaying(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _UnifiedAVPlayer_isPlaying(
+      ptr,
+    );
+  }
+
+  late final _UnifiedAVPlayer_isPlayingPtr =
+      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Pointer<ffi.Void>)>>(
+          'UnifiedAVPlayer_isPlaying');
+  late final _UnifiedAVPlayer_isPlaying = _UnifiedAVPlayer_isPlayingPtr
+      .asFunction<int Function(ffi.Pointer<ffi.Void>)>();
+
+  ffi.Pointer<pkg_ffi.Utf8> UnifiedAVPlayer_getCurrentState(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _UnifiedAVPlayer_getCurrentState(
+      ptr,
+    );
+  }
+
+  late final _UnifiedAVPlayer_getCurrentStatePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<pkg_ffi.Utf8> Function(
+              ffi.Pointer<ffi.Void>)>>('UnifiedAVPlayer_getCurrentState');
+  late final _UnifiedAVPlayer_getCurrentState =
+      _UnifiedAVPlayer_getCurrentStatePtr.asFunction<
+          ffi.Pointer<pkg_ffi.Utf8> Function(ffi.Pointer<ffi.Void>)>();
+
+  int UnifiedAVPlayer_hasVideoLoaded(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _UnifiedAVPlayer_hasVideoLoaded(
+      ptr,
+    );
+  }
+
+  late final _UnifiedAVPlayer_hasVideoLoadedPtr =
+      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Pointer<ffi.Void>)>>(
+          'UnifiedAVPlayer_hasVideoLoaded');
+  late final _UnifiedAVPlayer_hasVideoLoaded =
+      _UnifiedAVPlayer_hasVideoLoadedPtr.asFunction<
+          int Function(ffi.Pointer<ffi.Void>)>();
+
+  ffi.Pointer<ffi.Void> UnifiedAVPlayer_getVideoPlayerPtr(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _UnifiedAVPlayer_getVideoPlayerPtr(
+      ptr,
+    );
+  }
+
+  late final _UnifiedAVPlayer_getVideoPlayerPtrPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<ffi.Void> Function(
+              ffi.Pointer<ffi.Void>)>>('UnifiedAVPlayer_getVideoPlayerPtr');
+  late final _UnifiedAVPlayer_getVideoPlayerPtr =
+      _UnifiedAVPlayer_getVideoPlayerPtrPtr.asFunction<
+          ffi.Pointer<ffi.Void> Function(ffi.Pointer<ffi.Void>)>();
+
+  void UnifiedAVPlayer_onProgress(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>
+        callback,
+  ) {
+    return _UnifiedAVPlayer_onProgress(
+      ptr,
+      callback,
+    );
+  }
+
+  late final _UnifiedAVPlayer_onProgressPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>,
+                          ffi.Float)>>)>>('UnifiedAVPlayer_onProgress');
+  late final _UnifiedAVPlayer_onProgress =
+      _UnifiedAVPlayer_onProgressPtr.asFunction<
+          void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>)>();
+
+  void UnifiedAVPlayer_onStateUpdate(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(
+                    ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>
+        callback,
+  ) {
+    return _UnifiedAVPlayer_onStateUpdate(
+      ptr,
+      callback,
+    );
+  }
+
+  late final _UnifiedAVPlayer_onStateUpdatePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(
+                  ffi.Pointer<ffi.Void>,
+                  ffi.Pointer<
+                      ffi.NativeFunction<
+                          ffi.Void Function(ffi.Pointer<ffi.Void>,
+                              ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
+      'UnifiedAVPlayer_onStateUpdate');
+  late final _UnifiedAVPlayer_onStateUpdate =
+      _UnifiedAVPlayer_onStateUpdatePtr.asFunction<
+          void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>,
+                          ffi.Pointer<pkg_ffi.Utf8>)>>)>();
+
+  void UnifiedAVPlayer_onError(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(
+                    ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>
+        callback,
+  ) {
+    return _UnifiedAVPlayer_onError(
+      ptr,
+      callback,
+    );
+  }
+
+  late final _UnifiedAVPlayer_onErrorPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(
+                  ffi.Pointer<ffi.Void>,
+                  ffi.Pointer<
+                      ffi.NativeFunction<
+                          ffi.Void Function(ffi.Pointer<ffi.Void>,
+                              ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
+      'UnifiedAVPlayer_onError');
+  late final _UnifiedAVPlayer_onError = _UnifiedAVPlayer_onErrorPtr.asFunction<
+      void Function(
+          ffi.Pointer<ffi.Void>,
+          ffi.Pointer<
+              ffi.NativeFunction<
+                  ffi.Void Function(
+                      ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>)>();
+
+  void UnifiedAVPlayer_prepareRecorder(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<pkg_ffi.Utf8> file,
+  ) {
+    return _UnifiedAVPlayer_prepareRecorder(
+      ptr,
+      file,
+    );
+  }
+
+  late final _UnifiedAVPlayer_prepareRecorderPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<ffi.Void>,
+              ffi.Pointer<pkg_ffi.Utf8>)>>('UnifiedAVPlayer_prepareRecorder');
+  late final _UnifiedAVPlayer_prepareRecorder =
+      _UnifiedAVPlayer_prepareRecorderPtr.asFunction<
+          void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>();
+
+  void UnifiedAVPlayer_startRecorder(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _UnifiedAVPlayer_startRecorder(
+      ptr,
+    );
+  }
+
+  late final _UnifiedAVPlayer_startRecorderPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'UnifiedAVPlayer_startRecorder');
+  late final _UnifiedAVPlayer_startRecorder = _UnifiedAVPlayer_startRecorderPtr
+      .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void UnifiedAVPlayer_stopRecorder(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _UnifiedAVPlayer_stopRecorder(
+      ptr,
+    );
+  }
+
+  late final _UnifiedAVPlayer_stopRecorderPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'UnifiedAVPlayer_stopRecorder');
+  late final _UnifiedAVPlayer_stopRecorder = _UnifiedAVPlayer_stopRecorderPtr
+      .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void UnifiedAVPlayer_onRecLevel(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>
+        callback,
+  ) {
+    return _UnifiedAVPlayer_onRecLevel(
+      ptr,
+      callback,
+    );
+  }
+
+  late final _UnifiedAVPlayer_onRecLevelPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>,
+                          ffi.Float)>>)>>('UnifiedAVPlayer_onRecLevel');
+  late final _UnifiedAVPlayer_onRecLevel =
+      _UnifiedAVPlayer_onRecLevelPtr.asFunction<
+          void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>)>();
+
+  void UnifiedAVPlayer_onRecProgress(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>
+        callback,
+  ) {
+    return _UnifiedAVPlayer_onRecProgress(
+      ptr,
+      callback,
+    );
+  }
+
+  late final _UnifiedAVPlayer_onRecProgressPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>,
+                          ffi.Float)>>)>>('UnifiedAVPlayer_onRecProgress');
+  late final _UnifiedAVPlayer_onRecProgress =
+      _UnifiedAVPlayer_onRecProgressPtr.asFunction<
+          void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>)>();
+
+  void UnifiedAVPlayer_onRecStateUpdate(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(
+                    ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>
+        callback,
+  ) {
+    return _UnifiedAVPlayer_onRecStateUpdate(
+      ptr,
+      callback,
+    );
+  }
+
+  late final _UnifiedAVPlayer_onRecStateUpdatePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(
+                  ffi.Pointer<ffi.Void>,
+                  ffi.Pointer<
+                      ffi.NativeFunction<
+                          ffi.Void Function(ffi.Pointer<ffi.Void>,
+                              ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
+      'UnifiedAVPlayer_onRecStateUpdate');
+  late final _UnifiedAVPlayer_onRecStateUpdate =
+      _UnifiedAVPlayer_onRecStateUpdatePtr.asFunction<
+          void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>,
+                          ffi.Pointer<pkg_ffi.Utf8>)>>)>();
+
+  void UnifiedAVPlayer_onRecError(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(
+                    ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>
+        callback,
+  ) {
+    return _UnifiedAVPlayer_onRecError(
+      ptr,
+      callback,
+    );
+  }
+
+  late final _UnifiedAVPlayer_onRecErrorPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(
+                  ffi.Pointer<ffi.Void>,
+                  ffi.Pointer<
+                      ffi.NativeFunction<
+                          ffi.Void Function(ffi.Pointer<ffi.Void>,
+                              ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
+      'UnifiedAVPlayer_onRecError');
+  late final _UnifiedAVPlayer_onRecError =
+      _UnifiedAVPlayer_onRecErrorPtr.asFunction<
+          void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>,
+                          ffi.Pointer<pkg_ffi.Utf8>)>>)>();
+
+  void UnifiedAVPlayer_setUpdatedDevices(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<pkg_ffi.Utf8> json,
+  ) {
+    return _UnifiedAVPlayer_setUpdatedDevices(
+      ptr,
+      json,
+    );
+  }
+
+  late final _UnifiedAVPlayer_setUpdatedDevicesPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<ffi.Void>,
+              ffi.Pointer<pkg_ffi.Utf8>)>>('UnifiedAVPlayer_setUpdatedDevices');
+  late final _UnifiedAVPlayer_setUpdatedDevices =
+      _UnifiedAVPlayer_setUpdatedDevicesPtr.asFunction<
+          void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>();
+
+  ffi.Pointer<pkg_ffi.Utf8> UnifiedAVPlayer_getDeviceLatencyInfo(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _UnifiedAVPlayer_getDeviceLatencyInfo(
+      ptr,
+    );
+  }
+
+  late final _UnifiedAVPlayer_getDeviceLatencyInfoPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<pkg_ffi.Utf8> Function(
+              ffi.Pointer<ffi.Void>)>>('UnifiedAVPlayer_getDeviceLatencyInfo');
+  late final _UnifiedAVPlayer_getDeviceLatencyInfo =
+      _UnifiedAVPlayer_getDeviceLatencyInfoPtr.asFunction<
+          ffi.Pointer<pkg_ffi.Utf8> Function(ffi.Pointer<ffi.Void>)>();
+
+  void UnifiedAVPlayer_onDeviceUpdate(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(
+                    ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>
+        callback,
+  ) {
+    return _UnifiedAVPlayer_onDeviceUpdate(
+      ptr,
+      callback,
+    );
+  }
+
+  late final _UnifiedAVPlayer_onDeviceUpdatePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(
+                  ffi.Pointer<ffi.Void>,
+                  ffi.Pointer<
+                      ffi.NativeFunction<
+                          ffi.Void Function(ffi.Pointer<ffi.Void>,
+                              ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
+      'UnifiedAVPlayer_onDeviceUpdate');
+  late final _UnifiedAVPlayer_onDeviceUpdate =
+      _UnifiedAVPlayer_onDeviceUpdatePtr.asFunction<
+          void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>,
+                          ffi.Pointer<pkg_ffi.Utf8>)>>)>();
 }

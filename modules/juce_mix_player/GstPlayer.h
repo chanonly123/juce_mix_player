@@ -86,6 +86,9 @@ public:
   JuceMixPlayerCallbackString onStateUpdateCallback = nullptr;
   JuceMixPlayerCallbackString onErrorCallback = nullptr;
 
+  // User context for callbacks (e.g., parent wrapper object)
+  void *userContext = nullptr;
+
   GstPlayer();
   ~GstPlayer();
 

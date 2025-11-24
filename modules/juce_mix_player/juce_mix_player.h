@@ -23,3 +23,4 @@
 #include "TaskQueue.h"
 #include "GstPlatform.h"
 #include "GstPlayer.h"
+#include "UnifiedAVPlayer.h"

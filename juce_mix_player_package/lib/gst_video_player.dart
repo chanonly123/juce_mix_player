@@ -133,6 +133,39 @@ class GstPlayerController {
     _ptr = _init();
   }
 
+  // Factory constructor to wrap an existing native player pointer
+  // Used when the player is managed externally (e.g., by UnifiedAVPlayer)
+  GstPlayerController.fromNativeHandle(int nativeHandle) {
+    _lib = _openLib();
+
+    // Initialize all function lookups (same as regular constructor)
+    _deinit = _lib.lookupFunction<_deinit_t, _deinit_dart_t>('GstPlayer_deinit');
+    _setVideoPath = _lib.lookupFunction<_setVideoPath_t, _setVideoPath_dart_t>('GstPlayer_setVideoPath');
+    _play = _lib.lookupFunction<_play_t, _play_dart_t>('GstPlayer_play');
+    _pause = _lib.lookupFunction<_pause_t, _pause_dart_t>('GstPlayer_pause');
+    _stop = _lib.lookupFunction<_stop_t, _stop_dart_t>('GstPlayer_stop');
+    _seek = _lib.lookupFunction<_seek_t, _seek_dart_t>('GstPlayer_seek');
+    _isPlaying = _lib.lookupFunction<_isPlaying_t, _isPlaying_dart_t>('GstPlayer_isPlaying');
+    _getDurationInSecs =
+        _lib.lookupFunction<_getDurationInSecs_t, _getDurationInSecs_dart_t>('GstPlayer_getDurationInSecs');
+    _onStateUpdate = _lib.lookupFunction<_onStateUpdate_t, _onStateUpdate_dart_t>('GstPlayer_onStateUpdate');
+    _onProgress = _lib.lookupFunction<_onProgress_t, _onProgress_dart_t>('GstPlayer_onProgress');
+    _onError = _lib.lookupFunction<_onError_t, _onError_dart_t>('GstPlayer_onError');
+
+    _setSurfaceHandle =
+        _lib.lookupFunction<_setSurfaceHandle_t, _setSurfaceHandle_dart_t>('GstPlayer_setSurfaceHandle');
+    _setMuteEmbeddedAudio =
+        _lib.lookupFunction<_setMuteEmbeddedAudio_t, _setMuteEmbeddedAudio_dart_t>('GstPlayer_setMuteEmbeddedAudio');
+
+    // Video processing function lookups
+    _setRotation = _lib.lookupFunction<_setRotation_t, _setRotation_dart_t>('GstPlayer_setRotation');
+    _setVisualEffect = _lib.lookupFunction<_setVisualEffect_t, _setVisualEffect_dart_t>('GstPlayer_setVisualEffect');
+    _exportVideo = _lib.lookupFunction<_exportVideo_t, _exportVideo_dart_t>('GstPlayer_exportVideo');
+
+    // Use the provided native handle instead of creating a new player
+    _ptr = Pointer<Void>.fromAddress(nativeHandle);
+  }
+
   void setVideoPath(String path) {
     _setVideoPath(_ptr, path.toNativeUtf8());
   }
