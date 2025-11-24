@@ -166,3 +166,4 @@ fabric.properties
 
 !/gradle/wrapper/gradle-wrapper.jar
 .trae/
+.agent/

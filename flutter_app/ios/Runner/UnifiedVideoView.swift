@@ -17,7 +17,6 @@ final class UnifiedVideoView: NSObject, FlutterPlatformView {
     self.viewId = viewId
     self.container = GstView(frame: frame)
     self.container.backgroundColor = .black
-    // Set content scale factor for retina displays
     self.container.contentScaleFactor = UIScreen.main.scale
     
     if let dict = args as? [String: Any], let ptr = dict["playerPtr"] as? NSNumber {
@@ -27,8 +26,6 @@ final class UnifiedVideoView: NSObject, FlutterPlatformView {
     }
     super.init()
 
-    // Pass UIView pointer to native UnifiedAVPlayer for GStreamer video overlay
-    // UnifiedAVPlayer will forward this to its internal GstPlayer
     if playerPtr != 0 {
       let viewPtr = Unmanaged.passUnretained(self.container).toOpaque()
       UnifiedAVPlayer_setVideoSurfaceHandle(UnsafeMutableRawPointer(bitPattern: UInt(playerPtr)), viewPtr)
@@ -36,36 +33,29 @@ final class UnifiedVideoView: NSObject, FlutterPlatformView {
   }
 
   // Required for GStreamer glimagesink to render on iOS
-  class GstView: UIView {
-      override class var layerClass: AnyClass {
-          return CAEAGLLayer.self
-      }
-      
-      override init(frame: CGRect) {
-          super.init(frame: frame)
-          if let layer = self.layer as? CAEAGLLayer {
-              layer.isOpaque = true
-              layer.drawableProperties = [
-                  kEAGLDrawablePropertyRetainedBacking: false,
-                  kEAGLDrawablePropertyColorFormat: kEAGLColorFormatRGBA8
-              ]
-          }
-      }
-      
-      required init?(coder: NSCoder) {
-          fatalError("init(coder:) has not been implemented")
+class GstView: UIView {
+  override class var layerClass: AnyClass {
+      return CAEAGLLayer.self
+  }
+  
+  override init(frame: CGRect) {
+      super.init(frame: frame)
+      if let layer = self.layer as? CAEAGLLayer {
+          layer.isOpaque = true
+          layer.drawableProperties = [
+              kEAGLDrawablePropertyRetainedBacking: false,
+              kEAGLDrawablePropertyColorFormat: kEAGLColorFormatRGBA8
+          ]
       }
   }
+  
+  required init?(coder: NSCoder) {
+      fatalError("init(coder:) has not been implemented")
+  }
+}
 
   func view() -> UIView {
     return container
-  }
-
-  deinit {
-    // Clean up the surface handle when the view is deallocated
-    if playerPtr != 0 {
-      UnifiedAVPlayer_setVideoSurfaceHandle(UnsafeMutableRawPointer(bitPattern: UInt(playerPtr)), nil)
-    }
   }
 }
 

@@ -38,37 +38,30 @@ final class GstVideoPlayerView: NSObject, FlutterPlatformView {
 
 
   // NEW: Required for GStreamer glimagesink to render on iOS
-  class GstView: UIView {
-      override class var layerClass: AnyClass {
-          return CAEAGLLayer.self
-      }
-      
-      override init(frame: CGRect) {
-          super.init(frame: frame)
-          if let layer = self.layer as? CAEAGLLayer {
-              layer.isOpaque = true
-              layer.drawableProperties = [
-                  kEAGLDrawablePropertyRetainedBacking: false,
-                  kEAGLDrawablePropertyColorFormat: kEAGLColorFormatRGBA8
-              ]
-          }
-      }
-      
-      required init?(coder: NSCoder) {
-          fatalError("init(coder:) has not been implemented")
+class GstView: UIView {
+  override class var layerClass: AnyClass {
+      return CAEAGLLayer.self
+  }
+  
+  override init(frame: CGRect) {
+      super.init(frame: frame)
+      if let layer = self.layer as? CAEAGLLayer {
+          layer.isOpaque = true
+          layer.drawableProperties = [
+              kEAGLDrawablePropertyRetainedBacking: false,
+              kEAGLDrawablePropertyColorFormat: kEAGLColorFormatRGBA8
+          ]
       }
   }
+  
+  required init?(coder: NSCoder) {
+      fatalError("init(coder:) has not been implemented")
+  }
+}
 
 
   func view() -> UIView {
     return container
-  }
-
-  deinit {
-    // Clean up the surface handle when the view is deallocated
-    if playerPtr != 0 {
-      GstPlayer_setSurfaceHandle(UnsafeMutableRawPointer(bitPattern: UInt(playerPtr)), nil)
-    }
   }
 }
 

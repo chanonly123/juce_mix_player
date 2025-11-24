@@ -16,6 +16,10 @@ TaskQueue::~TaskQueue() {
 void TaskQueue::async(TaskQueueItem task) {
     {
         std::lock_guard<std::mutex> lock(mtx);
+        // Don't queue new tasks if we're shutting down
+        if (stop) {
+            return;
+        }
         taskList.push_back(std::move(task));
     }
     cv.notify_one();

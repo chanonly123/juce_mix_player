@@ -112,13 +112,13 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
   }
 
   Future<void> _loadAudioFromGallery() async {
-    final ImagePicker picker = ImagePicker();
+    // final ImagePicker picker = ImagePicker();
     // Note: ImagePicker doesn't directly support audio, you might want to use file_picker
     _showSnack('Use file picker for audio files');
   }
 
   Future<void> _loadSampleVideo() async {
-    final path = await AssetHelper.extractAsset('assets/media/Fate_of_Ophelia.mp4');
+    final path = await AssetHelper.extractAsset('assets/media/Fate_of_Ophelia_muted.mp4');
     player.setVideoPath(path);
     setState(() => hasVideoLoaded = true);
     _showSnack('Sample video loaded', isSuccess: true);

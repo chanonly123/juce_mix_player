@@ -44,8 +44,8 @@ private:
   float videoDuration = 0.0f;
 
   // Drift correction
-  const float SYNC_THRESHOLD_MS = 50.0f;      // Max acceptable drift
-  const float SYNC_CHECK_INTERVAL_MS = 100.0f; // How often to check sync
+  const float SYNC_THRESHOLD_MS = 80.0f;      // Max acceptable drift
+  const float SYNC_CHECK_INTERVAL_MS = 150.0f; // How often to check sync
   float lastAudioProgress = 0.0f;
   float lastVideoProgress = 0.0f;
 
