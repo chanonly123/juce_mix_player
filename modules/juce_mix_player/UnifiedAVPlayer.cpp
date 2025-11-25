@@ -360,8 +360,24 @@ bool UnifiedAVPlayer::hasVideoLoaded() { return hasVideo; }
 
 void UnifiedAVPlayer::_handleAudioProgress(float progress) {
   lastAudioProgress = progress;
+  bool shouldBlack = false;
 
-  // Forward progress callback (audio is master timeline)
+  if (hasVideo && videoDuration > 0.0f && audioDuration > 0.0f &&
+      videoDuration < audioDuration) {
+    const float marginSeconds = 0.15f;
+
+    float audioTime = progress * audioDuration;
+    float thresholdTime = videoDuration - marginSeconds;
+    if (thresholdTime < 0.0f)
+      thresholdTime = 0.0f;
+    shouldBlack = (audioTime >= thresholdTime);
+  }
+
+  if (shouldBlack != isVideoAfterEndForPlayback) {
+    isVideoAfterEndForPlayback = shouldBlack;
+    _updateVideoBlackOverlayForPlayback(shouldBlack);
+  }
+
   if (onProgressCallback) {
     onProgressCallback(this, progress);
   }
@@ -392,6 +408,7 @@ void UnifiedAVPlayer::_handleVideoStateChange(const std::string &state) {
   if (state == "READY" && videoPlayer) {
     videoDuration = videoPlayer->getDurationInSecs();
     hasVideo = true;
+    isVideoAfterEndForPlayback = false;
     PRINT("Video ready, duration: " << videoDuration);
 
     // Ensure video is muted (always secondary, silent media)
@@ -447,6 +464,15 @@ void UnifiedAVPlayer::_ensureVideoSyncOnPlay() {
   // Small delay to let seek complete, then play
   juce::Thread::sleep(50);
   videoPlayer->play();
+}
+
+void UnifiedAVPlayer::_updateVideoBlackOverlayForPlayback(bool enable) {
+    PRINT("UnifiedAVPlayer::_updateVideoBlackOverlayForPlayback");
+  if (!hasVideo || !videoPlayer) {
+    return;
+  }
+
+  videoPlayer->setBlackOverlayEnabled(enable ? 1 : 0);
 }
 
 void UnifiedAVPlayer::_syncVideoToAudio() {

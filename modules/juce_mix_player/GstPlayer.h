@@ -44,6 +44,7 @@ private:
   bool _muteEmbedded = true;
   double _lastSeekMs = 0;
   VisualEffect _currentEffect = VisualEffect::NONE;
+  bool _blackOverlayEnabled = false;
 
   double progressUpdateIntervalSec = 0.10;
 
@@ -103,6 +104,7 @@ public:
   void setProgressUpdateInterval(float seconds);
   void setRotation(int degrees);
   void setVisualEffect(int effectId);
+  void setBlackOverlayEnabled(int enabled);
   void exportVideo(const char *outputPath,
                    std::function<void(const char *)> completion);
   void setMuteEmbeddedAudio(int mute);

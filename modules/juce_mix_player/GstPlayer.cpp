@@ -236,16 +236,16 @@ void GstPlayer::setRotation(int degree) {
     switch (degree) {
     case 0:
       method = 0;
-      break; // identity
+      break;
     case 90:
       method = 1;
-      break; // 90 degrees clockwise
+      break;
     case 180:
       method = 2;
-      break; // 180 degrees
+      break;
     case 270:
       method = 3;
-      break; // 90 degrees counter-clockwise
+      break;
     }
     g_object_set(videoFlip, "method", method, nullptr);
   }
@@ -277,11 +277,23 @@ void GstPlayer::setVisualEffect(int effectId) {
   }
   _currentEffect = newEffect;
 
-  // Apply new effect parameters to the existing filter in real-time
   if (videoBalance) {
     applyEffectParams(_currentEffect);
   }
   std::cout << "VIDEO FILTER APPLIED: " << effectId << std::endl;
+}
+
+void GstPlayer::setBlackOverlayEnabled(int enabled) {
+  bool newValue = (enabled != 0);
+  if (_blackOverlayEnabled == newValue) {
+    return;
+  }
+
+  _blackOverlayEnabled = newValue;
+
+  if (videoBalance) {
+    applyEffectParams(_currentEffect);
+  }
 }
 
 static void onPadAdded(GstElement *src, GstPad *pad, gpointer data) {
@@ -326,8 +338,8 @@ void GstPlayer::exportVideo(const char *outputPath,
     g_object_get(videoFlip, "method", &rotationMethod, nullptr);
   }
 
-  gstTaskQueue.async([this, inputPath, outputPathStr, effect, rotationMethod,
-                      completion]() {
+  gstTaskQueue.async([this, inputPath, outputPathStr, effect, rotationMethod, completion]() {
+    
     GstElement *pipeline = gst_pipeline_new("export_pipeline");
     GstElement *src = gst_element_factory_make("filesrc", "src");
     GstElement *decodebin = gst_element_factory_make("decodebin", "decodebin");
@@ -339,8 +351,7 @@ void GstPlayer::exportVideo(const char *outputPath,
     GstElement *x264enc = gst_element_factory_make("x264enc", "x264enc");
     GstElement *h264parse = gst_element_factory_make("h264parse", "h264parse");
     GstElement *aconv = gst_element_factory_make("audioconvert", "aconv");
-    GstElement *aresample =
-        gst_element_factory_make("audioresample", "aresample");
+    GstElement *aresample = gst_element_factory_make("audioresample", "aresample");
     GstElement *aacenc = gst_element_factory_make("voaacenc", "aacenc");
     GstElement *aacparse = gst_element_factory_make("aacparse", "aacparse");
     GstElement *mp4mux = gst_element_factory_make("mp4mux", "mux");
@@ -354,8 +365,7 @@ void GstPlayer::exportVideo(const char *outputPath,
     }
 
     g_object_set(src, "location", inputPath.c_str(), nullptr);
-    g_object_set(sink, "location", outputPathStr.c_str(), "sync", FALSE,
-                 nullptr);
+    g_object_set(sink, "location", outputPathStr.c_str(), "sync", FALSE, nullptr);
     g_object_set(flip, "method", rotationMethod, nullptr);
     applyEffectParams(_currentEffect);
 
@@ -364,16 +374,12 @@ void GstPlayer::exportVideo(const char *outputPath,
                      aresample, aacenc, aacparse, mp4mux, sink, nullptr);
 
     gst_element_link(src, decodebin);
-    gst_element_link_many(videoQueue, balance, flip, vconv, x264enc, h264parse,
-                          nullptr);
-    gst_element_link_many(audioQueue, aconv, aresample, aacenc, aacparse,
-                          nullptr);
+    gst_element_link_many(videoQueue, balance, flip, vconv, x264enc, h264parse, nullptr);
+    gst_element_link_many(audioQueue, aconv, aresample, aacenc, aacparse, nullptr);
     gst_element_link(mp4mux, sink);
 
-    auto *decodeTargets =
-        new std::pair<GstElement *, GstElement *>(videoQueue, audioQueue);
-    g_signal_connect(decodebin, "pad-added", G_CALLBACK(onPadAdded),
-                     decodeTargets);
+    auto *decodeTargets = new std::pair<GstElement *, GstElement *>(videoQueue, audioQueue);
+    g_signal_connect(decodebin, "pad-added", G_CALLBACK(onPadAdded), decodeTargets);
 
     GstPad *videoSinkPad = gst_element_request_pad_simple(mp4mux, "video_0");
     GstPad *audioSinkPad = gst_element_request_pad_simple(mp4mux, "audio_0");
@@ -477,6 +483,7 @@ void GstPlayer::setVideoPath(const char *path) {
     _isReady = false;
     _isCompleted = false;
     _progress = 0.0f;
+    _blackOverlayEnabled = false;
 
     // Build new pipeline
     buildPipeline();
@@ -704,13 +711,11 @@ void GstPlayer::applyOverlay() {
     return;
   }
 
-  // Check if video sink supports GstVideoOverlay interface
   if (!GST_IS_VIDEO_OVERLAY(videoSink)) {
     PRINT("Warning: Video sink does not support GstVideoOverlay interface");
     return;
   }
 
-  // Get surface handle atomically
   void *handle = reinterpret_cast<void *>(
       surfaceHandleAtomic.load(std::memory_order_acquire));
 
@@ -720,9 +725,6 @@ void GstPlayer::applyOverlay() {
   }
 
   PRINT("Applying video overlay with handle");
-
-  // Set the window handle for video rendering
-  // On iOS, this is a UIView* pointer that glimagesink will use
   gst_video_overlay_set_window_handle(GST_VIDEO_OVERLAY(videoSink),
                                       reinterpret_cast<guintptr>(handle));
 
@@ -807,6 +809,14 @@ void GstPlayer::applyEffectParams(VisualEffect effect) {
       gst_plugin_feature_get_name(GST_PLUGIN_FEATURE(factory));
 
   if (g_strcmp0(factoryName, "videobalance") != 0) {
+    return;
+  }
+
+  // If black overlay is enabled, force a fully black frame regardless of
+  // the currently selected visual effect.
+  if (_blackOverlayEnabled) {
+    g_object_set(videoBalance, "brightness", -1.0, "contrast", 0.0,
+                 "saturation", 0.0, "hue", 0.0, nullptr);
     return;
   }
 

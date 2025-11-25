@@ -43,6 +43,7 @@ private:
   std::string videoPath;
   float audioDuration = 0.0f;
   float videoDuration = 0.0f;
+  bool isVideoAfterEndForPlayback = false;
 
   // Drift correction
   const float SYNC_THRESHOLD_MS = 80.0f;       // Max acceptable drift
@@ -64,6 +65,7 @@ private:
   void _handleAudioStateChange(JuceMixPlayerState state);
   void _handleVideoStateChange(const std::string &state);
   void _handleAudioProgress(float progress);
+  void _updateVideoBlackOverlayForPlayback(bool enable);
   void _ensureVideoSyncOnPlay();
   void _logError(const std::string &message);
 
