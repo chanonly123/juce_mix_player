@@ -117,10 +117,18 @@ void GstPlayer::seek(float normalizedPos) {
     return;
   }
 
-  gstTaskQueue.async([&] {
-    normalizedPos = std::clamp(normalizedPos, 0.0f, 1.0f);
+  gstTaskQueue.async([&, normalizedPos] {
+    // normalizedPos = std::clamp(normalizedPos, 0.0f, 1.0f);
+    float seekPos = std::clamp(normalizedPos, 0.0f, 1.0f);
     _isSeeking = true;
-    gint64 targetMs = static_cast<gint64>(_durationMs * normalizedPos);
+    
+    if (_durationMs <= 0) {
+      PRINT("ERROR: Cannot seek - duration not set or invalid");
+      _isSeeking = false;
+      return;
+    }
+
+    gint64 targetMs = static_cast<gint64>(_durationMs * seekPos);
     _lastSeekMs = targetMs;
 
     // Target timestamp
