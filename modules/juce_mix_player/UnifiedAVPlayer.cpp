@@ -374,6 +374,17 @@ void UnifiedAVPlayer::_handleAudioStateChange(JuceMixPlayerState state) {
     PRINT("Audio ready, duration: " << audioDuration);
   }
 
+  // When audio completes, stop the video player to prevent it from
+  // continuing to play when video duration > audio duration
+  if (state == JuceMixPlayerState::COMPLETED) {
+    PRINT("Audio completed - stopping video player");
+    isPlaying = false;
+
+    if (hasVideo && videoPlayer) {
+      videoPlayer->pause();
+    }
+  }
+
   if (onStateUpdateCallback) {
     onStateUpdateCallback(
         this, returnCopyCharDelete(JuceMixPlayerState_toString(state)));
@@ -500,4 +511,3 @@ void UnifiedAVPlayer::_resetAudioToInitialState() {
   audioPlayer->seek(0.0f);
   lastAudioProgress = 0.0f;
 }
-

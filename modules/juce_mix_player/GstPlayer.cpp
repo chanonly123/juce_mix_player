@@ -92,6 +92,9 @@ void GstPlayer::_pauseInternal(bool stop) {
     }
   }
 
+  // Reset completed flag when pausing to allow seeking/playing again
+  _isCompleted = false;
+
   if (stop) {
     if (pipeline) {
       gst_element_set_state(pipeline, GST_STATE_NULL);
@@ -123,6 +126,9 @@ void GstPlayer::seek(float normalizedPos) {
     // normalizedPos = std::clamp(normalizedPos, 0.0f, 1.0f);
     float seekPos = std::clamp(normalizedPos, 0.0f, 1.0f);
     _isSeeking = true;
+
+    // Reset completed flag to allow seeking after EOS
+    _isCompleted = false;
 
     if (_durationMs <= 0) {
       PRINT("ERROR: Cannot seek - duration not set or invalid");
