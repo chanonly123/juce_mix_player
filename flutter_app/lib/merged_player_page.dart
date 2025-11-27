@@ -78,7 +78,6 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
 
     // Set default settings
     player.setAudioSettings(MixerSettings(
-      loop: false,
       progressUpdateInterval: 0.05,
     ));
   }
@@ -102,12 +101,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
   // Audio loading methods
   Future<void> _loadSampleAudio() async {
     final path = await AssetHelper.extractAsset('assets/media/Fate_of_Ophelia.flac');
-    lastMixerComposeModel = MixerComposeModel(
-      tracks: [
-        MixerTrack(id: "bgm", path: path, volume: bgmVolume, enabled: true),
-      ],
-    );
-    player.setAudioData(lastMixerComposeModel!);
+    await _createComposeModel(path);
     _showSnack('Sample audio loaded', isSuccess: true);
   }
 
@@ -134,65 +128,66 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
     }
   }
 
-  void _updateAudioMix() async {
-    if (lastMixerComposeModel != null) {
-      List<MixerTrack> tracks = [];
-
-      // Add BGM track
-      final bgmTrack = lastMixerComposeModel!.tracks!.firstWhere(
-        (t) => t.id == 'bgm',
-        orElse: () => lastMixerComposeModel!.tracks!.first,
-      );
-      tracks.add(bgmTrack.copyWith(volume: bgmVolume, enabled: true));
-
-      // Add metronome tracks if enabled
-      if (metronomeEnabled) {
-        // Extract metronome audio files
-        final pathH = await AssetHelper.extractAsset('assets/media/met_h.wav');
-        final pathL = await AssetHelper.extractAsset('assets/media/met_l.wav');
-
-        // Add 4 metronome tracks with repeating pattern (high, low, low, low)
-        tracks.add(MixerTrack(
+  Future<void> _createComposeModel(String bgmPath) async {
+    final pathH = await AssetHelper.extractAsset('assets/media/met_h.wav');
+    final pathL = await AssetHelper.extractAsset('assets/media/met_l.wav');
+    lastMixerComposeModel = MixerComposeModel(
+      tracks: [
+        MixerTrack(id: "bgm", path: bgmPath, volume: bgmVolume, enabled: true),
+        MixerTrack(
           id: "metronome_track_0",
           path: pathH,
           offset: 0,
           volume: bgmVolume,
-          enabled: true,
+          enabled: metronomeEnabled,
           repeat: true,
           repeatInterval: 3.2,
-        ));
-        tracks.add(MixerTrack(
+        ),
+        MixerTrack(
           id: "metronome_track_1",
           path: pathL,
           offset: 0.8,
           volume: bgmVolume,
-          enabled: true,
+          enabled: metronomeEnabled,
           repeat: true,
           repeatInterval: 3.2,
-        ));
-        tracks.add(MixerTrack(
+        ),
+        MixerTrack(
           id: "metronome_track_2",
           path: pathL,
           offset: 1.6,
           volume: bgmVolume,
-          enabled: true,
+          enabled: metronomeEnabled,
           repeat: true,
           repeatInterval: 3.2,
-        ));
-        tracks.add(MixerTrack(
+        ),
+        MixerTrack(
           id: "metronome_track_3",
           path: pathL,
           offset: 2.4,
           volume: bgmVolume,
-          enabled: true,
+          enabled: metronomeEnabled,
           repeat: true,
           repeatInterval: 3.2,
-        ));
-      }
+        ),
+      ],
+    );
+    player.setAudioData(lastMixerComposeModel!);
+  }
 
-      lastMixerComposeModel = lastMixerComposeModel!.copyWith(tracks: tracks);
-      player.setAudioData(lastMixerComposeModel!);
-    }
+  void _updateAudioMix() async {
+    if (lastMixerComposeModel == null) return;
+    lastMixerComposeModel = lastMixerComposeModel!.copyWith(
+      tracks: lastMixerComposeModel!.tracks?.map((track) {
+        if (track.id == 'bgm') {
+          return track.copyWith(volume: bgmVolume, enabled: true);
+        } else {
+          return track.copyWith(volume: bgmVolume, enabled: metronomeEnabled);
+        }
+      }).toList(),
+    );
+    player.setAudioData(lastMixerComposeModel!);
+    _showSnack('Audio mix updated', isSuccess: true);
   }
 
   @override
@@ -341,8 +336,8 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Colors.deepPurple.shade900.withOpacity(0.3),
-            Colors.cyan.shade900.withOpacity(0.3),
+            Colors.deepPurple.shade900.withValues(alpha: 0.3),
+            Colors.cyan.shade900.withValues(alpha: 0.3),
           ],
         ),
       ),
@@ -396,7 +391,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
         color: const Color(0xFF1E1E1E),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withValues(alpha:0.3),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -581,7 +576,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                     title: const Text('Enable Guide'),
                     value: guideEnabled,
                     onChanged: (v) => setState(() => guideEnabled = v),
-                    activeColor: Colors.greenAccent,
+                    activeThumbColor: Colors.greenAccent,
                   ),
                   SwitchListTile(
                     title: const Text('Enable Metronome'),
@@ -590,7 +585,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                       setState(() => metronomeEnabled = v);
                       _updateAudioMix();
                     },
-                    activeColor: Colors.greenAccent,
+                    activeThumbColor: Colors.greenAccent,
                   ),
                 ],
               ),
@@ -627,7 +622,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
-                    children: ['0', '90', '180', '270'].map((deg) {
+                    children: ['0', '45', '90', '135', '180', '225', '270'].map((deg) {
                       bool isSelected = currentRotation == deg;
                       return ChoiceChip(
                         label: Text('$deg°'),
@@ -638,7 +633,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                             player.setVideoRotation(int.parse(deg));
                           }
                         },
-                        selectedColor: Colors.purpleAccent.withOpacity(0.3),
+                        selectedColor: Colors.purpleAccent.withValues(alpha: 0.3),
                       );
                     }).toList(),
                   ),
@@ -662,7 +657,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                             player.setVideoVisualEffect(effect.index);
                           }
                         },
-                        selectedColor: Colors.cyanAccent.withOpacity(0.3),
+                        selectedColor: Colors.cyanAccent.withValues(alpha: 0.3),
                       );
                     }).toList(),
                   ),
