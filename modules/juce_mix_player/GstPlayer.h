@@ -54,7 +54,7 @@ private:
   GstElement *videoQueue = nullptr;
   GstElement *videoConvert = nullptr;
   GstElement *videoSink = nullptr;
-  GstElement *videoFlip = nullptr;
+  GstElement *videoRotate = nullptr;
   GstElement *videoBalance = nullptr;
   GstElement *videoBin = nullptr;
   GstElement *audioConvert = nullptr;

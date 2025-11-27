@@ -661,6 +661,30 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                   player.setVideoRotation(angle);
                 },
               ),
+              const SizedBox(height: 8),
+              // Quick preset angles
+              Wrap(
+                spacing: 8,
+                children: [0, 90, 180, 270].map((angle) {
+                  final isSelected = currentRotation == angle;
+                  return ChoiceChip(
+                    label: Text('${angle}°'),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      if (!selected) return;
+                      setModalState(() => currentRotation = angle);
+                      setState(() => currentRotation = angle);
+                      player.setVideoRotation(angle);
+                    },
+                    selectedColor: Colors.cyanAccent.withOpacity(0.3),
+                    backgroundColor: Colors.grey[800],
+                    labelStyle: TextStyle(
+                      color: isSelected ? Colors.white : Colors.white70,
+                      fontSize: 12,
+                    ),
+                  );
+                }).toList(),
+              ),
 
               const SizedBox(height: 16),
               const Divider(color: Colors.white24),

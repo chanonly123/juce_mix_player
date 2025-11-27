@@ -16,10 +16,9 @@ G_PASTE(g_io_, G_PASTE(name, _load)) (NULL)
  */
 
 //#define GST_IOS_PLUGINS_VIS
-//#define GST_IOS_PLUGINS_EFFECTS
 //#define GST_IOS_PLUGINS_CAPTURE
 //#define GST_IOS_PLUGINS_NET_RESTRICTED
-// #define GST_IOS_PLUGINS_NET                 // if playing URL
+//#define GST_IOS_PLUGINS_NET                 // if playing URL
 //#define GST_IOS_PLUGINS_GES
 //#define GST_IOS_GIO_MODULE_GNUTLS
 
@@ -30,7 +29,7 @@ G_PASTE(g_io_, G_PASTE(name, _load)) (NULL)
 #define GST_IOS_PLUGINS_ENCODING
 #define GST_IOS_PLUGINS_PLAYBACK
 #define GST_IOS_PLUGINS_SYS
-
+#define GST_IOS_PLUGINS_EFFECTS
 
 
 void gst_ios_init (void);
