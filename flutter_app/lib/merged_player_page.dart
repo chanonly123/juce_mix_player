@@ -36,7 +36,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
 
   // Video state
   bool isVideoViewReady = false;
-  String currentRotation = "0";
+  int currentRotation = 0;
   VisualEffectType currentEffect = VisualEffectType.none;
   bool isExporting = false;
 
@@ -44,6 +44,31 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
   bool isAudioPanelExpanded = true;
   bool isVideoPanelExpanded = false;
   bool isVideoLoading = false;
+
+  // New UI State
+  bool hasAudioLoaded = false;
+  bool isOverlayVisible = true;
+  Timer? _overlayTimer;
+  Map<String, bool> showVolumeBars = {
+    'bgm': false,
+    'vocal': false,
+    'guide': false,
+    'metronome': false,
+  };
+
+  // Separate volumes
+  double guideVolume = 1.0;
+  double metronomeVolume = 1.0;
+
+  // Overlay positioning
+  final Map<String, LayerLink> _layerLinks = {
+    'bgm': LayerLink(),
+    'vocal': LayerLink(),
+    'guide': LayerLink(),
+    'metronome': LayerLink(),
+  };
+
+  bool isDiscarding = false;
 
   @override
   void initState() {
@@ -64,10 +89,6 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
         setState(() {
           state = newState;
           isPlaying = newState == JuceMixPlayerState.PLAYING;
-
-          if (newState == JuceMixPlayerState.READY) {
-            _showSnack('Player ready!', isSuccess: true);
-          }
         });
       }
     });
@@ -87,6 +108,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
   void _showSnack(String msg, {bool isError = false, bool isSuccess = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
+        duration: Duration(milliseconds: 500),
         content: Text(msg),
         backgroundColor: isError
             ? Colors.redAccent
@@ -104,6 +126,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
   Future<void> _loadSampleAudio() async {
     final path = await AssetHelper.extractAsset('assets/media/Fate_of_Ophelia.flac');
     await _createComposeModel(path);
+    setState(() => hasAudioLoaded = true);
     _showSnack('Sample audio loaded', isSuccess: true);
   }
 
@@ -119,6 +142,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
         final filePath = result.files.single.path!;
         final fileName = result.files.single.name;
         await _createComposeModel(filePath);
+        setState(() => hasAudioLoaded = true);
         _showSnack('Audio loaded: $fileName', isSuccess: true);
       } else {
         _showSnack('No file selected');
@@ -129,7 +153,10 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
   }
 
   Future<void> _loadSampleVideo() async {
-    setState(() => isVideoLoading = true);
+    setState(() {
+      isVideoLoading = true;
+      hasVideoLoaded = false;
+    });
     try {
       final path = await AssetHelper.extractAsset('assets/media/Fate_of_Ophelia_muted.mp4');
       player.setVideoPath(path);
@@ -146,7 +173,10 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
 
   Future<void> _loadVideoFromGallery() async {
     final ImagePicker picker = ImagePicker();
-    setState(() => isVideoLoading = true);
+    setState(() {
+      isVideoLoading = true;
+      hasVideoLoaded = false;
+    });
     final XFile? video = await picker.pickVideo(source: ImageSource.gallery);
     if (video != null) {
       try {
@@ -216,13 +246,18 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
       tracks: lastMixerComposeModel!.tracks?.map((track) {
         if (track.id == 'bgm') {
           return track.copyWith(volume: bgmVolume, enabled: true);
+        } else if (track.id.startsWith('metronome')) {
+          return track.copyWith(volume: metronomeVolume, enabled: metronomeEnabled);
         } else {
+          // Assuming other tracks are guide or vocal if not explicitly handled,
+          // but for now let's stick to what we know.
+          // If there was a 'guide' track in the model, we'd handle it here.
+          // Since the sample model only has bgm and metronome, we'll just return as is or update if id matches.
           return track.copyWith(volume: bgmVolume, enabled: metronomeEnabled);
         }
       }).toList(),
     );
     player.setAudioData(lastMixerComposeModel!);
-    _showSnack('Audio mix updated', isSuccess: true);
   }
 
   @override
@@ -246,150 +281,25 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
         ),
       ),
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Unified A/V Player'),
-          backgroundColor: const Color(0xFF1E1E1E),
-          elevation: 0,
-        ),
-        body: Column(
-          children: [
-            // Video viewport (if video loaded)
-            if (hasVideoLoaded)
-              Expanded(
-                flex: 3,
-                child: _buildVideoViewport(),
-              )
-            else
-              Expanded(
-                flex: 3,
-                child: _buildPlaceholderViewport(),
-              ),
-
-            // Unified playback controls
-            _buildUnifiedControls(),
-
-            // Scrollable panels area
-            Expanded(
-              flex: 2,
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    _buildAudioPanel(),
-                    if (hasVideoLoaded) _buildVideoPanel(),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildVideoViewport() {
-    return Container(
-      color: Colors.black,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Video view - match video_player_page.dart structure
-          Center(
-            child: Container(
-              color: Colors.grey[900],
-              child: _buildVideoView(),
-            ),
-          ),
-
-          // Overlay controls
-          Positioned(
-            top: 16,
-            right: 16,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.black54,
-                shape: BoxShape.circle,
-              ),
-              child: IconButton(
-                icon: const Icon(Icons.close, color: Colors.white),
-                onPressed: () {
-                  setState(() {
-                    hasVideoLoaded = false;
-                    isVideoViewReady = false;
-                  });
-                  _showSnack('Video removed');
-                },
-              ),
-            ),
-          ),
-
-          // Video info overlay (bottom left)
-          Positioned(
-            bottom: 16,
-            left: 16,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.black54,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.videocam, size: 16, color: Colors.purpleAccent),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Video Active',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Loading overlay
-          if (isVideoLoading)
-            Container(
-              color: Colors.black87,
-              child: Center(
+        body: isDiscarding
+            ? Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.cyanAccent),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Loading video...',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                    CircularProgressIndicator(color: Colors.redAccent),
+                    SizedBox(height: 16),
+                    Text("Discarding...", style: TextStyle(color: Colors.white)),
                   ],
                 ),
-              ),
-            ),
-        ],
+              )
+            : hasAudioLoaded
+                ? _buildVideoPlayerScreen()
+                : _buildAudioLoadScreen(),
       ),
     );
   }
 
-  // Use UnifiedVideoView for direct UnifiedAVPlayer integration
-  Widget _buildVideoView() {
-    return UnifiedVideoView(
-      controller: player,
-      onViewReady: () {
-        setState(() => isVideoViewReady = true);
-      },
-    );
-  }
-
-  Widget _buildPlaceholderViewport() {
+  Widget _buildAudioLoadScreen() {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -402,369 +312,600 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
         ),
       ),
       child: Center(
-        child: isVideoLoading
-            ? Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.cyanAccent),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Loading video...',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              )
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.audiotrack, size: 80, color: Colors.white30),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Audio Player',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white70,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    state == JuceMixPlayerState.IDLE ? 'Load audio to begin' : 'Playing audio',
-                    style: TextStyle(color: Colors.white54),
-                  ),
-                  const SizedBox(height: 24),
-                  if (!hasVideoLoaded)
-                    TextButton.icon(
-                      onPressed: _loadVideoFromGallery,
-                      icon: const Icon(Icons.video_library),
-                      label: const Text('Add Video (Optional)'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.cyanAccent,
-                      ),
-                    ),
-                  TextButton.icon(
-                    onPressed: _loadSampleVideo,
-                    icon: const Icon(Icons.video_library),
-                    label: const Text('Load Sample Video'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.cyanAccent,
-                    ),
-                  ),
-                ],
-              ),
-      ),
-    );
-  }
-
-  Widget _buildUnifiedControls() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Progress bar and time
-          Row(
-            children: [
-              Text(
-                TimeUtils.formatDuration(progress * player.getDuration()),
-                style: const TextStyle(fontSize: 12, color: Colors.white70),
-              ),
-              Expanded(
-                child: Slider(
-                  value: progress,
-                  onChanged: (value) {
-                    setState(() => progress = value);
-                  },
-                  onChangeStart: (_) => isSliderEditing = true,
-                  onChangeEnd: (value) {
-                    isSliderEditing = false;
-                    player.seek(value);
-                  },
-                ),
-              ),
-              Text(
-                TimeUtils.formatDuration(player.getDuration()),
-                style: const TextStyle(fontSize: 12, color: Colors.white70),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 8),
-
-          // Main playback buttons
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton(
-                iconSize: 32,
-                icon: const Icon(Icons.skip_previous),
-                onPressed: () => player.seek(0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.audiotrack, size: 80, color: Colors.white30),
+            const SizedBox(height: 20),
+            Text(
+              'Audio Player',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
                 color: Colors.white70,
               ),
-              const SizedBox(width: 16),
-              Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [Colors.cyanAccent, Colors.blueAccent],
-                  ),
-                ),
-                child: IconButton(
-                  iconSize: 48,
-                  icon: Icon(
-                    isPlaying ? Icons.pause : Icons.play_arrow,
-                    color: Colors.white,
-                  ),
-                  onPressed: state != JuceMixPlayerState.IDLE ? () => player.togglePlayPause() : null,
-                ),
-              ),
-              const SizedBox(width: 16),
-              IconButton(
-                iconSize: 32,
-                icon: const Icon(Icons.stop),
-                onPressed: () => player.stop(),
-                color: Colors.redAccent,
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 8),
-
-          // State indicator
-          Text(
-            state.name,
-            style: TextStyle(
-              fontSize: 11,
-              color: _getStateColor(state),
-              fontWeight: FontWeight.bold,
             ),
-          ),
-        ],
+            const SizedBox(height: 8),
+            Text(
+              'Load audio to begin',
+              style: TextStyle(color: Colors.white54),
+            ),
+            const SizedBox(height: 48),
+            SizedBox(
+              width: 250,
+              child: ElevatedButton.icon(
+                onPressed: _loadSampleAudio,
+                icon: const Icon(Icons.music_note),
+                label: const Text('Load Sample Audio'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: 250,
+              child: ElevatedButton.icon(
+                onPressed: _loadAudioFromGallery,
+                icon: const Icon(Icons.folder_open),
+                label: const Text('Load from Gallery'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white10,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildAudioPanel() {
-    return Card(
-      margin: const EdgeInsets.all(8),
-      color: const Color(0xFF2A2A2A),
-      child: Column(
-        children: [
-          ListTile(
-            leading: const Icon(Icons.audiotrack, color: Colors.cyanAccent),
-            title: const Text('Audio Settings', style: TextStyle(fontWeight: FontWeight.bold)),
-            trailing: IconButton(
-              icon: Icon(
-                isAudioPanelExpanded ? Icons.expand_less : Icons.expand_more,
-              ),
-              onPressed: () => setState(() => isAudioPanelExpanded = !isAudioPanelExpanded),
-            ),
-          ),
-          if (isAudioPanelExpanded)
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildVideoPlayerScreen() {
+    return Stack(
+      children: [
+        Column(
+          children: [
+            // Video Area (Top)
+            Expanded(
+              child: Stack(
+                fit: StackFit.expand,
                 children: [
-                  // Load audio buttons
+                  // Video View
+                  Container(
+                    color: Colors.black,
+                    child: Center(
+                      child: AspectRatio(
+                        aspectRatio: 9 / 16,
+                        child: Container(
+                          color: Colors.grey[900],
+                          child: hasVideoLoaded ? _buildVideoView() : _buildVideoPlaceholder(),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Overlay Controls (Tap to show/hide)
+                  Positioned.fill(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      onTap: _toggleOverlay,
+                      child: AnimatedOpacity(
+                        opacity: isOverlayVisible ? 1.0 : 0.0,
+                        duration: const Duration(milliseconds: 300),
+                        child: Container(
+                          color: Colors.black26,
+                          child: Stack(
+                            children: [
+                              // Center Play/Pause
+                              Center(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    IconButton(
+                                      iconSize: 64,
+                                      icon: Icon(
+                                        isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
+                                        color: Colors.white.withValues(alpha: 0.8),
+                                      ),
+                                      onPressed: () {
+                                        player.togglePlayPause();
+                                        _resetOverlayTimer();
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              // Bottom Seeker
+                              Positioned(
+                                bottom: 16,
+                                left: 16,
+                                right: 16,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text(
+                                          TimeUtils.formatDuration(progress * player.getDuration()),
+                                          style: const TextStyle(color: Colors.white, fontSize: 12),
+                                        ),
+                                        Expanded(
+                                          child: Slider(
+                                            value: progress,
+                                            onChanged: (value) {
+                                              setState(() => progress = value);
+                                              _resetOverlayTimer();
+                                            },
+                                            onChangeStart: (_) => isSliderEditing = true,
+                                            onChangeEnd: (value) {
+                                              isSliderEditing = false;
+                                              player.seek(value);
+                                              _resetOverlayTimer();
+                                            },
+                                            activeColor: Colors.cyanAccent,
+                                            inactiveColor: Colors.white24,
+                                          ),
+                                        ),
+                                        Text(
+                                          TimeUtils.formatDuration(player.getDuration()),
+                                          style: const TextStyle(color: Colors.white, fontSize: 12),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Top Bar (Always Visible)
+                  Positioned(
+                    top: MediaQuery.of(context).padding.top + 16,
+                    left: 16,
+                    right: 16,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Discard Button
+                        IconButton(
+                          icon: const Icon(Icons.remove_circle, color: Colors.red),
+                          onPressed: _discardPage,
+                          tooltip: 'Discard & Reload',
+                        ),
+                        // Export Button
+                        IconButton(
+                          icon: isExporting
+                              ? SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                )
+                              : const Icon(Icons.download, color: Colors.white),
+                          onPressed: isExporting ? null : _exportVideo,
+                          tooltip: 'Export Video',
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Bottom Controls Area
+            Container(
+              color: const Color(0xFF1E1E1E),
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Track Controls Row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildTrackControl('BGM', 'bgm', Icons.music_note, bgmVolume),
+                      _buildTrackControl('Vocal', 'vocal', Icons.mic, vocalVolume),
+                      _buildTrackControl('Guide', 'guide', Icons.headphones, guideVolume,
+                          isToggle: true, isEnabled: guideEnabled),
+                      _buildTrackControl('Metronome', 'metronome', Icons.timer, metronomeVolume,
+                          isToggle: true, isEnabled: metronomeEnabled),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Bottom Action Buttons
                   Row(
                     children: [
+                      IconButton(
+                        onPressed: () {
+                          setState(() {
+                            hasVideoLoaded = false;
+                            isVideoViewReady = false;
+                          });
+                        },
+                        icon: const Icon(Icons.videocam_off_outlined, color: Colors.redAccent),
+                        tooltip: 'Remove Video',
+                      ),
+                      const SizedBox(width: 8),
+                      // Video Settings (Expanded)
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: _loadSampleAudio,
-                          icon: const Icon(Icons.music_note),
-                          label: const Text('Load Sample'),
+                          onPressed: hasVideoLoaded ? _showVideoSettings : null,
+                          icon: const Icon(Icons.tune),
+                          label: const Text('Video Settings'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blueAccent,
+                            backgroundColor: Colors.white10,
+                            foregroundColor: Colors.white,
+                            disabledBackgroundColor: Colors.white10.withValues(alpha: 0.5),
+                            disabledForegroundColor: Colors.white30,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: _loadAudioFromGallery,
-                          icon: const Icon(Icons.folder),
-                          label: const Text('From Gallery'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blueAccent,
-                          ),
-                        ),
+                      IconButton(
+                        onPressed: _changeVideo,
+                        icon: Icon(hasVideoLoaded ? Icons.video_library : Icons.add_circle_outline,
+                            color: Colors.cyanAccent),
+                        tooltip: hasVideoLoaded ? 'Replace Video' : 'Add Video',
                       ),
                     ],
-                  ),
-
-                  const SizedBox(height: 16),
-                  const Divider(),
-
-                  // BGM Volume
-                  const Text('BGM Volume', style: TextStyle(fontWeight: FontWeight.bold)),
-                  Row(
-                    children: [
-                      const Icon(Icons.volume_up, size: 20, color: Colors.orangeAccent),
-                      Expanded(
-                        child: Slider(
-                          value: bgmVolume,
-                          onChanged: (v) {
-                            setState(() => bgmVolume = v);
-                          },
-                          onChangeEnd: (_) => _updateAudioMix(),
-                        ),
-                      ),
-                      Text('${(bgmVolume * 100).toInt()}%', style: const TextStyle(fontSize: 12)),
-                    ],
-                  ),
-
-                  // Vocal Volume
-                  // const Text('Vocal Volume', style: TextStyle(fontWeight: FontWeight.bold)),
-                  // Row(
-                  //   children: [
-                  //     const Icon(Icons.mic, size: 20, color: Colors.purpleAccent),
-                  //     Expanded(
-                  //       child: Slider(
-                  //         value: vocalVolume,
-                  //         onChanged: (v) {
-                  //           setState(() => vocalVolume = v);
-                  //         },
-                  //         onChangeEnd: (_) => _updateAudioMix(),
-                  //       ),
-                  //     ),
-                  //     Text('${(vocalVolume * 100).toInt()}%', style: const TextStyle(fontSize: 12)),
-                  //   ],
-                  // ),
-
-                  const Divider(),
-
-                  // Guide & Metronome toggles
-                  // SwitchListTile(
-                  //   title: const Text('Enable Guide'),
-                  //   value: guideEnabled,
-                  //   onChanged: (v) => setState(() => guideEnabled = v),
-                  //   activeThumbColor: Colors.greenAccent,
-                  // ),
-                  SwitchListTile(
-                    title: const Text('Enable Metronome'),
-                    value: metronomeEnabled,
-                    onChanged: (v) {
-                      setState(() => metronomeEnabled = v);
-                      _updateAudioMix();
-                    },
-                    activeThumbColor: Colors.greenAccent,
                   ),
                 ],
               ),
             ),
+          ],
+        ),
+
+        // Volume Overlay Layer
+        if (showVolumeBars.containsValue(true))
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: () {
+                setState(() {
+                  showVolumeBars.updateAll((key, value) => false);
+                });
+              },
+              child: Stack(
+                children: showVolumeBars.entries.where((e) => e.value).map((e) {
+                  final id = e.key;
+                  return CompositedTransformFollower(
+                    link: _layerLinks[id]!,
+                    offset: const Offset(-15, -150), // Adjust to position above
+                    child: Container(
+                      height: 140,
+                      width: 50,
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2A2A2A),
+                        borderRadius: BorderRadius.circular(25),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black54, blurRadius: 8, offset: Offset(0, 4)),
+                        ],
+                      ),
+                      child: RotatedBox(
+                        quarterTurns: 3,
+                        child: SliderTheme(
+                          data: SliderTheme.of(context).copyWith(
+                            trackHeight: 4,
+                            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+                            overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
+                          ),
+                          child: Slider(
+                            value: _getVolumeForId(id),
+                            onChanged: (v) => _updateTrackVolume(id, v, shouldUpdateMix: false),
+                            onChangeEnd: (v) => _updateTrackVolume(id, v),
+                            activeColor: Colors.cyanAccent,
+                            inactiveColor: Colors.grey[800],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  void _showVideoSettings() {
+    showModalBottomSheet(
+      context: context,
+      barrierColor: Colors.transparent,
+      backgroundColor: const Color(0xFF1E1E1E),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => StatefulBuilder(builder: (context, setModalState) {
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Video Settings',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+              const SizedBox(height: 16),
+
+              // Rotation controls
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Rotation', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white70)),
+                  Text(
+                    '${currentRotation.clamp(0, 359)}°',
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Slider(
+                min: 0,
+                max: 359,
+                divisions: 359,
+                value: currentRotation.toDouble().clamp(0.0, 359.0),
+                label: '${currentRotation.clamp(0, 359)}°',
+                onChanged: (value) {
+                  final angle = value.round().clamp(0, 359).toInt();
+                  setModalState(() => currentRotation = angle);
+                  setState(() => currentRotation = angle);
+                  player.setVideoRotation(angle);
+                },
+              ),
+
+              const SizedBox(height: 16),
+              const Divider(color: Colors.white24),
+              const SizedBox(height: 8),
+
+              // Visual effects
+              const Text('Visual Effects', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white70)),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                children: VisualEffectType.values.map((effect) {
+                  bool isSelected = currentEffect == effect;
+                  return ChoiceChip(
+                    label: Text(effect.name.toUpperCase()),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      if (selected) {
+                        setModalState(() => currentEffect = effect);
+                        setState(() => currentEffect = effect);
+                        player.setVideoVisualEffect(effect.index);
+                      }
+                    },
+                    selectedColor: Colors.cyanAccent.withOpacity(0.3),
+                    backgroundColor: Colors.grey[800],
+                    labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.white70),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+        );
+      }),
+    );
+  }
+
+  double _getVolumeForId(String id) {
+    switch (id) {
+      case 'bgm':
+        return bgmVolume;
+      case 'vocal':
+        return vocalVolume;
+      case 'guide':
+        return guideVolume;
+      case 'metronome':
+        return metronomeVolume;
+      default:
+        return 0.0;
+    }
+  }
+
+  Widget _buildVideoPlaceholder() {
+    return Container(
+      color: Colors.black,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.videocam_off, size: 48, color: Colors.white24),
+            SizedBox(height: 8),
+            Text("No Video Loaded", style: TextStyle(color: Colors.white54)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTrackControl(String label, String id, IconData icon, double volume,
+      {bool isToggle = false, bool isEnabled = true}) {
+    bool isActive = isToggle ? isEnabled : volume > 0;
+
+    return CompositedTransformTarget(
+      link: _layerLinks[id]!,
+      child: GestureDetector(
+        onTap: () {
+          if (isToggle) {
+            _toggleTrack(id);
+          } else {
+            // Toggle mute for volume tracks
+            _toggleMute(id);
+          }
+        },
+        onLongPress: () {
+          setState(() {
+            // Hide others
+            showVolumeBars.updateAll((key, value) => false);
+            showVolumeBars[id] = true;
+          });
+
+          // Auto hide after 3 seconds of no interaction (simple timer for now)
+          // Ideally we reset this timer on slider interaction, but for simplicity:
+          Future.delayed(const Duration(seconds: 4), () {
+            if (mounted && showVolumeBars[id] == true) {
+              setState(() => showVolumeBars[id] = false);
+            }
+          });
+        },
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isActive ? Colors.cyanAccent.withValues(alpha: 0.2) : Colors.transparent,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isActive ? Colors.cyanAccent : Colors.grey,
+                  width: 2,
+                ),
+              ),
+              child: Icon(icon, color: isActive ? Colors.cyanAccent : Colors.grey, size: 24),
+            ),
+            const SizedBox(height: 4),
+            Text(label, style: TextStyle(color: isActive ? Colors.white : Colors.grey, fontSize: 10)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Logic Helpers
+
+  void _discardPage() async {
+    setState(() => isDiscarding = true);
+    // Simulate buffer
+    if (mounted) {
+      // Reset everything
+      player.pause();
+      setState(() {
+        //   isDiscarding = false;
+        //   hasAudioLoaded = false;
+        hasVideoLoaded = false;
+        isVideoViewReady = false;
+        //   progress = 0.0;
+        //   isPlaying = false;
+        //   state = JuceMixPlayerState.IDLE;
+        //   // Reset other settings if needed
+      });
+      UnifiedAVPlayerController.destroyInstance();
+    }
+    await Future.delayed(const Duration(seconds: 3));
+    setState(() {
+      isDiscarding = false;
+    });
+  }
+
+  void _changeVideo() {
+    player.pause();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1E1E1E),
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.video_library, color: Colors.cyanAccent),
+            title: const Text('Load Sample Video', style: TextStyle(color: Colors.white)),
+            onTap: () {
+              Navigator.pop(context);
+              _loadSampleVideo();
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.folder_open, color: Colors.cyanAccent),
+            title: const Text('Load from Gallery', style: TextStyle(color: Colors.white)),
+            onTap: () {
+              Navigator.pop(context);
+              _loadVideoFromGallery();
+            },
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildVideoPanel() {
-    return Card(
-      margin: const EdgeInsets.all(8),
-      color: const Color(0xFF2A2A2A),
-      child: Column(
-        children: [
-          ListTile(
-            leading: const Icon(Icons.videocam, color: Colors.purpleAccent),
-            title: const Text('Video Settings', style: TextStyle(fontWeight: FontWeight.bold)),
-            trailing: IconButton(
-              icon: Icon(
-                isVideoPanelExpanded ? Icons.expand_less : Icons.expand_more,
-              ),
-              onPressed: () => setState(() => isVideoPanelExpanded = !isVideoPanelExpanded),
-            ),
-          ),
-          if (isVideoPanelExpanded)
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Rotation controls
-                  const Text('Rotation', style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: ['0', '45', '90', '135', '180', '225', '270'].map((deg) {
-                      bool isSelected = currentRotation == deg;
-                      return ChoiceChip(
-                        label: Text('$deg°'),
-                        selected: isSelected,
-                        onSelected: (selected) {
-                          if (selected) {
-                            setState(() => currentRotation = deg);
-                            player.setVideoRotation(int.parse(deg));
-                          }
-                        },
-                        selectedColor: Colors.purpleAccent.withValues(alpha: 0.3),
-                      );
-                    }).toList(),
-                  ),
+  void _toggleOverlay() {
+    setState(() {
+      isOverlayVisible = !isOverlayVisible;
+    });
+    if (isOverlayVisible) {
+      _resetOverlayTimer();
+    } else {
+      _overlayTimer?.cancel();
+    }
+  }
 
-                  const SizedBox(height: 16),
-                  const Divider(),
+  void _resetOverlayTimer() {
+    _overlayTimer?.cancel();
+    _overlayTimer = Timer(const Duration(seconds: 3), () {
+      if (mounted && isPlaying) {
+        setState(() => isOverlayVisible = false);
+      }
+    });
+  }
 
-                  // Visual effects
-                  const Text('Visual Effects', style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: VisualEffectType.values.map((effect) {
-                      bool isSelected = currentEffect == effect;
-                      return ChoiceChip(
-                        label: Text(effect.name.toUpperCase()),
-                        selected: isSelected,
-                        onSelected: (selected) {
-                          if (selected) {
-                            setState(() => currentEffect = effect);
-                            player.setVideoVisualEffect(effect.index);
-                          }
-                        },
-                        selectedColor: Colors.cyanAccent.withValues(alpha: 0.3),
-                      );
-                    }).toList(),
-                  ),
+  void _toggleTrack(String id) {
+    if (id == 'metronome') {
+      setState(() => metronomeEnabled = !metronomeEnabled);
+      _updateAudioMix();
+    } else if (id == 'guide') {
+      setState(() => guideEnabled = !guideEnabled);
+      // Update mix if guide logic exists
+    }
+  }
 
-                  const SizedBox(height: 16),
+  void _toggleMute(String id) {
+    if (id == 'bgm') {
+      setState(() {
+        bgmVolume = bgmVolume > 0 ? 0 : 0.7;
+      });
+    } else if (id == 'vocal') {
+      setState(() {
+        vocalVolume = vocalVolume > 0 ? 0 : 1.0;
+      });
+    } else if (id == 'guide') {
+      setState(() {
+        guideVolume = guideVolume > 0 ? 0 : 1.0;
+      });
+    } else if (id == 'metronome') {
+      setState(() {
+        metronomeVolume = metronomeVolume > 0 ? 0 : 1.0;
+      });
+    }
+    _updateAudioMix();
+  }
 
-                  // Export video button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: isExporting ? null : _exportVideo,
-                      icon: isExporting
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.download),
-                      label: Text(isExporting ? 'EXPORTING...' : 'EXPORT VIDEO'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green.shade700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
+  void _updateTrackVolume(String id, double value, {bool shouldUpdateMix = true}) {
+    setState(() {
+      if (id == 'bgm') bgmVolume = value;
+      if (id == 'vocal') vocalVolume = value;
+      if (id == 'guide') guideVolume = value;
+      if (id == 'metronome') metronomeVolume = value;
+    });
+    if (shouldUpdateMix) {
+      _updateAudioMix();
+    }
+  }
+
+  // Use UnifiedVideoView for direct UnifiedAVPlayer integration
+  Widget _buildVideoView() {
+    return UnifiedVideoView(
+      controller: player,
+      onViewReady: () {
+        setState(() => isVideoViewReady = true);
+      },
     );
   }
 
@@ -780,23 +921,6 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
       _showSnack('Export failed: $e', isError: true);
     } finally {
       setState(() => isExporting = false);
-    }
-  }
-
-  Color _getStateColor(JuceMixPlayerState state) {
-    switch (state) {
-      case JuceMixPlayerState.PLAYING:
-        return Colors.greenAccent;
-      case JuceMixPlayerState.PAUSED:
-        return Colors.orangeAccent;
-      case JuceMixPlayerState.STOPPED:
-        return Colors.redAccent;
-      case JuceMixPlayerState.ERROR:
-        return Colors.red;
-      case JuceMixPlayerState.READY:
-        return Colors.cyanAccent;
-      default:
-        return Colors.grey;
     }
   }
 }

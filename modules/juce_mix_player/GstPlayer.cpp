@@ -605,7 +605,7 @@ void GstPlayer::buildPipeline() {
     teardownPipeline();
     return;
   }
-n)
+    
   decodebinPadData =
       new std::pair<GstElement *, GstElement *>(videoBin, audioConvert);
   g_signal_connect(decodebin, "pad-added", G_CALLBACK(onPadAdded),

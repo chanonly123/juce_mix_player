@@ -96,11 +96,12 @@ class VideoPlayerState extends State<VideoPlayerPage> {
 
   Future<void> pickVideoFromGallery() async {
     final ImagePicker picker = ImagePicker();
+    setState(() {
+      _hasVideoLoaded = false;
+      _isViewReady = false;
+    });
     final XFile? video = await picker.pickVideo(source: ImageSource.gallery);
     if (video != null) {
-      setState(() {
-        _hasVideoLoaded = false;
-      });
       player.setVideoPath(video.path);
       _showSnack('Video loaded: ${video.name}');
     }
@@ -313,6 +314,10 @@ class VideoPlayerState extends State<VideoPlayerPage> {
                   icon: const Icon(Icons.smart_display_outlined),
                   tooltip: "Load Sample",
                   onPressed: () async {
+                    setState(() {
+                      _hasVideoLoaded = false;
+                      _isViewReady = false;
+                    });
                     final pathL = await AssetHelper.extractAsset('assets/media/sample_3.mp4');
                     player.setVideoPath(pathL);
                   },
