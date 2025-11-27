@@ -7,11 +7,9 @@
 
 #include "UnifiedAVPlayer.h"
 
-// Static singleton members
 std::unique_ptr<UnifiedAVPlayer> UnifiedAVPlayer::instance = nullptr;
 std::mutex UnifiedAVPlayer::instanceMutex;
 
-// Singleton access
 UnifiedAVPlayer *UnifiedAVPlayer::getInstance() {
   std::lock_guard<std::mutex> lock(instanceMutex);
   if (!instance) {
@@ -28,18 +26,12 @@ void UnifiedAVPlayer::destroyInstance() {
   }
 }
 
-// Constructor
 UnifiedAVPlayer::UnifiedAVPlayer() {
   PRINT("UnifiedAVPlayer()");
 
-  // Create audio player
-  audioPlayer.reset(new JuceMixPlayer());
+  audioPlayer = new JuceMixPlayer();
+  videoPlayer = new GstPlayer();
 
-  // Create video player
-  videoPlayer.reset(new GstPlayer());
-
-  // Setup audio callbacks - forward to our own callbacks
-  // Store 'this' in the audioPlayer's userContext so callbacks can access it
   audioPlayer->userContext = this;
 
   audioPlayer->onProgressCallback = [](void *context, float progress) {
@@ -73,8 +65,7 @@ UnifiedAVPlayer::UnifiedAVPlayer() {
     }
   };
 
-  // Setup video callbacks
-  // Store 'this' in the videoPlayer's userContext so callbacks can access it
+
   videoPlayer->userContext = this;
 
   videoPlayer->onStateUpdateCallback = [](void *context, const char *state) {
@@ -95,7 +86,6 @@ UnifiedAVPlayer::UnifiedAVPlayer() {
     }
   };
 
-  // Start drift correction timer
   startTimer(SYNC_CHECK_INTERVAL_MS);
 
   PRINT("UnifiedAVPlayer initialized");
@@ -109,16 +99,13 @@ void UnifiedAVPlayer::dispose() {
 
   if (audioPlayer) {
     audioPlayer->dispose();
-    audioPlayer.release();
   }
 
   if (videoPlayer) {
     videoPlayer->dispose();
-    videoPlayer.release();
   }
 }
 
-// Destructor
 UnifiedAVPlayer::~UnifiedAVPlayer() { PRINT("~UnifiedAVPlayer"); }
 
 // MARK: Unified Playback Controls
@@ -145,7 +132,6 @@ void UnifiedAVPlayer::pause() {
   const juce::ScopedLock scopedLock(lock);
   isPlaying = false;
 
-  // Pause both simultaneously
   if (audioPlayer) {
     audioPlayer->pause();
   }
@@ -188,15 +174,11 @@ void UnifiedAVPlayer::seek(float normalizedPos) {
   }
 
   if (hasVideo && videoPlayer) {
-    // Calculate video position considering possible trim/pad
     float videoPos = value;
     if (videoDuration > 0 && audioDuration > 0) {
       if (videoDuration > audioDuration) {
-        // Video is longer, trimmed to audio duration
-        // Seek proportionally in the first part of video
         videoPos = value * (audioDuration / videoDuration);
       }
-      // If video is shorter, seek to end stays at video end (GStreamer handles)
     }
     videoPlayer->seek(videoPos);
   }
@@ -223,7 +205,6 @@ void UnifiedAVPlayer::setAudioData(const char *json) {
 
   audioPlayer->setJson(json);
 
-  // Update audio duration after setting data
   audioDuration = audioPlayer->getDuration();
   PRINT("Audio duration: " << audioDuration << " seconds");
 }
@@ -275,9 +256,6 @@ void UnifiedAVPlayer::setVideoPath(const char *path) {
 
   videoPath = std::string(path);
   videoPlayer->setVideoPath(path);
-
-  // Video player will call state callback when ready
-  // We'll get duration in the state callback
 }
 
 void UnifiedAVPlayer::setVideoSurfaceHandle(void *handle) {
@@ -330,7 +308,6 @@ void UnifiedAVPlayer::exportVideo(
 // MARK: State Queries
 
 float UnifiedAVPlayer::getDuration() {
-  // Audio duration is master
   if (audioPlayer) {
     return audioPlayer->getDuration();
   }
@@ -338,7 +315,6 @@ float UnifiedAVPlayer::getDuration() {
 }
 
 float UnifiedAVPlayer::getCurrentTime() {
-  // Audio time is master
   if (audioPlayer) {
     return audioPlayer->getCurrentTime();
   }
@@ -388,13 +364,11 @@ void UnifiedAVPlayer::_handleAudioStateChange(JuceMixPlayerState state) {
         << JuceMixPlayerState_toString(state));
   currentState = state;
 
-  // Update audio duration when ready
   if (state == JuceMixPlayerState::READY && audioPlayer) {
     audioDuration = audioPlayer->getDuration();
     PRINT("Audio ready, duration: " << audioDuration);
   }
 
-  // Forward state callback
   if (onStateUpdateCallback) {
     onStateUpdateCallback(
         this, returnCopyCharDelete(JuceMixPlayerState_toString(state)));
@@ -404,17 +378,14 @@ void UnifiedAVPlayer::_handleAudioStateChange(JuceMixPlayerState state) {
 void UnifiedAVPlayer::_handleVideoStateChange(const std::string &state) {
   PRINT("UnifiedAVPlayer::_handleVideoStateChange: " << state);
 
-  // Update video status when ready
   if (state == "READY" && videoPlayer) {
     videoDuration = videoPlayer->getDurationInSecs();
     hasVideo = true;
     isVideoAfterEndForPlayback = false;
     PRINT("Video ready, duration: " << videoDuration);
 
-    // Ensure video is muted (always secondary, silent media)
     videoPlayer->setMuteEmbeddedAudio(1);
 
-    // Log duration mismatch warnings
     if (audioDuration > 0) {
       if (videoDuration > audioDuration) {
         PRINT("WARNING: Video duration ("
@@ -438,7 +409,6 @@ void UnifiedAVPlayer::_ensureVideoSyncOnPlay() {
     return;
   }
 
-  // Get current audio position
   float audioPos = audioPlayer->getCurrentTime();
   float audioDur = audioPlayer->getDuration();
 
@@ -447,21 +417,16 @@ void UnifiedAVPlayer::_ensureVideoSyncOnPlay() {
     return;
   }
 
-  // Calculate normalized position
   float normalized = audioPos / audioDur;
 
-  // Seek video to match audio position
   float videoPos = normalized;
   if (videoDuration > 0 && audioDuration > 0) {
     if (videoDuration > audioDuration) {
-      // Video is longer, map to proportional position in video
       videoPos = normalized * (audioDuration / videoDuration);
     }
   }
 
   videoPlayer->seek(videoPos);
-
-  // Small delay to let seek complete, then play
   juce::Thread::sleep(50);
   videoPlayer->play();
 }
@@ -480,7 +445,6 @@ void UnifiedAVPlayer::_syncVideoToAudio() {
     return;
   }
 
-  // Check if drift exceeds threshold
   float audioTime = audioPlayer->getCurrentTime();
   float audioDur = audioPlayer->getDuration();
 
@@ -490,13 +454,8 @@ void UnifiedAVPlayer::_syncVideoToAudio() {
 
   float audioProgress = audioTime / audioDur;
 
-  // Estimate video progress (we don't have direct video progress callback)
-  // If drift is detected via audio progress changes without video updates,
-  // apply corrective seek
-
   float progressDiff = std::abs(audioProgress - lastAudioProgress);
   if (progressDiff > (SYNC_THRESHOLD_MS / (audioDur * 1000.0f))) {
-    // Audio has progressed significantly, ensure video is synced
     float videoPos = audioProgress;
     if (videoDuration > 0 && audioDuration > 0) {
       if (videoDuration > audioDuration) {

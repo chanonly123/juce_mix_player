@@ -17,17 +17,19 @@ GstPlayer::GstPlayer() : platform(GstPlatform::create()) {
 GstPlayer::~GstPlayer() { PRINT("~GstPlayer"); }
 
 void GstPlayer::dispose() {
-  PRINT("GstPlayer::dispose");
-  _isPlaying = false;
-  _isPlayingInternal = false;
-  stop();
-  teardownPipeline();
-  std::thread thread([&] {
-    gstTaskQueue.stopQueue();
-    juce::Thread::sleep(2000);
-    delete this;
+  juce::MessageManager::getInstanceWithoutCreating()->callAsync([&] {
+    PRINT("GstPlayer::dispose");
+    _isPlaying = false;
+    _isPlayingInternal = false;
+    stop();
+    teardownPipeline();
+    std::thread thread([&] {
+      gstTaskQueue.stopQueue();
+      juce::Thread::sleep(5000);
+      delete this;
+    });
+    thread.detach();
   });
-  thread.detach();
 }
 
 void GstPlayer::notifyState(JuceMixPlayerState state) {
@@ -121,7 +123,7 @@ void GstPlayer::seek(float normalizedPos) {
     // normalizedPos = std::clamp(normalizedPos, 0.0f, 1.0f);
     float seekPos = std::clamp(normalizedPos, 0.0f, 1.0f);
     _isSeeking = true;
-    
+
     if (_durationMs <= 0) {
       PRINT("ERROR: Cannot seek - duration not set or invalid");
       _isSeeking = false;
@@ -338,8 +340,8 @@ void GstPlayer::exportVideo(const char *outputPath,
     g_object_get(videoFlip, "method", &rotationMethod, nullptr);
   }
 
-  gstTaskQueue.async([this, inputPath, outputPathStr, effect, rotationMethod, completion]() {
-    
+  gstTaskQueue.async([this, inputPath, outputPathStr, effect, rotationMethod,
+                      completion]() {
     GstElement *pipeline = gst_pipeline_new("export_pipeline");
     GstElement *src = gst_element_factory_make("filesrc", "src");
     GstElement *decodebin = gst_element_factory_make("decodebin", "decodebin");
@@ -351,7 +353,8 @@ void GstPlayer::exportVideo(const char *outputPath,
     GstElement *x264enc = gst_element_factory_make("x264enc", "x264enc");
     GstElement *h264parse = gst_element_factory_make("h264parse", "h264parse");
     GstElement *aconv = gst_element_factory_make("audioconvert", "aconv");
-    GstElement *aresample = gst_element_factory_make("audioresample", "aresample");
+    GstElement *aresample =
+        gst_element_factory_make("audioresample", "aresample");
     GstElement *aacenc = gst_element_factory_make("voaacenc", "aacenc");
     GstElement *aacparse = gst_element_factory_make("aacparse", "aacparse");
     GstElement *mp4mux = gst_element_factory_make("mp4mux", "mux");
@@ -365,7 +368,8 @@ void GstPlayer::exportVideo(const char *outputPath,
     }
 
     g_object_set(src, "location", inputPath.c_str(), nullptr);
-    g_object_set(sink, "location", outputPathStr.c_str(), "sync", FALSE, nullptr);
+    g_object_set(sink, "location", outputPathStr.c_str(), "sync", FALSE,
+                 nullptr);
     g_object_set(flip, "method", rotationMethod, nullptr);
     applyEffectParams(_currentEffect);
 
@@ -374,12 +378,16 @@ void GstPlayer::exportVideo(const char *outputPath,
                      aresample, aacenc, aacparse, mp4mux, sink, nullptr);
 
     gst_element_link(src, decodebin);
-    gst_element_link_many(videoQueue, balance, flip, vconv, x264enc, h264parse, nullptr);
-    gst_element_link_many(audioQueue, aconv, aresample, aacenc, aacparse, nullptr);
+    gst_element_link_many(videoQueue, balance, flip, vconv, x264enc, h264parse,
+                          nullptr);
+    gst_element_link_many(audioQueue, aconv, aresample, aacenc, aacparse,
+                          nullptr);
     gst_element_link(mp4mux, sink);
 
-    auto *decodeTargets = new std::pair<GstElement *, GstElement *>(videoQueue, audioQueue);
-    g_signal_connect(decodebin, "pad-added", G_CALLBACK(onPadAdded), decodeTargets);
+    auto *decodeTargets =
+        new std::pair<GstElement *, GstElement *>(videoQueue, audioQueue);
+    g_signal_connect(decodebin, "pad-added", G_CALLBACK(onPadAdded),
+                     decodeTargets);
 
     GstPad *videoSinkPad = gst_element_request_pad_simple(mp4mux, "video_0");
     GstPad *audioSinkPad = gst_element_request_pad_simple(mp4mux, "audio_0");
@@ -504,9 +512,9 @@ void GstPlayer::setVideoPath(const char *path) {
 }
 
 void GstPlayer::setSurfaceHandle(void *handle) {
-  PRINT("GstPlayer::setSurfaceHandle");
-
-  // Store handle atomically
+  PRINT("GstPlayer::setSurfaceHandle | this=" +
+        juce::String::toHexString(
+            reinterpret_cast<juce::pointer_sized_int>(this)));
   surfaceHandleAtomic.store(reinterpret_cast<guintptr>(handle),
                             std::memory_order_release);
   surfaceHandle = handle;

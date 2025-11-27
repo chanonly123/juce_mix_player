@@ -197,7 +197,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
 
   @override
   void dispose() {
-    player.dispose();
+    UnifiedAVPlayerController.destroyInstance();
     super.dispose();
   }
 

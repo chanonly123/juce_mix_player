@@ -28,15 +28,12 @@
  */
 class UnifiedAVPlayer : private juce::Timer {
 private:
-  // Singleton instance
   static std::unique_ptr<UnifiedAVPlayer> instance;
   static std::mutex instanceMutex;
 
-  // Player instances
-  std::unique_ptr<JuceMixPlayer> audioPlayer;
-  std::unique_ptr<GstPlayer> videoPlayer;
+  JuceMixPlayer *audioPlayer;
+  GstPlayer *videoPlayer;
 
-  // Synchronization state
   std::atomic<bool> hasVideo{false};
   std::atomic<bool> isPlaying{false};
   std::atomic<bool> isDisposed{false};
@@ -45,22 +42,15 @@ private:
   float videoDuration = 0.0f;
   bool isVideoAfterEndForPlayback = false;
 
-  // Drift correction
-  const float SYNC_THRESHOLD_MS = 80.0f;       // Max acceptable drift
-  const float SYNC_CHECK_INTERVAL_MS = 150.0f; // How often to check sync
+  const float SYNC_THRESHOLD_MS = 80.0f;
+  const float SYNC_CHECK_INTERVAL_MS = 150.0f;
   float lastAudioProgress = 0.0f;
   float lastVideoProgress = 0.0f;
 
-  // Thread safety
   juce::CriticalSection lock;
-
-  // Internal state
   JuceMixPlayerState currentState = JuceMixPlayerState::IDLE;
-
-  // Private constructor for singleton
   UnifiedAVPlayer();
 
-  // Internal methods
   void _syncVideoToAudio();
   void _handleAudioStateChange(JuceMixPlayerState state);
   void _handleVideoStateChange(const std::string &state);
@@ -70,61 +60,45 @@ private:
   void _logError(const std::string &message);
 
 public:
-  // Singleton access
   static UnifiedAVPlayer *getInstance();
   static void destroyInstance();
 
-  // Destructor
   ~UnifiedAVPlayer();
 
-  // Prevent copying
   UnifiedAVPlayer(const UnifiedAVPlayer &) = delete;
   UnifiedAVPlayer &operator=(const UnifiedAVPlayer &) = delete;
 
-  // Unified playback controls
   void play();
   void pause();
   void stop();
   void seek(float normalizedPos); // 0.0 to 1.0
   void togglePlayPause();
 
-  // Audio setup (required - primary media)
   void setAudioData(const char *json);
   void setAudioSettings(const char *json);
   void resetAudioPlayBuffer();
-
-  // Audio export
   void exportToFile(const char *outputFile,
                     std::function<void(const char *)> completion);
 
-  // Video setup (optional - secondary media)
   void setVideoPath(const char *path);
   void setVideoSurfaceHandle(void *handle);
   void setVideoRotation(int degrees);
   void setVideoVisualEffect(int effectId);
 
-  // Video export
   void exportVideo(const char *outputPath,
                    std::function<void(const char *)> completion);
 
-  // State queries
-  float getDuration();    // Returns audio duration (master)
-  float getCurrentTime(); // Returns audio current time
+  float getDuration();
+  float getCurrentTime();
   bool getIsPlaying();
   std::string getCurrentState();
   bool hasVideoLoaded();
 
-  // Callbacks (unified - driven by audio timeline)
   JuceMixPlayerCallbackFloat onProgressCallback = nullptr;
   JuceMixPlayerCallbackString onStateUpdateCallback = nullptr;
   JuceMixPlayerCallbackString onErrorCallback = nullptr;
-
-  // Device management (audio only)
   JuceMixPlayerCallbackString onDeviceUpdateCallback = nullptr;
 
-  // Timer callback for drift correction
   void timerCallback() override;
-
-  // Cleanup
   void dispose();
 };

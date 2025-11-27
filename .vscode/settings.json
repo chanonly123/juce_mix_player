@@ -60,6 +60,14 @@
         "format": "cpp",
         "queue": "cpp",
         "stack": "cpp",
-        "ranges": "cpp"
+        "ranges": "cpp",
+        "complex": "cpp",
+        "cstdarg": "cpp",
+        "map": "cpp",
+        "variant": "cpp",
+        "cinttypes": "cpp",
+        "any": "cpp",
+        "bitset": "cpp",
+        "optional": "cpp"
     },
 }
