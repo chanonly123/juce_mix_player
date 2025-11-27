@@ -8,6 +8,18 @@ import 'package:flutter/foundation.dart';
 import 'juce_lib_gen.dart';
 import 'juce_mix_player.dart'; // For model classes and enums
 
+enum VideoFlipMethod {
+  none, // 0
+  clockwise, // 1
+  rotate180, // 2
+  counterClockwise, // 3
+  horizontal, // 4
+  vertical, // 5
+  upperLeftDiagonal, // 6
+  upperRightDiagonal, // 7
+  automatic, // 8
+}
+
 /// UnifiedAVPlayer Controller
 /// Coordinates synchronized playback of audio (primary/master) and video (secondary/optional)
 /// Audio is the master timeline, video is automatically muted and synced
@@ -132,6 +144,10 @@ class UnifiedAVPlayerController {
 
   void setVideoRotation(int degrees) {
     _juceLib.UnifiedAVPlayer_setVideoRotation(_ptr, degrees);
+  }
+
+  void setVideoFlip(VideoFlipMethod method) {
+    _juceLib.UnifiedAVPlayer_setVideoFlip(_ptr, method.index);
   }
 
   void setVideoVisualEffect(int effectId) {

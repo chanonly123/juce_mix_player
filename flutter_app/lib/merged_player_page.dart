@@ -1,3 +1,4 @@
+
 import 'dart:async';
 
 import 'package:file_picker/file_picker.dart';
@@ -37,6 +38,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
   // Video state
   bool isVideoViewReady = false;
   int currentRotation = 0;
+  VideoFlipMethod currentFlipMethod = VideoFlipMethod.none;
   VisualEffectType currentEffect = VisualEffectType.none;
   bool isExporting = false;
 
@@ -620,104 +622,180 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
   void _showVideoSettings() {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       barrierColor: Colors.transparent,
       backgroundColor: const Color(0xFF1E1E1E),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (context) => StatefulBuilder(builder: (context, setModalState) {
-        return Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Video Settings',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-              const SizedBox(height: 16),
+      builder: (context) {
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.4,
+          minChildSize: 0.3,
+          maxChildSize: 0.7,
+          builder: (context, scrollController) {
+            return StatefulBuilder(builder: (context, setModalState) {
+              return SafeArea(
+                top: false,
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Row(
+                      //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      //   children: [
+  
+                      //   ],
+                      // ),
+                      // const SizedBox(height: 16),
 
-              // Rotation controls
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Rotation', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white70)),
-                  Text(
-                    '${currentRotation.clamp(0, 359)}°',
-                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                       // Visual Effects on top
+                      Row(
+                        children: const [
+                          Icon(Icons.auto_awesome, size: 16, color: Colors.white70),
+                          SizedBox(width: 4),
+                          Text('FX', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white70)),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: VisualEffectType.values.map((effect) {
+                          final isSelected = currentEffect == effect;
+                          final label = effect.name.toUpperCase();
+                          return ChoiceChip(
+                            label: Text(label),
+                            labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            visualDensity: VisualDensity.compact,
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              if (selected) {
+                                setModalState(() => currentEffect = effect);
+                                setState(() => currentEffect = effect);
+                                player.setVideoVisualEffect(effect.index);
+                              }
+                            },
+                            selectedColor: Colors.black,
+                            backgroundColor: Colors.grey[800],
+                            labelStyle: TextStyle(
+                              color: isSelected ? Colors.white : Colors.white70,
+                              fontSize: 11,
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      const Divider(color: Colors.white24),
+                      // Rotation controls
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: const [
+                              Icon(Icons.screen_rotation, size: 8, color: Colors.white70),
+                              SizedBox(width: 2),
+                              Text('ROTATE', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white70)),
+                            ],
+                          ),
+                          Text(
+                            '${currentRotation.clamp(0, 359)}°',
+                            style: const TextStyle(color: Colors.white70, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Slider(
+                        min: 0,
+                        max: 359,
+                        divisions: 359,
+                        value: currentRotation.toDouble().clamp(0.0, 359.0),
+                        label: '${currentRotation.clamp(0, 359)}°',
+                        onChanged: (value) {
+                          final angle = value.round().clamp(0, 359).toInt();
+                          setModalState(() => currentRotation = angle);
+                          setState(() => currentRotation = angle);
+                          player.setVideoRotation(angle);
+                        },
+                      ),
+                      const SizedBox(height: 2),
+                      Wrap(
+                        spacing: 6,
+                        children: [0, 90, 180, 270].map((angle) {
+                          final isSelected = currentRotation == angle;
+                          return ChoiceChip(
+                            label: Text('${angle}°'),
+                            labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            visualDensity: VisualDensity.compact,
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              if (!selected) return;
+                              setModalState(() => currentRotation = angle);
+                              setState(() => currentRotation = angle);
+                              player.setVideoRotation(angle);
+                            },
+                            selectedColor: Colors.black,
+                            backgroundColor: Colors.grey[800],
+                            labelStyle: TextStyle(
+                              color: isSelected ? Colors.white : Colors.white70,
+                              fontSize: 11,
+                            ),
+                          );
+                        }).toList(),
+                      ),
+
+                      const Divider(color: Colors.white24),
+
+                      // Flip controls
+                      Row(
+                        children: const [
+                          Icon(Icons.compare_arrows, size: 16, color: Colors.white70),
+                          SizedBox(width: 4),
+                          Text('FLIP', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white70)),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: VideoFlipMethod.values.map((method) {
+                          final isSelected = currentFlipMethod == method;
+                          final label = method.name.toUpperCase();
+                          return ChoiceChip(
+                            label: Text(label),
+                            labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            visualDensity: VisualDensity.compact,
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              if (selected) {
+                                setModalState(() => currentFlipMethod = method);
+                                setState(() => currentFlipMethod = method);
+                                player.setVideoFlip(method);
+                              }
+                            },
+                            selectedColor: Colors.cyanAccent.withOpacity(0.3),
+                            backgroundColor: Colors.grey[800],
+                            labelStyle: TextStyle(
+                              color: isSelected ? Colors.white : Colors.white70,
+                              fontSize: 11,
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
                   ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Slider(
-                min: 0,
-                max: 359,
-                divisions: 359,
-                value: currentRotation.toDouble().clamp(0.0, 359.0),
-                label: '${currentRotation.clamp(0, 359)}°',
-                onChanged: (value) {
-                  final angle = value.round().clamp(0, 359).toInt();
-                  setModalState(() => currentRotation = angle);
-                  setState(() => currentRotation = angle);
-                  player.setVideoRotation(angle);
-                },
-              ),
-              const SizedBox(height: 8),
-              // Quick preset angles
-              Wrap(
-                spacing: 8,
-                children: [0, 90, 180, 270].map((angle) {
-                  final isSelected = currentRotation == angle;
-                  return ChoiceChip(
-                    label: Text('${angle}°'),
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      if (!selected) return;
-                      setModalState(() => currentRotation = angle);
-                      setState(() => currentRotation = angle);
-                      player.setVideoRotation(angle);
-                    },
-                    selectedColor: Colors.cyanAccent.withOpacity(0.3),
-                    backgroundColor: Colors.grey[800],
-                    labelStyle: TextStyle(
-                      color: isSelected ? Colors.white : Colors.white70,
-                      fontSize: 12,
-                    ),
-                  );
-                }).toList(),
-              ),
-
-              const SizedBox(height: 16),
-              const Divider(color: Colors.white24),
-              const SizedBox(height: 8),
-
-              // Visual effects
-              const Text('Visual Effects', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white70)),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                children: VisualEffectType.values.map((effect) {
-                  bool isSelected = currentEffect == effect;
-                  return ChoiceChip(
-                    label: Text(effect.name.toUpperCase()),
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      if (selected) {
-                        setModalState(() => currentEffect = effect);
-                        setState(() => currentEffect = effect);
-                        player.setVideoVisualEffect(effect.index);
-                      }
-                    },
-                    selectedColor: Colors.cyanAccent.withOpacity(0.3),
-                    backgroundColor: Colors.grey[800],
-                    labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.white70),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 24),
-            ],
-          ),
+                ),
+              );
+            });
+          },
         );
-      }),
+      },
     );
   }
 

@@ -84,6 +84,7 @@ public:
   void setVideoPath(const char *path);
   void setVideoSurfaceHandle(void *handle);
   void setVideoRotation(int degrees);
+  void setVideoFlip(int method);
   void setVideoVisualEffect(int effectId);
 
   void exportVideo(const char *outputPath,

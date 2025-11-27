@@ -286,6 +286,17 @@ void UnifiedAVPlayer::setVideoRotation(int degrees) {
   videoPlayer->setRotation(degrees);
 }
 
+void UnifiedAVPlayer::setVideoFlip(int method) {
+  PRINT("UnifiedAVPlayer::setVideoFlip: Method=" << method);
+  const juce::ScopedLock scopedLock(lock);
+
+  if (!hasVideo || !videoPlayer) {
+    return;
+  }
+
+  videoPlayer->setFlip(method);
+}
+
 void UnifiedAVPlayer::setVideoVisualEffect(int effectId) {
   PRINT("UnifiedAVPlayer::setVideoVisualEffect: " << effectId);
   const juce::ScopedLock scopedLock(lock);

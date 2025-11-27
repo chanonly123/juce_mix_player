@@ -249,6 +249,21 @@ void GstPlayer::setRotation(int degree) {
   }
 }
 
+void GstPlayer::setFlip(int method) {
+  // Clamp method to valid range 0-8
+  int validMethod = std::max(0, std::min(8, method));
+
+  if (_currentFlipMethod == validMethod) {
+    return;
+  }
+  _currentFlipMethod = validMethod;
+
+  if (videoFlip) {
+    g_object_set(videoFlip, "method", validMethod, nullptr);
+    std::cout << "FLIP METHOD APPLIED: " << validMethod << std::endl;
+  }
+}
+
 void GstPlayer::setVisualEffect(int effectId) {
   VisualEffect newEffect;
   switch (effectId) {
@@ -335,14 +350,20 @@ void GstPlayer::exportVideo(const char *outputPath,
     g_object_get(videoRotate, "angle", &rotationAngle, nullptr);
   }
 
+  int flipMethod = 0;
+  if (videoFlip) {
+    g_object_get(videoFlip, "method", &flipMethod, nullptr);
+  }
+
   gstTaskQueue.async([this, inputPath, outputPathStr, effect, rotationAngle,
-                      completion]() {
+                      flipMethod, completion]() {
     GstElement *pipeline = gst_pipeline_new("export_pipeline");
     GstElement *src = gst_element_factory_make("filesrc", "src");
     GstElement *decodebin = gst_element_factory_make("decodebin", "decodebin");
     GstElement *videoQueue = gst_element_factory_make("queue", "video_queue");
     GstElement *audioQueue = gst_element_factory_make("queue", "audio_queue");
     GstElement *balance = gst_element_factory_make("videobalance", "balance");
+    GstElement *flip = gst_element_factory_make("videoflip", "flip");
     GstElement *rotate = gst_element_factory_make("rotate", "rotate");
     GstElement *vconv = gst_element_factory_make("videoconvert", "vconv");
     GstElement *x264enc = gst_element_factory_make("x264enc", "x264enc");
@@ -356,8 +377,8 @@ void GstPlayer::exportVideo(const char *outputPath,
     GstElement *sink = gst_element_factory_make("filesink", "sink");
 
     if (!pipeline || !src || !decodebin || !videoQueue || !audioQueue ||
-        !balance || !rotate || !vconv || !x264enc || !h264parse || !aconv ||
-        !aresample || !aacenc || !aacparse || !mp4mux || !sink) {
+        !balance || !flip || !rotate || !vconv || !x264enc || !h264parse ||
+        !aconv || !aresample || !aacenc || !aacparse || !mp4mux || !sink) {
       completion("Failed to create GStreamer export pipeline");
       return;
     }
@@ -366,14 +387,15 @@ void GstPlayer::exportVideo(const char *outputPath,
     g_object_set(sink, "location", outputPathStr.c_str(), "sync", FALSE,
                  nullptr);
     g_object_set(rotate, "angle", rotationAngle, nullptr);
+    g_object_set(flip, "method", flipMethod, nullptr);
     applyEffectParams(_currentEffect);
 
     gst_bin_add_many(GST_BIN(pipeline), src, decodebin, videoQueue, balance,
-                     rotate, vconv, x264enc, h264parse, audioQueue, aconv,
+                     flip, rotate, vconv, x264enc, h264parse, audioQueue, aconv,
                      aresample, aacenc, aacparse, mp4mux, sink, nullptr);
 
     gst_element_link(src, decodebin);
-    gst_element_link_many(videoQueue, balance, rotate, vconv, x264enc,
+    gst_element_link_many(videoQueue, balance, flip, rotate, vconv, x264enc,
                           h264parse, nullptr);
     gst_element_link_many(audioQueue, aconv, aresample, aacenc, aacparse,
                           nullptr);
@@ -651,6 +673,7 @@ void GstPlayer::teardownPipeline() {
   videoBin = nullptr;
   videoSink = nullptr;
   videoRotate = nullptr;
+  videoFlip = nullptr;
   videoBalance = nullptr;
   videoQueue = nullptr;
   videoConvert = nullptr;
@@ -708,16 +731,19 @@ void GstPlayer::setupVideoProcessingBin() {
   }
 
   videoQueue = gst_element_factory_make("queue", "video_queue");
-  GstElement *videoConvert1 = gst_element_factory_make("videoconvert", "video_convert1");
-  GstElement *videoScale = gst_element_factory_make("videoscale", "video_scale");
+  GstElement *videoConvert1 =
+      gst_element_factory_make("videoconvert", "video_convert1");
+  GstElement *videoScale =
+      gst_element_factory_make("videoscale", "video_scale");
   videoBalance = gst_element_factory_make("videobalance", "video_balance");
+  videoFlip = gst_element_factory_make("videoflip", "video_flip");
   videoRotate = gst_element_factory_make("rotate", "video_rotate");
   videoConvert = gst_element_factory_make("videoconvert", "video_convert2");
 
   videoSink = gst_element_factory_make("glimagesink", "video_sink");
 
   if (!videoQueue || !videoConvert1 || !videoScale || !videoBalance ||
-      !videoRotate || !videoConvert || !videoSink) {
+      !videoFlip || !videoRotate || !videoConvert || !videoSink) {
     notifyError("Failed to create video processing elements");
     if (videoBin)
       gst_object_unref(videoBin);
@@ -728,11 +754,12 @@ void GstPlayer::setupVideoProcessingBin() {
   g_object_set(videoSink, "sync", TRUE, nullptr);
 
   gst_bin_add_many(GST_BIN(videoBin), videoQueue, videoConvert1, videoScale,
-                   videoBalance, videoRotate, videoConvert, videoSink, nullptr);
+                   videoBalance, videoFlip, videoRotate, videoConvert,
+                   videoSink, nullptr);
 
   if (!gst_element_link_many(videoQueue, videoConvert1, videoScale,
-                             videoBalance, videoRotate, videoConvert, videoSink,
-                             nullptr)) {
+                             videoBalance, videoFlip, videoRotate, videoConvert,
+                             videoSink, nullptr)) {
     notifyError("Failed to link video processing elements");
     gst_object_unref(videoBin);
     videoBin = nullptr;
@@ -745,7 +772,8 @@ void GstPlayer::setupVideoProcessingBin() {
   gst_object_unref(sinkPad);
   applyEffectParams(VisualEffect::NONE);
 
-   g_object_set(videoRotate, "angle", 0.0, nullptr);
+  g_object_set(videoRotate, "angle", 0.0, nullptr);
+  g_object_set(videoFlip, "method", 0, nullptr);
 
   PRINT("Video processing bin setup complete");
 }

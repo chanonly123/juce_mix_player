@@ -40,6 +40,8 @@ private:
   bool _isCompleted = false;
   float _progress = 0.0f;
   int _currentRotation = 0;
+  // Flip state (0-8)
+  int _currentFlipMethod = 0;
   gint64 _durationMs = 0;
   bool _muteEmbedded = true;
   double _lastSeekMs = 0;
@@ -55,6 +57,7 @@ private:
   GstElement *videoConvert = nullptr;
   GstElement *videoSink = nullptr;
   GstElement *videoRotate = nullptr;
+  GstElement *videoFlip = nullptr;
   GstElement *videoBalance = nullptr;
   GstElement *videoBin = nullptr;
   GstElement *audioConvert = nullptr;
@@ -103,6 +106,7 @@ public:
   float getDurationInSecs();
   void setProgressUpdateInterval(float seconds);
   void setRotation(int degrees);
+  void setFlip(int method);
   void setVisualEffect(int effectId);
   void setBlackOverlayEnabled(int enabled);
   void exportVideo(const char *outputPath,
