@@ -58,6 +58,7 @@ private:
   void _updateVideoBlackOverlayForPlayback(bool enable);
   void _ensureVideoSyncOnPlay();
   void _logError(const std::string &message);
+  void _resetAudioToInitialState();
 
 public:
   static UnifiedAVPlayer *getInstance();

@@ -65,7 +65,6 @@ UnifiedAVPlayer::UnifiedAVPlayer() {
     }
   };
 
-
   videoPlayer->userContext = this;
 
   videoPlayer->onStateUpdateCallback = [](void *context, const char *state) {
@@ -145,8 +144,8 @@ void UnifiedAVPlayer::stop() {
   PRINT("UnifiedAVPlayer::stop");
   if (isDisposed)
     return;
-  
-    const juce::ScopedLock scopedLock(lock);
+
+  const juce::ScopedLock scopedLock(lock);
   isPlaying = false;
 
   if (audioPlayer) {
@@ -252,6 +251,12 @@ void UnifiedAVPlayer::setVideoPath(const char *path) {
   if (!videoPlayer) {
     _logError("Video player not initialized");
     return;
+  }
+
+  // Reset audio to initial state when video is changed
+  if (audioPlayer && audioDuration > 0) {
+    PRINT("Video changed - resetting audio to initial state");
+    _resetAudioToInitialState();
   }
 
   videoPath = std::string(path);
@@ -432,7 +437,7 @@ void UnifiedAVPlayer::_ensureVideoSyncOnPlay() {
 }
 
 void UnifiedAVPlayer::_updateVideoBlackOverlayForPlayback(bool enable) {
-    PRINT("UnifiedAVPlayer::_updateVideoBlackOverlayForPlayback");
+  PRINT("UnifiedAVPlayer::_updateVideoBlackOverlayForPlayback");
   if (!hasVideo || !videoPlayer) {
     return;
   }
@@ -482,3 +487,17 @@ void UnifiedAVPlayer::timerCallback() {
     _syncVideoToAudio();
   }
 }
+
+// MARK: Media Reset Helpers
+
+void UnifiedAVPlayer::_resetAudioToInitialState() {
+  PRINT("UnifiedAVPlayer::_resetAudioToInitialState");
+  if (!audioPlayer) {
+    return;
+  }
+
+  audioPlayer->pause();
+  audioPlayer->seek(0.0f);
+  lastAudioProgress = 0.0f;
+}
+
