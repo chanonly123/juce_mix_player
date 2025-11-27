@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app/asset_helper.dart';
 import 'package:flutter_app/utils.dart';
@@ -106,9 +107,24 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
   }
 
   Future<void> _loadAudioFromGallery() async {
-    // final ImagePicker picker = ImagePicker();
-    // Note: ImagePicker doesn't directly support audio, you might want to use file_picker
-    _showSnack('Use file picker for audio files');
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['mp3', 'flac', 'wav'],
+        allowMultiple: false,
+      );
+
+      if (result != null && result.files.single.path != null) {
+        final filePath = result.files.single.path!;
+        final fileName = result.files.single.name;
+        await _createComposeModel(filePath);
+        _showSnack('Audio loaded: $fileName', isSuccess: true);
+      } else {
+        _showSnack('No file selected');
+      }
+    } catch (e) {
+      _showSnack('Error loading audio: $e', isError: true);
+    }
   }
 
   Future<void> _loadSampleVideo() async {
@@ -391,7 +407,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
         color: const Color(0xFF1E1E1E),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha:0.3),
+            color: Colors.black.withValues(alpha: 0.3),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -552,32 +568,32 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                   ),
 
                   // Vocal Volume
-                  const Text('Vocal Volume', style: TextStyle(fontWeight: FontWeight.bold)),
-                  Row(
-                    children: [
-                      const Icon(Icons.mic, size: 20, color: Colors.purpleAccent),
-                      Expanded(
-                        child: Slider(
-                          value: vocalVolume,
-                          onChanged: (v) {
-                            setState(() => vocalVolume = v);
-                          },
-                          onChangeEnd: (_) => _updateAudioMix(),
-                        ),
-                      ),
-                      Text('${(vocalVolume * 100).toInt()}%', style: const TextStyle(fontSize: 12)),
-                    ],
-                  ),
+                  // const Text('Vocal Volume', style: TextStyle(fontWeight: FontWeight.bold)),
+                  // Row(
+                  //   children: [
+                  //     const Icon(Icons.mic, size: 20, color: Colors.purpleAccent),
+                  //     Expanded(
+                  //       child: Slider(
+                  //         value: vocalVolume,
+                  //         onChanged: (v) {
+                  //           setState(() => vocalVolume = v);
+                  //         },
+                  //         onChangeEnd: (_) => _updateAudioMix(),
+                  //       ),
+                  //     ),
+                  //     Text('${(vocalVolume * 100).toInt()}%', style: const TextStyle(fontSize: 12)),
+                  //   ],
+                  // ),
 
                   const Divider(),
 
                   // Guide & Metronome toggles
-                  SwitchListTile(
-                    title: const Text('Enable Guide'),
-                    value: guideEnabled,
-                    onChanged: (v) => setState(() => guideEnabled = v),
-                    activeThumbColor: Colors.greenAccent,
-                  ),
+                  // SwitchListTile(
+                  //   title: const Text('Enable Guide'),
+                  //   value: guideEnabled,
+                  //   onChanged: (v) => setState(() => guideEnabled = v),
+                  //   activeThumbColor: Colors.greenAccent,
+                  // ),
                   SwitchListTile(
                     title: const Text('Enable Metronome'),
                     value: metronomeEnabled,
