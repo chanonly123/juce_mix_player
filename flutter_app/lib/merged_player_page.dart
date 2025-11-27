@@ -43,6 +43,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
   // UI state
   bool isAudioPanelExpanded = true;
   bool isVideoPanelExpanded = false;
+  bool isVideoLoading = false;
 
   @override
   void initState() {
@@ -128,19 +129,37 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
   }
 
   Future<void> _loadSampleVideo() async {
-    final path = await AssetHelper.extractAsset('assets/media/Fate_of_Ophelia_muted.mp4');
-    player.setVideoPath(path);
-    setState(() => hasVideoLoaded = true);
-    _showSnack('Sample video loaded', isSuccess: true);
+    setState(() => isVideoLoading = true);
+    try {
+      final path = await AssetHelper.extractAsset('assets/media/Fate_of_Ophelia_muted.mp4');
+      player.setVideoPath(path);
+      setState(() {
+        hasVideoLoaded = true;
+        isVideoLoading = false;
+      });
+      _showSnack('Sample video loaded', isSuccess: true);
+    } catch (e) {
+      setState(() => isVideoLoading = false);
+      _showSnack('Error loading video: $e', isError: true);
+    }
   }
 
   Future<void> _loadVideoFromGallery() async {
     final ImagePicker picker = ImagePicker();
+    setState(() => isVideoLoading = true);
     final XFile? video = await picker.pickVideo(source: ImageSource.gallery);
     if (video != null) {
-      player.setVideoPath(video.path);
-      setState(() => hasVideoLoaded = true);
-      _showSnack('Video loaded: ${video.name}', isSuccess: true);
+      try {
+        player.setVideoPath(video.path);
+        setState(() {
+          hasVideoLoaded = true;
+          isVideoLoading = false;
+        });
+        _showSnack('Video loaded: ${video.name}', isSuccess: true);
+      } catch (e) {
+        setState(() => isVideoLoading = false);
+        _showSnack('Error loading video: $e', isError: true);
+      }
     }
   }
 
@@ -330,6 +349,31 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
               ),
             ),
           ),
+
+          // Loading overlay
+          if (isVideoLoading)
+            Container(
+              color: Colors.black87,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.cyanAccent),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Loading video...',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -358,44 +402,62 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
         ),
       ),
       child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.audiotrack, size: 80, color: Colors.white30),
-            const SizedBox(height: 20),
-            Text(
-              'Audio Player',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white70,
+        child: isVideoLoading
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.cyanAccent),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Loading video...',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              )
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.audiotrack, size: 80, color: Colors.white30),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Audio Player',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    state == JuceMixPlayerState.IDLE ? 'Load audio to begin' : 'Playing audio',
+                    style: TextStyle(color: Colors.white54),
+                  ),
+                  const SizedBox(height: 24),
+                  if (!hasVideoLoaded)
+                    TextButton.icon(
+                      onPressed: _loadVideoFromGallery,
+                      icon: const Icon(Icons.video_library),
+                      label: const Text('Add Video (Optional)'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.cyanAccent,
+                      ),
+                    ),
+                  TextButton.icon(
+                    onPressed: _loadSampleVideo,
+                    icon: const Icon(Icons.video_library),
+                    label: const Text('Load Sample Video'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.cyanAccent,
+                    ),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              state == JuceMixPlayerState.IDLE ? 'Load audio to begin' : 'Playing audio',
-              style: TextStyle(color: Colors.white54),
-            ),
-            const SizedBox(height: 24),
-            if (!hasVideoLoaded)
-              TextButton.icon(
-                onPressed: _loadVideoFromGallery,
-                icon: const Icon(Icons.video_library),
-                label: const Text('Add Video (Optional)'),
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.cyanAccent,
-                ),
-              ),
-            TextButton.icon(
-              onPressed: _loadSampleVideo,
-              icon: const Icon(Icons.video_library),
-              label: const Text('Load Sample Video'),
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.cyanAccent,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

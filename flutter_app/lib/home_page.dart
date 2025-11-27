@@ -13,7 +13,7 @@ class HomePage extends StatefulWidget {
 }
 
 class HomePageState extends State<HomePage> {
-  int _selectedIndex = 2;
+  int _selectedIndex = 3;
 
   // Using a getter instead of static final to create new instances when needed
   List<Widget> get _pages => [
