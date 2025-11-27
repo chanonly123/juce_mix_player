@@ -1,4 +1,3 @@
-
 import 'dart:async';
 
 import 'package:file_picker/file_picker.dart';
@@ -19,7 +18,7 @@ class MergedPlayerPage extends StatefulWidget {
 }
 
 class MergedPlayerPageState extends State<MergedPlayerPage> {
-  final player = UnifiedAVPlayerController();
+  late UnifiedAVPlayerController player;
 
   // Playback state
   double progress = 0.0;
@@ -75,6 +74,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
   @override
   void initState() {
     super.initState();
+    player = UnifiedAVPlayerController();
     _initializePlayer();
   }
 
@@ -644,20 +644,12 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Row(
-                      //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      //   children: [
-  
-                      //   ],
-                      // ),
-                      // const SizedBox(height: 16),
-
-                       // Visual Effects on top
                       Row(
                         children: const [
                           Icon(Icons.auto_awesome, size: 16, color: Colors.white70),
                           SizedBox(width: 4),
-                          Text('FX', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white70)),
+                          Text('FX',
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white70)),
                         ],
                       ),
                       const SizedBox(height: 6),
@@ -698,7 +690,8 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                             children: const [
                               Icon(Icons.screen_rotation, size: 8, color: Colors.white70),
                               SizedBox(width: 2),
-                              Text('ROTATE', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white70)),
+                              Text('ROTATE',
+                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white70)),
                             ],
                           ),
                           Text(
@@ -755,7 +748,8 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                         children: const [
                           Icon(Icons.compare_arrows, size: 16, color: Colors.white70),
                           SizedBox(width: 4),
-                          Text('FLIP', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white70)),
+                          Text('FLIP',
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white70)),
                         ],
                       ),
                       const SizedBox(height: 6),
@@ -841,19 +835,15 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
           if (isToggle) {
             _toggleTrack(id);
           } else {
-            // Toggle mute for volume tracks
             _toggleMute(id);
           }
         },
         onLongPress: () {
           setState(() {
-            // Hide others
             showVolumeBars.updateAll((key, value) => false);
             showVolumeBars[id] = true;
           });
 
-          // Auto hide after 3 seconds of no interaction (simple timer for now)
-          // Ideally we reset this timer on slider interaction, but for simplicity:
           Future.delayed(const Duration(seconds: 4), () {
             if (mounted && showVolumeBars[id] == true) {
               setState(() => showVolumeBars[id] = false);
@@ -886,27 +876,32 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
   // Logic Helpers
 
   void _discardPage() async {
-    setState(() => isDiscarding = true);
+    setState(() {
+      isVideoViewReady = false;
+      hasVideoLoaded = false;
+      isDiscarding = true;
+    });
     // Simulate buffer
     if (mounted) {
-      // Reset everything
-      player.pause();
-      setState(() {
-        //   isDiscarding = false;
-        //   hasAudioLoaded = false;
-        hasVideoLoaded = false;
-        isVideoViewReady = false;
-        //   progress = 0.0;
-        //   isPlaying = false;
-        //   state = JuceMixPlayerState.IDLE;
-        //   // Reset other settings if needed
-      });
+      // player.pause();
       UnifiedAVPlayerController.destroyInstance();
+      print("Destroyed player");
     }
-    await Future.delayed(const Duration(seconds: 3));
-    setState(() {
-      isDiscarding = false;
-    });
+    await Future.delayed(const Duration(seconds: 6));
+
+    if (mounted) {
+      player = UnifiedAVPlayerController();
+      _initializePlayer();
+
+      setState(() {
+        isDiscarding = false;
+        hasAudioLoaded = false;
+        progress = 0.0;
+        isPlaying = false;
+        state = JuceMixPlayerState.IDLE;
+        lastMixerComposeModel = null;
+      });
+    }
   }
 
   void _changeVideo() {
