@@ -59,12 +59,12 @@ class UnifiedAVPlayerController {
     _juceLib.juce_enableLogs(enable ? 1 : 0);
   }
 
-  /// Create UnifiedAVPlayer instance (singleton pattern)
+  /// Create UnifiedAVPlayer instance
   UnifiedAVPlayerController() {
     _juceLib = JuceLibGen(
         defaultTargetPlatform == TargetPlatform.iOS ? DynamicLibrary.process() : DynamicLibrary.open(libname));
 
-    _ptr = _juceLib.UnifiedAVPlayer_getInstance();
+    _ptr = _juceLib.UnifiedAVPlayer_new();
   }
 
   // ========== Unified Playback Controls ==========
@@ -107,7 +107,6 @@ class UnifiedAVPlayerController {
     final jsonStr = json.encode(settings.toJson());
     _juceLib.UnifiedAVPlayer_setAudioSettings(_ptr, jsonStr.toNativeUtf8());
   }
-
 
   Future<void> exportAudio(String outputPath) async {
     final completer = Completer<void>();
@@ -244,10 +243,5 @@ class UnifiedAVPlayerController {
     _exportVideoUpdateNativeCallable?.close();
 
     _juceLib.UnifiedAVPlayer_dispose(_ptr);
-  }
-
-  /// Destroy the singleton instance (use with caution)
-  static void destroyInstance() {
-    _juceLib.UnifiedAVPlayer_destroyInstance();
   }
 }

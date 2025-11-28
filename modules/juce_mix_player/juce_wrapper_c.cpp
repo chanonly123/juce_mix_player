@@ -191,14 +191,12 @@ void GstPlayer_exportVideo(void *ptr, const char *outputPath,
   static_cast<GstPlayer *>(ptr)->exportVideo(outputPath, completion);
 }
 
-// MARK: UnifiedAVPlayer - Coordinated Audio/Video Player
-
-void *UnifiedAVPlayer_getInstance() { return UnifiedAVPlayer::getInstance(); }
-
-void UnifiedAVPlayer_destroyInstance() { UnifiedAVPlayer::destroyInstance(); }
-
+// MARK: UnifiedAVPlayer
+void *UnifiedAVPlayer_new() { return new UnifiedAVPlayer(); }
 void UnifiedAVPlayer_dispose(void *ptr) {
-  static_cast<UnifiedAVPlayer *>(ptr)->dispose();
+  if (ptr) {
+    reinterpret_cast<UnifiedAVPlayer *>(ptr)->dispose();
+  }
 }
 
 // Unified playback controls

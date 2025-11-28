@@ -7,25 +7,6 @@
 
 #include "UnifiedAVPlayer.h"
 
-std::unique_ptr<UnifiedAVPlayer> UnifiedAVPlayer::instance = nullptr;
-std::mutex UnifiedAVPlayer::instanceMutex;
-
-UnifiedAVPlayer *UnifiedAVPlayer::getInstance() {
-  std::lock_guard<std::mutex> lock(instanceMutex);
-  if (!instance) {
-    instance.reset(new UnifiedAVPlayer());
-  }
-  return instance.get();
-}
-
-void UnifiedAVPlayer::destroyInstance() {
-  std::lock_guard<std::mutex> lock(instanceMutex);
-  if (instance) {
-    instance->dispose();
-    instance.reset();
-  }
-}
-
 UnifiedAVPlayer::UnifiedAVPlayer() {
   PRINT("UnifiedAVPlayer()");
 
@@ -91,22 +72,35 @@ UnifiedAVPlayer::UnifiedAVPlayer() {
 }
 
 void UnifiedAVPlayer::dispose() {
-  PRINT("UnifiedAVPlayer::dispose");
-  isPlaying = false;
-  isDisposed = true;
-  stopTimer();
+  juce::MessageManager::getInstanceWithoutCreating()->callAsync([&] {
+    PRINT("UnifiedAVPlayer::dispose");
+    stopTimer();
+    isPlaying = false;
+    isDisposed = true;
 
-  if (audioPlayer) {
-    audioPlayer->userContext = nullptr;
-    audioPlayer->dispose();
-    audioPlayer = nullptr;
-  }
+    onProgressCallback = nullptr;
+    onStateUpdateCallback = nullptr;
+    onErrorCallback = nullptr;
+    onDeviceUpdateCallback = nullptr;
 
-  if (videoPlayer) {
-    videoPlayer->userContext = nullptr;
-    videoPlayer->dispose();
-    videoPlayer = nullptr;
-  }
+    if (audioPlayer) {
+      audioPlayer->userContext = nullptr;
+      audioPlayer->dispose();
+      audioPlayer = nullptr;
+    }
+
+    if (videoPlayer) {
+      videoPlayer->userContext = nullptr;
+      videoPlayer->dispose();
+      videoPlayer = nullptr;
+    }
+
+    std::thread thread([&] {
+      juce::Thread::sleep(5000);
+      delete this;
+    });
+    thread.detach();
+  });
 }
 
 UnifiedAVPlayer::~UnifiedAVPlayer() { PRINT("~UnifiedAVPlayer"); }
@@ -114,6 +108,9 @@ UnifiedAVPlayer::~UnifiedAVPlayer() { PRINT("~UnifiedAVPlayer"); }
 // MARK: Unified Playback Controls
 void UnifiedAVPlayer::play() {
   PRINT("UnifiedAVPlayer::play");
+  if (isDisposed)
+    return;
+
   const juce::ScopedLock scopedLock(lock);
 
   if (!audioPlayer) {
@@ -132,6 +129,9 @@ void UnifiedAVPlayer::play() {
 
 void UnifiedAVPlayer::pause() {
   PRINT("UnifiedAVPlayer::pause");
+  if (isDisposed)
+    return;
+
   const juce::ScopedLock scopedLock(lock);
   isPlaying = false;
 
@@ -188,6 +188,9 @@ void UnifiedAVPlayer::seek(float normalizedPos) {
 }
 
 void UnifiedAVPlayer::togglePlayPause() {
+  if (isDisposed)
+    return;
+
   if (isPlaying) {
     pause();
   } else {
@@ -199,6 +202,9 @@ void UnifiedAVPlayer::togglePlayPause() {
 
 void UnifiedAVPlayer::setAudioData(const char *json) {
   PRINT("UnifiedAVPlayer::setAudioData");
+  if (isDisposed)
+    return;
+
   const juce::ScopedLock scopedLock(lock);
 
   if (!audioPlayer) {
@@ -214,6 +220,9 @@ void UnifiedAVPlayer::setAudioData(const char *json) {
 
 void UnifiedAVPlayer::setAudioSettings(const char *json) {
   PRINT("UnifiedAVPlayer::setAudioSettings");
+  if (isDisposed)
+    return;
+
   const juce::ScopedLock scopedLock(lock);
 
   if (!audioPlayer) {
@@ -223,7 +232,6 @@ void UnifiedAVPlayer::setAudioSettings(const char *json) {
 
   audioPlayer->setSettings(json);
 }
-
 
 void UnifiedAVPlayer::exportToFile(
     const char *outputFile, std::function<void(const char *)> completion) {
@@ -242,6 +250,9 @@ void UnifiedAVPlayer::exportToFile(
 
 void UnifiedAVPlayer::setVideoPath(const char *path) {
   PRINT("UnifiedAVPlayer::setVideoPath: " << path);
+  if (isDisposed)
+    return;
+
   const juce::ScopedLock scopedLock(lock);
 
   if (!videoPlayer) {
@@ -501,6 +512,9 @@ void UnifiedAVPlayer::_logError(const std::string &message) {
 // MARK: Timer Callback for Drift Correction
 
 void UnifiedAVPlayer::timerCallback() {
+  if (isDisposed)
+    return;
+
   if (isPlaying && hasVideo) {
     _syncVideoToAudio();
   }

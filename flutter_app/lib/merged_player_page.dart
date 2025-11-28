@@ -20,33 +20,28 @@ class MergedPlayerPage extends StatefulWidget {
 class MergedPlayerPageState extends State<MergedPlayerPage> {
   late UnifiedAVPlayerController player;
 
-  // Playback state
   double progress = 0.0;
   bool isSliderEditing = false;
   bool isPlaying = false;
   JuceMixPlayerState state = JuceMixPlayerState.IDLE;
   bool hasVideoLoaded = false;
 
-  // Audio settings
   double bgmVolume = 0.7;
   double vocalVolume = 1.0;
   bool guideEnabled = false;
   bool metronomeEnabled = false;
   MixerComposeModel? lastMixerComposeModel;
 
-  // Video state
   bool isVideoViewReady = false;
   int currentRotation = 0;
   VideoFlipMethod currentFlipMethod = VideoFlipMethod.none;
   VisualEffectType currentEffect = VisualEffectType.none;
   bool isExporting = false;
 
-  // UI state
   bool isAudioPanelExpanded = true;
   bool isVideoPanelExpanded = false;
   bool isVideoLoading = false;
 
-  // New UI State
   bool hasAudioLoaded = false;
   bool isOverlayVisible = true;
   Timer? _overlayTimer;
@@ -57,11 +52,9 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
     'metronome': false,
   };
 
-  // Separate volumes
   double guideVolume = 1.0;
   double metronomeVolume = 1.0;
 
-  // Overlay positioning
   final Map<String, LayerLink> _layerLinks = {
     'bgm': LayerLink(),
     'vocal': LayerLink(),
@@ -79,7 +72,6 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
   }
 
   void _initializePlayer() {
-    // Playback callbacks
     player.setProgressHandler((progress) {
       if (!isSliderEditing && mounted) {
         setState(() => this.progress = progress);
@@ -101,7 +93,6 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
       }
     });
 
-    // Set default settings
     player.setAudioSettings(MixerSettings(
       progressUpdateInterval: 0.05,
     ));
@@ -124,7 +115,6 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
     );
   }
 
-  // Audio loading methods
   Future<void> _loadSampleAudio() async {
     final path = await AssetHelper.extractAsset('assets/media/Fate_of_Ophelia.flac');
     await _createComposeModel(path);
@@ -251,10 +241,6 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
         } else if (track.id.startsWith('metronome')) {
           return track.copyWith(volume: metronomeVolume, enabled: metronomeEnabled);
         } else {
-          // Assuming other tracks are guide or vocal if not explicitly handled,
-          // but for now let's stick to what we know.
-          // If there was a 'guide' track in the model, we'd handle it here.
-          // Since the sample model only has bgm and metronome, we'll just return as is or update if id matches.
           return track.copyWith(volume: bgmVolume, enabled: metronomeEnabled);
         }
       }).toList(),
@@ -264,7 +250,15 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
 
   @override
   void dispose() {
-    UnifiedAVPlayerController.destroyInstance();
+    if (player.isPlaying()) {
+      player.pause();
+    }
+
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      player.dispose();
+    });
+
+    _overlayTimer?.cancel();
     super.dispose();
   }
 
@@ -370,12 +364,10 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
       children: [
         Column(
           children: [
-            // Video Area (Top)
             Expanded(
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // Video View
                   Container(
                     color: Colors.black,
                     child: Center(
@@ -389,7 +381,6 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                     ),
                   ),
 
-                  // Overlay Controls (Tap to show/hide)
                   Positioned.fill(
                     child: GestureDetector(
                       behavior: HitTestBehavior.translucent,
@@ -401,7 +392,6 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                           color: Colors.black26,
                           child: Stack(
                             children: [
-                              // Center Play/Pause
                               Center(
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -421,7 +411,6 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                                 ),
                               ),
 
-                              // Bottom Seeker
                               Positioned(
                                 bottom: 16,
                                 left: 16,
@@ -468,7 +457,6 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                     ),
                   ),
 
-                  // Top Bar (Always Visible)
                   Positioned(
                     top: MediaQuery.of(context).padding.top + 16,
                     left: 16,
@@ -476,13 +464,11 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Discard Button
                         IconButton(
                           icon: const Icon(Icons.remove_circle, color: Colors.red),
                           onPressed: _discardPage,
                           tooltip: 'Discard & Reload',
                         ),
-                        // Export Button
                         IconButton(
                           icon: isExporting
                               ? SizedBox(
@@ -501,14 +487,12 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
               ),
             ),
 
-            // Bottom Controls Area
             Container(
               color: const Color(0xFF1E1E1E),
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Track Controls Row
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
@@ -521,7 +505,6 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  // Bottom Action Buttons
                   Row(
                     children: [
                       IconButton(
@@ -535,7 +518,6 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                         tooltip: 'Remove Video',
                       ),
                       const SizedBox(width: 8),
-                      // Video Settings (Expanded)
                       Expanded(
                         child: ElevatedButton.icon(
                           onPressed: hasVideoLoaded ? _showVideoSettings : null,
@@ -565,7 +547,6 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
           ],
         ),
 
-        // Volume Overlay Layer
         if (showVolumeBars.containsValue(true))
           Positioned.fill(
             child: GestureDetector(
@@ -580,7 +561,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                   final id = e.key;
                   return CompositedTransformFollower(
                     link: _layerLinks[id]!,
-                    offset: const Offset(-15, -150), // Adjust to position above
+                    offset: const Offset(-15, -150),
                     child: Container(
                       height: 140,
                       width: 50,
@@ -682,7 +663,6 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                         }).toList(),
                       ),
                       const Divider(color: Colors.white24),
-                      // Rotation controls
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -743,7 +723,6 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
 
                       const Divider(color: Colors.white24),
 
-                      // Flip controls
                       Row(
                         children: const [
                           Icon(Icons.compare_arrows, size: 16, color: Colors.white70),
@@ -873,33 +852,29 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
     );
   }
 
-  // Logic Helpers
 
-  void _discardPage() async {
+  void _discardPage() {
     setState(() {
-      isVideoViewReady = false;
-      hasVideoLoaded = false;
       isDiscarding = true;
     });
-    if (mounted) {
-      UnifiedAVPlayerController.destroyInstance();
-      print("Destroyed unified player");
+    if (player.isPlaying()) {
+      player.pause();
     }
-    await Future.delayed(const Duration(seconds: 6));
-
-    if (mounted) {
+    player.dispose();
+    Future.delayed(Duration(milliseconds: 500), () {
       player = UnifiedAVPlayerController();
       _initializePlayer();
-
       setState(() {
-        isDiscarding = false;
         hasAudioLoaded = false;
+        hasVideoLoaded = false;
+        isVideoViewReady = false;
+        isDiscarding = false;
         progress = 0.0;
         isPlaying = false;
         state = JuceMixPlayerState.IDLE;
         lastMixerComposeModel = null;
       });
-    }
+    });
   }
 
   void _changeVideo() {
@@ -957,7 +932,6 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
       _updateAudioMix();
     } else if (id == 'guide') {
       setState(() => guideEnabled = !guideEnabled);
-      // Update mix if guide logic exists
     }
   }
 
@@ -994,7 +968,6 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
     }
   }
 
-  // Use UnifiedVideoView for direct UnifiedAVPlayer integration
   Widget _buildVideoView() {
     return UnifiedVideoView(
       controller: player,

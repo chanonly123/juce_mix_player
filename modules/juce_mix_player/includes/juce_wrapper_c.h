@@ -85,8 +85,7 @@ EXPORT_C_FUNC void GstPlayer_exportVideo(void *ptr, const char *outputPath,
                                          void (*completion)(const char *));
 
 // MARK: UnifiedAVPlayer
-EXPORT_C_FUNC void *UnifiedAVPlayer_getInstance();
-EXPORT_C_FUNC void UnifiedAVPlayer_destroyInstance();
+EXPORT_C_FUNC void *UnifiedAVPlayer_new();
 EXPORT_C_FUNC void UnifiedAVPlayer_dispose(void *ptr);
 
 EXPORT_C_FUNC void UnifiedAVPlayer_play(void *ptr);

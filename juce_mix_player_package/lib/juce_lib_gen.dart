@@ -910,25 +910,15 @@ class JuceLibGen {
               ffi.NativeFunction<
                   ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>)>();
 
-  ffi.Pointer<ffi.Void> UnifiedAVPlayer_getInstance() {
-    return _UnifiedAVPlayer_getInstance();
+  ffi.Pointer<ffi.Void> UnifiedAVPlayer_new() {
+    return _UnifiedAVPlayer_new();
   }
 
-  late final _UnifiedAVPlayer_getInstancePtr =
+  late final _UnifiedAVPlayer_newPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Void> Function()>>(
-          'UnifiedAVPlayer_getInstance');
-  late final _UnifiedAVPlayer_getInstance = _UnifiedAVPlayer_getInstancePtr
-      .asFunction<ffi.Pointer<ffi.Void> Function()>();
-
-  void UnifiedAVPlayer_destroyInstance() {
-    return _UnifiedAVPlayer_destroyInstance();
-  }
-
-  late final _UnifiedAVPlayer_destroyInstancePtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function()>>(
-          'UnifiedAVPlayer_destroyInstance');
-  late final _UnifiedAVPlayer_destroyInstance =
-      _UnifiedAVPlayer_destroyInstancePtr.asFunction<void Function()>();
+          'UnifiedAVPlayer_new');
+  late final _UnifiedAVPlayer_new =
+      _UnifiedAVPlayer_newPtr.asFunction<ffi.Pointer<ffi.Void> Function()>();
 
   void UnifiedAVPlayer_dispose(
     ffi.Pointer<ffi.Void> ptr,

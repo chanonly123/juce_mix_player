@@ -28,9 +28,6 @@
  */
 class UnifiedAVPlayer : private juce::Timer {
 private:
-  static std::unique_ptr<UnifiedAVPlayer> instance;
-  static std::mutex instanceMutex;
-
   JuceMixPlayer *audioPlayer;
   GstPlayer *videoPlayer;
 
@@ -49,7 +46,6 @@ private:
 
   juce::CriticalSection lock;
   JuceMixPlayerState currentState = JuceMixPlayerState::IDLE;
-  UnifiedAVPlayer();
 
   void _syncVideoToAudio();
   void _handleAudioStateChange(JuceMixPlayerState state);
@@ -61,9 +57,7 @@ private:
   void _resetAudioToInitialState();
 
 public:
-  static UnifiedAVPlayer *getInstance();
-  static void destroyInstance();
-
+  UnifiedAVPlayer();
   ~UnifiedAVPlayer();
 
   UnifiedAVPlayer(const UnifiedAVPlayer &) = delete;
