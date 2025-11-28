@@ -881,11 +881,9 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
       hasVideoLoaded = false;
       isDiscarding = true;
     });
-    // Simulate buffer
     if (mounted) {
-      // player.pause();
       UnifiedAVPlayerController.destroyInstance();
-      print("Destroyed player");
+      print("Destroyed unified player");
     }
     await Future.delayed(const Duration(seconds: 6));
 

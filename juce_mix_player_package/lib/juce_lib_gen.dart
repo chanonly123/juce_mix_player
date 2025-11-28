@@ -8,19 +8,25 @@ import 'package:ffi/ffi.dart' as pkg_ffi;
 /// Generate c header to dart bindings
 class JuceLibGen {
   /// Holds the symbol lookup function.
-  final ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName) _lookup;
+  final ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName)
+      _lookup;
 
   /// The symbols are looked up in [dynamicLibrary].
-  JuceLibGen(ffi.DynamicLibrary dynamicLibrary) : _lookup = dynamicLibrary.lookup;
+  JuceLibGen(ffi.DynamicLibrary dynamicLibrary)
+      : _lookup = dynamicLibrary.lookup;
 
   /// The symbols are looked up with [lookup].
-  JuceLibGen.fromLookup(ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName) lookup) : _lookup = lookup;
+  JuceLibGen.fromLookup(
+      ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName)
+          lookup)
+      : _lookup = lookup;
 
   void juce_init() {
     return _juce_init();
   }
 
-  late final _juce_initPtr = _lookup<ffi.NativeFunction<ffi.Void Function()>>('juce_init');
+  late final _juce_initPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function()>>('juce_init');
   late final _juce_init = _juce_initPtr.asFunction<void Function()>();
 
   void Java_com_rmsl_juce_Native_juceMessageManagerInit() {
@@ -28,9 +34,11 @@ class JuceLibGen {
   }
 
   late final _Java_com_rmsl_juce_Native_juceMessageManagerInitPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function()>>('Java_com_rmsl_juce_Native_juceMessageManagerInit');
+      _lookup<ffi.NativeFunction<ffi.Void Function()>>(
+          'Java_com_rmsl_juce_Native_juceMessageManagerInit');
   late final _Java_com_rmsl_juce_Native_juceMessageManagerInit =
-      _Java_com_rmsl_juce_Native_juceMessageManagerInitPtr.asFunction<void Function()>();
+      _Java_com_rmsl_juce_Native_juceMessageManagerInitPtr.asFunction<
+          void Function()>();
 
   void juce_enableLogs(
     int enable,
@@ -40,16 +48,21 @@ class JuceLibGen {
     );
   }
 
-  late final _juce_enableLogsPtr = _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int)>>('juce_enableLogs');
-  late final _juce_enableLogs = _juce_enableLogsPtr.asFunction<void Function(int)>();
+  late final _juce_enableLogsPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int)>>(
+          'juce_enableLogs');
+  late final _juce_enableLogs =
+      _juce_enableLogsPtr.asFunction<void Function(int)>();
 
   ffi.Pointer<ffi.Void> JuceMixPlayer_init() {
     return _JuceMixPlayer_init();
   }
 
   late final _JuceMixPlayer_initPtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Void> Function()>>('JuceMixPlayer_init');
-  late final _JuceMixPlayer_init = _JuceMixPlayer_initPtr.asFunction<ffi.Pointer<ffi.Void> Function()>();
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Void> Function()>>(
+          'JuceMixPlayer_init');
+  late final _JuceMixPlayer_init =
+      _JuceMixPlayer_initPtr.asFunction<ffi.Pointer<ffi.Void> Function()>();
 
   void JuceMixPlayer_deinit(
     ffi.Pointer<ffi.Void> ptr,
@@ -60,8 +73,10 @@ class JuceLibGen {
   }
 
   late final _JuceMixPlayer_deinitPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>('JuceMixPlayer_deinit');
-  late final _JuceMixPlayer_deinit = _JuceMixPlayer_deinitPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'JuceMixPlayer_deinit');
+  late final _JuceMixPlayer_deinit = _JuceMixPlayer_deinitPtr.asFunction<
+      void Function(ffi.Pointer<ffi.Void>)>();
 
   void JuceMixPlayer_play(
     ffi.Pointer<ffi.Void> ptr,
@@ -72,8 +87,10 @@ class JuceLibGen {
   }
 
   late final _JuceMixPlayer_playPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>('JuceMixPlayer_play');
-  late final _JuceMixPlayer_play = _JuceMixPlayer_playPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'JuceMixPlayer_play');
+  late final _JuceMixPlayer_play =
+      _JuceMixPlayer_playPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void JuceMixPlayer_pause(
     ffi.Pointer<ffi.Void> ptr,
@@ -84,8 +101,10 @@ class JuceLibGen {
   }
 
   late final _JuceMixPlayer_pausePtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>('JuceMixPlayer_pause');
-  late final _JuceMixPlayer_pause = _JuceMixPlayer_pausePtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'JuceMixPlayer_pause');
+  late final _JuceMixPlayer_pause = _JuceMixPlayer_pausePtr.asFunction<
+      void Function(ffi.Pointer<ffi.Void>)>();
 
   void JuceMixPlayer_stop(
     ffi.Pointer<ffi.Void> ptr,
@@ -96,8 +115,10 @@ class JuceLibGen {
   }
 
   late final _JuceMixPlayer_stopPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>('JuceMixPlayer_stop');
-  late final _JuceMixPlayer_stop = _JuceMixPlayer_stopPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'JuceMixPlayer_stop');
+  late final _JuceMixPlayer_stop =
+      _JuceMixPlayer_stopPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void JuceMixPlayer_set(
     ffi.Pointer<ffi.Void> ptr,
@@ -109,11 +130,12 @@ class JuceLibGen {
     );
   }
 
-  late final _JuceMixPlayer_setPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>(
-          'JuceMixPlayer_set');
-  late final _JuceMixPlayer_set =
-      _JuceMixPlayer_setPtr.asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>();
+  late final _JuceMixPlayer_setPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<ffi.Void>,
+              ffi.Pointer<pkg_ffi.Utf8>)>>('JuceMixPlayer_set');
+  late final _JuceMixPlayer_set = _JuceMixPlayer_setPtr.asFunction<
+      void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>();
 
   void JuceMixPlayer_setSettings(
     ffi.Pointer<ffi.Void> ptr,
@@ -125,15 +147,20 @@ class JuceLibGen {
     );
   }
 
-  late final _JuceMixPlayer_setSettingsPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>(
-          'JuceMixPlayer_setSettings');
+  late final _JuceMixPlayer_setSettingsPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<ffi.Void>,
+              ffi.Pointer<pkg_ffi.Utf8>)>>('JuceMixPlayer_setSettings');
   late final _JuceMixPlayer_setSettings =
-      _JuceMixPlayer_setSettingsPtr.asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>();
+      _JuceMixPlayer_setSettingsPtr.asFunction<
+          void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>();
 
   void JuceMixPlayer_onStateUpdate(
     ffi.Pointer<ffi.Void> ptr,
-    ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(
+                    ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>
         JuceMixPlayerCallbackString,
   ) {
     return _JuceMixPlayer_onStateUpdate(
@@ -147,16 +174,26 @@ class JuceLibGen {
               ffi.Void Function(
                   ffi.Pointer<ffi.Void>,
                   ffi.Pointer<
-                      ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
+                      ffi.NativeFunction<
+                          ffi.Void Function(ffi.Pointer<ffi.Void>,
+                              ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
       'JuceMixPlayer_onStateUpdate');
-  late final _JuceMixPlayer_onStateUpdate = _JuceMixPlayer_onStateUpdatePtr.asFunction<
-      void Function(ffi.Pointer<ffi.Void>,
-          ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>)>();
+  late final _JuceMixPlayer_onStateUpdate =
+      _JuceMixPlayer_onStateUpdatePtr.asFunction<
+          void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>,
+                          ffi.Pointer<pkg_ffi.Utf8>)>>)>();
 
   /// callback with progress value range 0 to 1
   void JuceMixPlayer_onProgress(
     ffi.Pointer<ffi.Void> ptr,
-    ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>> onProgress,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>
+        onProgress,
   ) {
     return _JuceMixPlayer_onProgress(
       ptr,
@@ -165,17 +202,28 @@ class JuceLibGen {
   }
 
   late final _JuceMixPlayer_onProgressPtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Pointer<ffi.Void>,
-                  ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>)>>(
-      'JuceMixPlayer_onProgress');
-  late final _JuceMixPlayer_onProgress = _JuceMixPlayer_onProgressPtr.asFunction<
-      void Function(ffi.Pointer<ffi.Void>,
-          ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>)>();
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>,
+                          ffi.Float)>>)>>('JuceMixPlayer_onProgress');
+  late final _JuceMixPlayer_onProgress =
+      _JuceMixPlayer_onProgressPtr.asFunction<
+          void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>)>();
 
   void JuceMixPlayer_onError(
     ffi.Pointer<ffi.Void> ptr,
-    ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>> onError,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(
+                    ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>
+        onError,
   ) {
     return _JuceMixPlayer_onError(
       ptr,
@@ -188,11 +236,17 @@ class JuceLibGen {
               ffi.Void Function(
                   ffi.Pointer<ffi.Void>,
                   ffi.Pointer<
-                      ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
+                      ffi.NativeFunction<
+                          ffi.Void Function(ffi.Pointer<ffi.Void>,
+                              ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
       'JuceMixPlayer_onError');
   late final _JuceMixPlayer_onError = _JuceMixPlayer_onErrorPtr.asFunction<
-      void Function(ffi.Pointer<ffi.Void>,
-          ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>)>();
+      void Function(
+          ffi.Pointer<ffi.Void>,
+          ffi.Pointer<
+              ffi.NativeFunction<
+                  ffi.Void Function(
+                      ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>)>();
 
   /// value returns time in seconds
   double JuceMixPlayer_getDuration(
@@ -204,9 +258,10 @@ class JuceLibGen {
   }
 
   late final _JuceMixPlayer_getDurationPtr =
-      _lookup<ffi.NativeFunction<ffi.Float Function(ffi.Pointer<ffi.Void>)>>('JuceMixPlayer_getDuration');
-  late final _JuceMixPlayer_getDuration =
-      _JuceMixPlayer_getDurationPtr.asFunction<double Function(ffi.Pointer<ffi.Void>)>();
+      _lookup<ffi.NativeFunction<ffi.Float Function(ffi.Pointer<ffi.Void>)>>(
+          'JuceMixPlayer_getDuration');
+  late final _JuceMixPlayer_getDuration = _JuceMixPlayer_getDurationPtr
+      .asFunction<double Function(ffi.Pointer<ffi.Void>)>();
 
   /// returns 1 if playing else 0
   int JuceMixPlayer_isPlaying(
@@ -218,8 +273,10 @@ class JuceLibGen {
   }
 
   late final _JuceMixPlayer_isPlayingPtr =
-      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Pointer<ffi.Void>)>>('JuceMixPlayer_isPlaying');
-  late final _JuceMixPlayer_isPlaying = _JuceMixPlayer_isPlayingPtr.asFunction<int Function(ffi.Pointer<ffi.Void>)>();
+      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Pointer<ffi.Void>)>>(
+          'JuceMixPlayer_isPlaying');
+  late final _JuceMixPlayer_isPlaying = _JuceMixPlayer_isPlayingPtr.asFunction<
+      int Function(ffi.Pointer<ffi.Void>)>();
 
   /// value range 0 to 1
   void JuceMixPlayer_seek(
@@ -232,9 +289,12 @@ class JuceLibGen {
     );
   }
 
-  late final _JuceMixPlayer_seekPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>('JuceMixPlayer_seek');
-  late final _JuceMixPlayer_seek = _JuceMixPlayer_seekPtr.asFunction<void Function(ffi.Pointer<ffi.Void>, double)>();
+  late final _JuceMixPlayer_seekPtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>(
+      'JuceMixPlayer_seek');
+  late final _JuceMixPlayer_seek = _JuceMixPlayer_seekPtr.asFunction<
+      void Function(ffi.Pointer<ffi.Void>, double)>();
 
   void JuceMixPlayer_prepareRecorder(
     ffi.Pointer<ffi.Void> ptr,
@@ -246,11 +306,13 @@ class JuceLibGen {
     );
   }
 
-  late final _JuceMixPlayer_prepareRecorderPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>(
-          'JuceMixPlayer_prepareRecorder');
+  late final _JuceMixPlayer_prepareRecorderPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<ffi.Void>,
+              ffi.Pointer<pkg_ffi.Utf8>)>>('JuceMixPlayer_prepareRecorder');
   late final _JuceMixPlayer_prepareRecorder =
-      _JuceMixPlayer_prepareRecorderPtr.asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>();
+      _JuceMixPlayer_prepareRecorderPtr.asFunction<
+          void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>();
 
   void JuceMixPlayer_startRecorder(
     ffi.Pointer<ffi.Void> ptr,
@@ -261,9 +323,10 @@ class JuceLibGen {
   }
 
   late final _JuceMixPlayer_startRecorderPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>('JuceMixPlayer_startRecorder');
-  late final _JuceMixPlayer_startRecorder =
-      _JuceMixPlayer_startRecorderPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'JuceMixPlayer_startRecorder');
+  late final _JuceMixPlayer_startRecorder = _JuceMixPlayer_startRecorderPtr
+      .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void JuceMixPlayer_stopRecorder(
     ffi.Pointer<ffi.Void> ptr,
@@ -274,13 +337,18 @@ class JuceLibGen {
   }
 
   late final _JuceMixPlayer_stopRecorderPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>('JuceMixPlayer_stopRecorder');
-  late final _JuceMixPlayer_stopRecorder =
-      _JuceMixPlayer_stopRecorderPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'JuceMixPlayer_stopRecorder');
+  late final _JuceMixPlayer_stopRecorder = _JuceMixPlayer_stopRecorderPtr
+      .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void JuceMixPlayer_onRecStateUpdate(
     ffi.Pointer<ffi.Void> ptr,
-    ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>> onStateUpdate,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(
+                    ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>
+        onStateUpdate,
   ) {
     return _JuceMixPlayer_onRecStateUpdate(
       ptr,
@@ -293,15 +361,25 @@ class JuceLibGen {
               ffi.Void Function(
                   ffi.Pointer<ffi.Void>,
                   ffi.Pointer<
-                      ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
+                      ffi.NativeFunction<
+                          ffi.Void Function(ffi.Pointer<ffi.Void>,
+                              ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
       'JuceMixPlayer_onRecStateUpdate');
-  late final _JuceMixPlayer_onRecStateUpdate = _JuceMixPlayer_onRecStateUpdatePtr.asFunction<
-      void Function(ffi.Pointer<ffi.Void>,
-          ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>)>();
+  late final _JuceMixPlayer_onRecStateUpdate =
+      _JuceMixPlayer_onRecStateUpdatePtr.asFunction<
+          void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>,
+                          ffi.Pointer<pkg_ffi.Utf8>)>>)>();
 
   void JuceMixPlayer_onRecProgress(
     ffi.Pointer<ffi.Void> ptr,
-    ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>> onProgress,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>
+        onProgress,
   ) {
     return _JuceMixPlayer_onRecProgress(
       ptr,
@@ -310,17 +388,28 @@ class JuceLibGen {
   }
 
   late final _JuceMixPlayer_onRecProgressPtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Pointer<ffi.Void>,
-                  ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>)>>(
-      'JuceMixPlayer_onRecProgress');
-  late final _JuceMixPlayer_onRecProgress = _JuceMixPlayer_onRecProgressPtr.asFunction<
-      void Function(ffi.Pointer<ffi.Void>,
-          ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>)>();
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>,
+                          ffi.Float)>>)>>('JuceMixPlayer_onRecProgress');
+  late final _JuceMixPlayer_onRecProgress =
+      _JuceMixPlayer_onRecProgressPtr.asFunction<
+          void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>)>();
 
   void JuceMixPlayer_onRecError(
     ffi.Pointer<ffi.Void> ptr,
-    ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>> onError,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(
+                    ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>
+        onError,
   ) {
     return _JuceMixPlayer_onRecError(
       ptr,
@@ -333,15 +422,25 @@ class JuceLibGen {
               ffi.Void Function(
                   ffi.Pointer<ffi.Void>,
                   ffi.Pointer<
-                      ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
+                      ffi.NativeFunction<
+                          ffi.Void Function(ffi.Pointer<ffi.Void>,
+                              ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
       'JuceMixPlayer_onRecError');
-  late final _JuceMixPlayer_onRecError = _JuceMixPlayer_onRecErrorPtr.asFunction<
-      void Function(ffi.Pointer<ffi.Void>,
-          ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>)>();
+  late final _JuceMixPlayer_onRecError =
+      _JuceMixPlayer_onRecErrorPtr.asFunction<
+          void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>,
+                          ffi.Pointer<pkg_ffi.Utf8>)>>)>();
 
   void JuceMixPlayer_onRecLevel(
     ffi.Pointer<ffi.Void> ptr,
-    ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>> onLevel,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>
+        onLevel,
   ) {
     return _JuceMixPlayer_onRecLevel(
       ptr,
@@ -350,17 +449,28 @@ class JuceLibGen {
   }
 
   late final _JuceMixPlayer_onRecLevelPtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Pointer<ffi.Void>,
-                  ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>)>>(
-      'JuceMixPlayer_onRecLevel');
-  late final _JuceMixPlayer_onRecLevel = _JuceMixPlayer_onRecLevelPtr.asFunction<
-      void Function(ffi.Pointer<ffi.Void>,
-          ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>)>();
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>,
+                          ffi.Float)>>)>>('JuceMixPlayer_onRecLevel');
+  late final _JuceMixPlayer_onRecLevel =
+      _JuceMixPlayer_onRecLevelPtr.asFunction<
+          void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>)>();
 
   void JuceMixPlayer_onDeviceUpdate(
     ffi.Pointer<ffi.Void> ptr,
-    ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>> onDeviceUpdate,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(
+                    ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>
+        onDeviceUpdate,
   ) {
     return _JuceMixPlayer_onDeviceUpdate(
       ptr,
@@ -373,11 +483,18 @@ class JuceLibGen {
               ffi.Void Function(
                   ffi.Pointer<ffi.Void>,
                   ffi.Pointer<
-                      ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
+                      ffi.NativeFunction<
+                          ffi.Void Function(ffi.Pointer<ffi.Void>,
+                              ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
       'JuceMixPlayer_onDeviceUpdate');
-  late final _JuceMixPlayer_onDeviceUpdate = _JuceMixPlayer_onDeviceUpdatePtr.asFunction<
-      void Function(ffi.Pointer<ffi.Void>,
-          ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>)>();
+  late final _JuceMixPlayer_onDeviceUpdate =
+      _JuceMixPlayer_onDeviceUpdatePtr.asFunction<
+          void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>,
+                          ffi.Pointer<pkg_ffi.Utf8>)>>)>();
 
   void JuceMixPlayer_setUpdatedDevices(
     ffi.Pointer<ffi.Void> ptr,
@@ -389,11 +506,13 @@ class JuceLibGen {
     );
   }
 
-  late final _JuceMixPlayer_setUpdatedDevicesPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>(
-          'JuceMixPlayer_setUpdatedDevices');
+  late final _JuceMixPlayer_setUpdatedDevicesPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<ffi.Void>,
+              ffi.Pointer<pkg_ffi.Utf8>)>>('JuceMixPlayer_setUpdatedDevices');
   late final _JuceMixPlayer_setUpdatedDevices =
-      _JuceMixPlayer_setUpdatedDevicesPtr.asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>();
+      _JuceMixPlayer_setUpdatedDevicesPtr.asFunction<
+          void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>();
 
   ffi.Pointer<pkg_ffi.Utf8> JuceMixPlayer_getDeviceLatencyInfo(
     ffi.Pointer<ffi.Void> ptr,
@@ -403,16 +522,20 @@ class JuceLibGen {
     );
   }
 
-  late final _JuceMixPlayer_getDeviceLatencyInfoPtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<pkg_ffi.Utf8> Function(ffi.Pointer<ffi.Void>)>>(
-          'JuceMixPlayer_getDeviceLatencyInfo');
+  late final _JuceMixPlayer_getDeviceLatencyInfoPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<pkg_ffi.Utf8> Function(
+              ffi.Pointer<ffi.Void>)>>('JuceMixPlayer_getDeviceLatencyInfo');
   late final _JuceMixPlayer_getDeviceLatencyInfo =
-      _JuceMixPlayer_getDeviceLatencyInfoPtr.asFunction<ffi.Pointer<pkg_ffi.Utf8> Function(ffi.Pointer<ffi.Void>)>();
+      _JuceMixPlayer_getDeviceLatencyInfoPtr.asFunction<
+          ffi.Pointer<pkg_ffi.Utf8> Function(ffi.Pointer<ffi.Void>)>();
 
   void JuceMixPlayer_export(
     ffi.Pointer<ffi.Void> ptr,
     ffi.Pointer<pkg_ffi.Utf8> outputPath,
-    ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>> completion,
+    ffi.Pointer<
+            ffi.NativeFunction<ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>
+        completion,
   ) {
     return _JuceMixPlayer_export(
       ptr,
@@ -422,12 +545,21 @@ class JuceLibGen {
   }
 
   late final _JuceMixPlayer_exportPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>,
-              ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>)>>('JuceMixPlayer_export');
+          ffi.NativeFunction<
+              ffi.Void Function(
+                  ffi.Pointer<ffi.Void>,
+                  ffi.Pointer<pkg_ffi.Utf8>,
+                  ffi.Pointer<
+                      ffi.NativeFunction<
+                          ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
+      'JuceMixPlayer_export');
   late final _JuceMixPlayer_export = _JuceMixPlayer_exportPtr.asFunction<
-      void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>,
-          ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>)>();
+      void Function(
+          ffi.Pointer<ffi.Void>,
+          ffi.Pointer<pkg_ffi.Utf8>,
+          ffi.Pointer<
+              ffi.NativeFunction<
+                  ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>)>();
 
   int JuceMixPlayer_fileExists(
     ffi.Pointer<pkg_ffi.Utf8> filePath,
@@ -438,16 +570,20 @@ class JuceLibGen {
   }
 
   late final _JuceMixPlayer_fileExistsPtr =
-      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Pointer<pkg_ffi.Utf8>)>>('JuceMixPlayer_fileExists');
-  late final _JuceMixPlayer_fileExists =
-      _JuceMixPlayer_fileExistsPtr.asFunction<int Function(ffi.Pointer<pkg_ffi.Utf8>)>();
+      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Pointer<pkg_ffi.Utf8>)>>(
+          'JuceMixPlayer_fileExists');
+  late final _JuceMixPlayer_fileExists = _JuceMixPlayer_fileExistsPtr
+      .asFunction<int Function(ffi.Pointer<pkg_ffi.Utf8>)>();
 
   ffi.Pointer<ffi.Void> GstPlayer_init() {
     return _GstPlayer_init();
   }
 
-  late final _GstPlayer_initPtr = _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Void> Function()>>('GstPlayer_init');
-  late final _GstPlayer_init = _GstPlayer_initPtr.asFunction<ffi.Pointer<ffi.Void> Function()>();
+  late final _GstPlayer_initPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Void> Function()>>(
+          'GstPlayer_init');
+  late final _GstPlayer_init =
+      _GstPlayer_initPtr.asFunction<ffi.Pointer<ffi.Void> Function()>();
 
   void GstPlayer_deinit(
     ffi.Pointer<ffi.Void> ptr,
@@ -458,8 +594,10 @@ class JuceLibGen {
   }
 
   late final _GstPlayer_deinitPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>('GstPlayer_deinit');
-  late final _GstPlayer_deinit = _GstPlayer_deinitPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'GstPlayer_deinit');
+  late final _GstPlayer_deinit =
+      _GstPlayer_deinitPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void GstPlayer_setVideoPath(
     ffi.Pointer<ffi.Void> ptr,
@@ -471,11 +609,12 @@ class JuceLibGen {
     );
   }
 
-  late final _GstPlayer_setVideoPathPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>(
-          'GstPlayer_setVideoPath');
-  late final _GstPlayer_setVideoPath =
-      _GstPlayer_setVideoPathPtr.asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>();
+  late final _GstPlayer_setVideoPathPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<ffi.Void>,
+              ffi.Pointer<pkg_ffi.Utf8>)>>('GstPlayer_setVideoPath');
+  late final _GstPlayer_setVideoPath = _GstPlayer_setVideoPathPtr.asFunction<
+      void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>();
 
   void GstPlayer_play(
     ffi.Pointer<ffi.Void> ptr,
@@ -486,8 +625,10 @@ class JuceLibGen {
   }
 
   late final _GstPlayer_playPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>('GstPlayer_play');
-  late final _GstPlayer_play = _GstPlayer_playPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'GstPlayer_play');
+  late final _GstPlayer_play =
+      _GstPlayer_playPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void GstPlayer_pause(
     ffi.Pointer<ffi.Void> ptr,
@@ -498,8 +639,10 @@ class JuceLibGen {
   }
 
   late final _GstPlayer_pausePtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>('GstPlayer_pause');
-  late final _GstPlayer_pause = _GstPlayer_pausePtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'GstPlayer_pause');
+  late final _GstPlayer_pause =
+      _GstPlayer_pausePtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void GstPlayer_stop(
     ffi.Pointer<ffi.Void> ptr,
@@ -510,8 +653,10 @@ class JuceLibGen {
   }
 
   late final _GstPlayer_stopPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>('GstPlayer_stop');
-  late final _GstPlayer_stop = _GstPlayer_stopPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'GstPlayer_stop');
+  late final _GstPlayer_stop =
+      _GstPlayer_stopPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void GstPlayer_seek(
     ffi.Pointer<ffi.Void> ptr,
@@ -523,9 +668,12 @@ class JuceLibGen {
     );
   }
 
-  late final _GstPlayer_seekPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>('GstPlayer_seek');
-  late final _GstPlayer_seek = _GstPlayer_seekPtr.asFunction<void Function(ffi.Pointer<ffi.Void>, double)>();
+  late final _GstPlayer_seekPtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>(
+      'GstPlayer_seek');
+  late final _GstPlayer_seek = _GstPlayer_seekPtr.asFunction<
+      void Function(ffi.Pointer<ffi.Void>, double)>();
 
   int GstPlayer_isPlaying(
     ffi.Pointer<ffi.Void> ptr,
@@ -536,8 +684,10 @@ class JuceLibGen {
   }
 
   late final _GstPlayer_isPlayingPtr =
-      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Pointer<ffi.Void>)>>('GstPlayer_isPlaying');
-  late final _GstPlayer_isPlaying = _GstPlayer_isPlayingPtr.asFunction<int Function(ffi.Pointer<ffi.Void>)>();
+      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Pointer<ffi.Void>)>>(
+          'GstPlayer_isPlaying');
+  late final _GstPlayer_isPlaying =
+      _GstPlayer_isPlayingPtr.asFunction<int Function(ffi.Pointer<ffi.Void>)>();
 
   double GstPlayer_getDurationInSecs(
     ffi.Pointer<ffi.Void> ptr,
@@ -548,13 +698,18 @@ class JuceLibGen {
   }
 
   late final _GstPlayer_getDurationInSecsPtr =
-      _lookup<ffi.NativeFunction<ffi.Float Function(ffi.Pointer<ffi.Void>)>>('GstPlayer_getDurationInSecs');
-  late final _GstPlayer_getDurationInSecs =
-      _GstPlayer_getDurationInSecsPtr.asFunction<double Function(ffi.Pointer<ffi.Void>)>();
+      _lookup<ffi.NativeFunction<ffi.Float Function(ffi.Pointer<ffi.Void>)>>(
+          'GstPlayer_getDurationInSecs');
+  late final _GstPlayer_getDurationInSecs = _GstPlayer_getDurationInSecsPtr
+      .asFunction<double Function(ffi.Pointer<ffi.Void>)>();
 
   void GstPlayer_onStateUpdate(
     ffi.Pointer<ffi.Void> ptr,
-    ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>> callback,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(
+                    ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>
+        callback,
   ) {
     return _GstPlayer_onStateUpdate(
       ptr,
@@ -567,15 +722,24 @@ class JuceLibGen {
               ffi.Void Function(
                   ffi.Pointer<ffi.Void>,
                   ffi.Pointer<
-                      ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
+                      ffi.NativeFunction<
+                          ffi.Void Function(ffi.Pointer<ffi.Void>,
+                              ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
       'GstPlayer_onStateUpdate');
   late final _GstPlayer_onStateUpdate = _GstPlayer_onStateUpdatePtr.asFunction<
-      void Function(ffi.Pointer<ffi.Void>,
-          ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>)>();
+      void Function(
+          ffi.Pointer<ffi.Void>,
+          ffi.Pointer<
+              ffi.NativeFunction<
+                  ffi.Void Function(
+                      ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>)>();
 
   void GstPlayer_onProgress(
     ffi.Pointer<ffi.Void> ptr,
-    ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>> callback,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>
+        callback,
   ) {
     return _GstPlayer_onProgress(
       ptr,
@@ -584,17 +748,27 @@ class JuceLibGen {
   }
 
   late final _GstPlayer_onProgressPtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Pointer<ffi.Void>,
-                  ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>)>>(
-      'GstPlayer_onProgress');
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>,
+                          ffi.Float)>>)>>('GstPlayer_onProgress');
   late final _GstPlayer_onProgress = _GstPlayer_onProgressPtr.asFunction<
-      void Function(ffi.Pointer<ffi.Void>,
-          ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>)>();
+      void Function(
+          ffi.Pointer<ffi.Void>,
+          ffi.Pointer<
+              ffi.NativeFunction<
+                  ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>)>();
 
   void GstPlayer_onError(
     ffi.Pointer<ffi.Void> ptr,
-    ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>> callback,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(
+                    ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>
+        callback,
   ) {
     return _GstPlayer_onError(
       ptr,
@@ -603,15 +777,20 @@ class JuceLibGen {
   }
 
   late final _GstPlayer_onErrorPtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Void Function(
-                  ffi.Pointer<ffi.Void>,
-                  ffi.Pointer<
-                      ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
-      'GstPlayer_onError');
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>,
+                          ffi.Pointer<pkg_ffi.Utf8>)>>)>>('GstPlayer_onError');
   late final _GstPlayer_onError = _GstPlayer_onErrorPtr.asFunction<
-      void Function(ffi.Pointer<ffi.Void>,
-          ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>)>();
+      void Function(
+          ffi.Pointer<ffi.Void>,
+          ffi.Pointer<
+              ffi.NativeFunction<
+                  ffi.Void Function(
+                      ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>)>();
 
   void GstPlayer_setSurfaceHandle(
     ffi.Pointer<ffi.Void> ptr,
@@ -623,11 +802,13 @@ class JuceLibGen {
     );
   }
 
-  late final _GstPlayer_setSurfaceHandlePtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>>(
-          'GstPlayer_setSurfaceHandle');
+  late final _GstPlayer_setSurfaceHandlePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<ffi.Void>,
+              ffi.Pointer<ffi.Void>)>>('GstPlayer_setSurfaceHandle');
   late final _GstPlayer_setSurfaceHandle =
-      _GstPlayer_setSurfaceHandlePtr.asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
+      _GstPlayer_setSurfaceHandlePtr.asFunction<
+          void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
 
   void GstPlayer_setMuteEmbeddedAudio(
     ffi.Pointer<ffi.Void> ptr,
@@ -639,10 +820,13 @@ class JuceLibGen {
     );
   }
 
-  late final _GstPlayer_setMuteEmbeddedAudioPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Int)>>('GstPlayer_setMuteEmbeddedAudio');
+  late final _GstPlayer_setMuteEmbeddedAudioPtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Int)>>(
+      'GstPlayer_setMuteEmbeddedAudio');
   late final _GstPlayer_setMuteEmbeddedAudio =
-      _GstPlayer_setMuteEmbeddedAudioPtr.asFunction<void Function(ffi.Pointer<ffi.Void>, int)>();
+      _GstPlayer_setMuteEmbeddedAudioPtr.asFunction<
+          void Function(ffi.Pointer<ffi.Void>, int)>();
 
   void GstPlayer_setRotation(
     ffi.Pointer<ffi.Void> ptr,
@@ -654,9 +838,12 @@ class JuceLibGen {
     );
   }
 
-  late final _GstPlayer_setRotationPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Int)>>('GstPlayer_setRotation');
-  late final _GstPlayer_setRotation = _GstPlayer_setRotationPtr.asFunction<void Function(ffi.Pointer<ffi.Void>, int)>();
+  late final _GstPlayer_setRotationPtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Int)>>(
+      'GstPlayer_setRotation');
+  late final _GstPlayer_setRotation = _GstPlayer_setRotationPtr.asFunction<
+      void Function(ffi.Pointer<ffi.Void>, int)>();
 
   void GstPlayer_setFlip(
     ffi.Pointer<ffi.Void> ptr,
@@ -668,9 +855,12 @@ class JuceLibGen {
     );
   }
 
-  late final _GstPlayer_setFlipPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Int)>>('GstPlayer_setFlip');
-  late final _GstPlayer_setFlip = _GstPlayer_setFlipPtr.asFunction<void Function(ffi.Pointer<ffi.Void>, int)>();
+  late final _GstPlayer_setFlipPtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Int)>>(
+      'GstPlayer_setFlip');
+  late final _GstPlayer_setFlip = _GstPlayer_setFlipPtr.asFunction<
+      void Function(ffi.Pointer<ffi.Void>, int)>();
 
   void GstPlayer_setVisualEffect(
     ffi.Pointer<ffi.Void> ptr,
@@ -682,15 +872,19 @@ class JuceLibGen {
     );
   }
 
-  late final _GstPlayer_setVisualEffectPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Int)>>('GstPlayer_setVisualEffect');
-  late final _GstPlayer_setVisualEffect =
-      _GstPlayer_setVisualEffectPtr.asFunction<void Function(ffi.Pointer<ffi.Void>, int)>();
+  late final _GstPlayer_setVisualEffectPtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Int)>>(
+      'GstPlayer_setVisualEffect');
+  late final _GstPlayer_setVisualEffect = _GstPlayer_setVisualEffectPtr
+      .asFunction<void Function(ffi.Pointer<ffi.Void>, int)>();
 
   void GstPlayer_exportVideo(
     ffi.Pointer<ffi.Void> ptr,
     ffi.Pointer<pkg_ffi.Utf8> outputPath,
-    ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>> completion,
+    ffi.Pointer<
+            ffi.NativeFunction<ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>
+        completion,
   ) {
     return _GstPlayer_exportVideo(
       ptr,
@@ -700,29 +894,41 @@ class JuceLibGen {
   }
 
   late final _GstPlayer_exportVideoPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>,
-              ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>)>>('GstPlayer_exportVideo');
+          ffi.NativeFunction<
+              ffi.Void Function(
+                  ffi.Pointer<ffi.Void>,
+                  ffi.Pointer<pkg_ffi.Utf8>,
+                  ffi.Pointer<
+                      ffi.NativeFunction<
+                          ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
+      'GstPlayer_exportVideo');
   late final _GstPlayer_exportVideo = _GstPlayer_exportVideoPtr.asFunction<
-      void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>,
-          ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>)>();
+      void Function(
+          ffi.Pointer<ffi.Void>,
+          ffi.Pointer<pkg_ffi.Utf8>,
+          ffi.Pointer<
+              ffi.NativeFunction<
+                  ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>)>();
 
   ffi.Pointer<ffi.Void> UnifiedAVPlayer_getInstance() {
     return _UnifiedAVPlayer_getInstance();
   }
 
   late final _UnifiedAVPlayer_getInstancePtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Void> Function()>>('UnifiedAVPlayer_getInstance');
-  late final _UnifiedAVPlayer_getInstance =
-      _UnifiedAVPlayer_getInstancePtr.asFunction<ffi.Pointer<ffi.Void> Function()>();
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Void> Function()>>(
+          'UnifiedAVPlayer_getInstance');
+  late final _UnifiedAVPlayer_getInstance = _UnifiedAVPlayer_getInstancePtr
+      .asFunction<ffi.Pointer<ffi.Void> Function()>();
 
   void UnifiedAVPlayer_destroyInstance() {
     return _UnifiedAVPlayer_destroyInstance();
   }
 
   late final _UnifiedAVPlayer_destroyInstancePtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function()>>('UnifiedAVPlayer_destroyInstance');
-  late final _UnifiedAVPlayer_destroyInstance = _UnifiedAVPlayer_destroyInstancePtr.asFunction<void Function()>();
+      _lookup<ffi.NativeFunction<ffi.Void Function()>>(
+          'UnifiedAVPlayer_destroyInstance');
+  late final _UnifiedAVPlayer_destroyInstance =
+      _UnifiedAVPlayer_destroyInstancePtr.asFunction<void Function()>();
 
   void UnifiedAVPlayer_dispose(
     ffi.Pointer<ffi.Void> ptr,
@@ -733,8 +939,10 @@ class JuceLibGen {
   }
 
   late final _UnifiedAVPlayer_disposePtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>('UnifiedAVPlayer_dispose');
-  late final _UnifiedAVPlayer_dispose = _UnifiedAVPlayer_disposePtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'UnifiedAVPlayer_dispose');
+  late final _UnifiedAVPlayer_dispose = _UnifiedAVPlayer_disposePtr.asFunction<
+      void Function(ffi.Pointer<ffi.Void>)>();
 
   void UnifiedAVPlayer_play(
     ffi.Pointer<ffi.Void> ptr,
@@ -745,8 +953,10 @@ class JuceLibGen {
   }
 
   late final _UnifiedAVPlayer_playPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>('UnifiedAVPlayer_play');
-  late final _UnifiedAVPlayer_play = _UnifiedAVPlayer_playPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'UnifiedAVPlayer_play');
+  late final _UnifiedAVPlayer_play = _UnifiedAVPlayer_playPtr.asFunction<
+      void Function(ffi.Pointer<ffi.Void>)>();
 
   void UnifiedAVPlayer_pause(
     ffi.Pointer<ffi.Void> ptr,
@@ -757,8 +967,10 @@ class JuceLibGen {
   }
 
   late final _UnifiedAVPlayer_pausePtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>('UnifiedAVPlayer_pause');
-  late final _UnifiedAVPlayer_pause = _UnifiedAVPlayer_pausePtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'UnifiedAVPlayer_pause');
+  late final _UnifiedAVPlayer_pause = _UnifiedAVPlayer_pausePtr.asFunction<
+      void Function(ffi.Pointer<ffi.Void>)>();
 
   void UnifiedAVPlayer_stop(
     ffi.Pointer<ffi.Void> ptr,
@@ -769,8 +981,10 @@ class JuceLibGen {
   }
 
   late final _UnifiedAVPlayer_stopPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>('UnifiedAVPlayer_stop');
-  late final _UnifiedAVPlayer_stop = _UnifiedAVPlayer_stopPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'UnifiedAVPlayer_stop');
+  late final _UnifiedAVPlayer_stop = _UnifiedAVPlayer_stopPtr.asFunction<
+      void Function(ffi.Pointer<ffi.Void>)>();
 
   void UnifiedAVPlayer_seek(
     ffi.Pointer<ffi.Void> ptr,
@@ -782,10 +996,12 @@ class JuceLibGen {
     );
   }
 
-  late final _UnifiedAVPlayer_seekPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>('UnifiedAVPlayer_seek');
-  late final _UnifiedAVPlayer_seek =
-      _UnifiedAVPlayer_seekPtr.asFunction<void Function(ffi.Pointer<ffi.Void>, double)>();
+  late final _UnifiedAVPlayer_seekPtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>(
+      'UnifiedAVPlayer_seek');
+  late final _UnifiedAVPlayer_seek = _UnifiedAVPlayer_seekPtr.asFunction<
+      void Function(ffi.Pointer<ffi.Void>, double)>();
 
   void UnifiedAVPlayer_togglePlayPause(
     ffi.Pointer<ffi.Void> ptr,
@@ -796,9 +1012,11 @@ class JuceLibGen {
   }
 
   late final _UnifiedAVPlayer_togglePlayPausePtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>('UnifiedAVPlayer_togglePlayPause');
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'UnifiedAVPlayer_togglePlayPause');
   late final _UnifiedAVPlayer_togglePlayPause =
-      _UnifiedAVPlayer_togglePlayPausePtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _UnifiedAVPlayer_togglePlayPausePtr.asFunction<
+          void Function(ffi.Pointer<ffi.Void>)>();
 
   void UnifiedAVPlayer_setAudioData(
     ffi.Pointer<ffi.Void> ptr,
@@ -810,11 +1028,13 @@ class JuceLibGen {
     );
   }
 
-  late final _UnifiedAVPlayer_setAudioDataPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>(
-          'UnifiedAVPlayer_setAudioData');
+  late final _UnifiedAVPlayer_setAudioDataPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<ffi.Void>,
+              ffi.Pointer<pkg_ffi.Utf8>)>>('UnifiedAVPlayer_setAudioData');
   late final _UnifiedAVPlayer_setAudioData =
-      _UnifiedAVPlayer_setAudioDataPtr.asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>();
+      _UnifiedAVPlayer_setAudioDataPtr.asFunction<
+          void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>();
 
   void UnifiedAVPlayer_setAudioSettings(
     ffi.Pointer<ffi.Void> ptr,
@@ -826,29 +1046,20 @@ class JuceLibGen {
     );
   }
 
-  late final _UnifiedAVPlayer_setAudioSettingsPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>(
-          'UnifiedAVPlayer_setAudioSettings');
-  late final _UnifiedAVPlayer_setAudioSettings = _UnifiedAVPlayer_setAudioSettingsPtr.asFunction<
-      void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>();
-
-  void UnifiedAVPlayer_resetAudioPlayBuffer(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _UnifiedAVPlayer_resetAudioPlayBuffer(
-      ptr,
-    );
-  }
-
-  late final _UnifiedAVPlayer_resetAudioPlayBufferPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>('UnifiedAVPlayer_resetAudioPlayBuffer');
-  late final _UnifiedAVPlayer_resetAudioPlayBuffer =
-      _UnifiedAVPlayer_resetAudioPlayBufferPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+  late final _UnifiedAVPlayer_setAudioSettingsPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<ffi.Void>,
+              ffi.Pointer<pkg_ffi.Utf8>)>>('UnifiedAVPlayer_setAudioSettings');
+  late final _UnifiedAVPlayer_setAudioSettings =
+      _UnifiedAVPlayer_setAudioSettingsPtr.asFunction<
+          void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>();
 
   void UnifiedAVPlayer_exportAudio(
     ffi.Pointer<ffi.Void> ptr,
     ffi.Pointer<pkg_ffi.Utf8> outputPath,
-    ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>> completion,
+    ffi.Pointer<
+            ffi.NativeFunction<ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>
+        completion,
   ) {
     return _UnifiedAVPlayer_exportAudio(
       ptr,
@@ -859,12 +1070,21 @@ class JuceLibGen {
 
   late final _UnifiedAVPlayer_exportAudioPtr = _lookup<
           ffi.NativeFunction<
-              ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>,
-                  ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
+              ffi.Void Function(
+                  ffi.Pointer<ffi.Void>,
+                  ffi.Pointer<pkg_ffi.Utf8>,
+                  ffi.Pointer<
+                      ffi.NativeFunction<
+                          ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
       'UnifiedAVPlayer_exportAudio');
-  late final _UnifiedAVPlayer_exportAudio = _UnifiedAVPlayer_exportAudioPtr.asFunction<
-      void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>,
-          ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>)>();
+  late final _UnifiedAVPlayer_exportAudio =
+      _UnifiedAVPlayer_exportAudioPtr.asFunction<
+          void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<pkg_ffi.Utf8>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>)>();
 
   void UnifiedAVPlayer_setVideoPath(
     ffi.Pointer<ffi.Void> ptr,
@@ -876,11 +1096,13 @@ class JuceLibGen {
     );
   }
 
-  late final _UnifiedAVPlayer_setVideoPathPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>(
-          'UnifiedAVPlayer_setVideoPath');
+  late final _UnifiedAVPlayer_setVideoPathPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<ffi.Void>,
+              ffi.Pointer<pkg_ffi.Utf8>)>>('UnifiedAVPlayer_setVideoPath');
   late final _UnifiedAVPlayer_setVideoPath =
-      _UnifiedAVPlayer_setVideoPathPtr.asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>();
+      _UnifiedAVPlayer_setVideoPathPtr.asFunction<
+          void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>();
 
   void UnifiedAVPlayer_setVideoSurfaceHandle(
     ffi.Pointer<ffi.Void> ptr,
@@ -892,11 +1114,13 @@ class JuceLibGen {
     );
   }
 
-  late final _UnifiedAVPlayer_setVideoSurfaceHandlePtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>>(
-          'UnifiedAVPlayer_setVideoSurfaceHandle');
-  late final _UnifiedAVPlayer_setVideoSurfaceHandle = _UnifiedAVPlayer_setVideoSurfaceHandlePtr.asFunction<
-      void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
+  late final _UnifiedAVPlayer_setVideoSurfaceHandlePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<ffi.Void>,
+              ffi.Pointer<ffi.Void>)>>('UnifiedAVPlayer_setVideoSurfaceHandle');
+  late final _UnifiedAVPlayer_setVideoSurfaceHandle =
+      _UnifiedAVPlayer_setVideoSurfaceHandlePtr.asFunction<
+          void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
 
   void UnifiedAVPlayer_setVideoRotation(
     ffi.Pointer<ffi.Void> ptr,
@@ -908,11 +1132,13 @@ class JuceLibGen {
     );
   }
 
-  late final _UnifiedAVPlayer_setVideoRotationPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Int)>>(
-          'UnifiedAVPlayer_setVideoRotation');
+  late final _UnifiedAVPlayer_setVideoRotationPtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Int)>>(
+      'UnifiedAVPlayer_setVideoRotation');
   late final _UnifiedAVPlayer_setVideoRotation =
-      _UnifiedAVPlayer_setVideoRotationPtr.asFunction<void Function(ffi.Pointer<ffi.Void>, int)>();
+      _UnifiedAVPlayer_setVideoRotationPtr.asFunction<
+          void Function(ffi.Pointer<ffi.Void>, int)>();
 
   void UnifiedAVPlayer_setVideoFlip(
     ffi.Pointer<ffi.Void> ptr,
@@ -924,10 +1150,12 @@ class JuceLibGen {
     );
   }
 
-  late final _UnifiedAVPlayer_setVideoFlipPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Int)>>('UnifiedAVPlayer_setVideoFlip');
-  late final _UnifiedAVPlayer_setVideoFlip =
-      _UnifiedAVPlayer_setVideoFlipPtr.asFunction<void Function(ffi.Pointer<ffi.Void>, int)>();
+  late final _UnifiedAVPlayer_setVideoFlipPtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Int)>>(
+      'UnifiedAVPlayer_setVideoFlip');
+  late final _UnifiedAVPlayer_setVideoFlip = _UnifiedAVPlayer_setVideoFlipPtr
+      .asFunction<void Function(ffi.Pointer<ffi.Void>, int)>();
 
   void UnifiedAVPlayer_setVideoVisualEffect(
     ffi.Pointer<ffi.Void> ptr,
@@ -939,16 +1167,20 @@ class JuceLibGen {
     );
   }
 
-  late final _UnifiedAVPlayer_setVideoVisualEffectPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Int)>>(
-          'UnifiedAVPlayer_setVideoVisualEffect');
+  late final _UnifiedAVPlayer_setVideoVisualEffectPtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Int)>>(
+      'UnifiedAVPlayer_setVideoVisualEffect');
   late final _UnifiedAVPlayer_setVideoVisualEffect =
-      _UnifiedAVPlayer_setVideoVisualEffectPtr.asFunction<void Function(ffi.Pointer<ffi.Void>, int)>();
+      _UnifiedAVPlayer_setVideoVisualEffectPtr.asFunction<
+          void Function(ffi.Pointer<ffi.Void>, int)>();
 
   void UnifiedAVPlayer_exportVideo(
     ffi.Pointer<ffi.Void> ptr,
     ffi.Pointer<pkg_ffi.Utf8> outputPath,
-    ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>> completion,
+    ffi.Pointer<
+            ffi.NativeFunction<ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>
+        completion,
   ) {
     return _UnifiedAVPlayer_exportVideo(
       ptr,
@@ -959,12 +1191,21 @@ class JuceLibGen {
 
   late final _UnifiedAVPlayer_exportVideoPtr = _lookup<
           ffi.NativeFunction<
-              ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>,
-                  ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
+              ffi.Void Function(
+                  ffi.Pointer<ffi.Void>,
+                  ffi.Pointer<pkg_ffi.Utf8>,
+                  ffi.Pointer<
+                      ffi.NativeFunction<
+                          ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
       'UnifiedAVPlayer_exportVideo');
-  late final _UnifiedAVPlayer_exportVideo = _UnifiedAVPlayer_exportVideoPtr.asFunction<
-      void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>,
-          ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>)>();
+  late final _UnifiedAVPlayer_exportVideo =
+      _UnifiedAVPlayer_exportVideoPtr.asFunction<
+          void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<pkg_ffi.Utf8>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>)>();
 
   double UnifiedAVPlayer_getDuration(
     ffi.Pointer<ffi.Void> ptr,
@@ -975,9 +1216,10 @@ class JuceLibGen {
   }
 
   late final _UnifiedAVPlayer_getDurationPtr =
-      _lookup<ffi.NativeFunction<ffi.Float Function(ffi.Pointer<ffi.Void>)>>('UnifiedAVPlayer_getDuration');
-  late final _UnifiedAVPlayer_getDuration =
-      _UnifiedAVPlayer_getDurationPtr.asFunction<double Function(ffi.Pointer<ffi.Void>)>();
+      _lookup<ffi.NativeFunction<ffi.Float Function(ffi.Pointer<ffi.Void>)>>(
+          'UnifiedAVPlayer_getDuration');
+  late final _UnifiedAVPlayer_getDuration = _UnifiedAVPlayer_getDurationPtr
+      .asFunction<double Function(ffi.Pointer<ffi.Void>)>();
 
   double UnifiedAVPlayer_getCurrentTime(
     ffi.Pointer<ffi.Void> ptr,
@@ -988,9 +1230,11 @@ class JuceLibGen {
   }
 
   late final _UnifiedAVPlayer_getCurrentTimePtr =
-      _lookup<ffi.NativeFunction<ffi.Float Function(ffi.Pointer<ffi.Void>)>>('UnifiedAVPlayer_getCurrentTime');
+      _lookup<ffi.NativeFunction<ffi.Float Function(ffi.Pointer<ffi.Void>)>>(
+          'UnifiedAVPlayer_getCurrentTime');
   late final _UnifiedAVPlayer_getCurrentTime =
-      _UnifiedAVPlayer_getCurrentTimePtr.asFunction<double Function(ffi.Pointer<ffi.Void>)>();
+      _UnifiedAVPlayer_getCurrentTimePtr.asFunction<
+          double Function(ffi.Pointer<ffi.Void>)>();
 
   int UnifiedAVPlayer_isPlaying(
     ffi.Pointer<ffi.Void> ptr,
@@ -1001,9 +1245,10 @@ class JuceLibGen {
   }
 
   late final _UnifiedAVPlayer_isPlayingPtr =
-      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Pointer<ffi.Void>)>>('UnifiedAVPlayer_isPlaying');
-  late final _UnifiedAVPlayer_isPlaying =
-      _UnifiedAVPlayer_isPlayingPtr.asFunction<int Function(ffi.Pointer<ffi.Void>)>();
+      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Pointer<ffi.Void>)>>(
+          'UnifiedAVPlayer_isPlaying');
+  late final _UnifiedAVPlayer_isPlaying = _UnifiedAVPlayer_isPlayingPtr
+      .asFunction<int Function(ffi.Pointer<ffi.Void>)>();
 
   ffi.Pointer<pkg_ffi.Utf8> UnifiedAVPlayer_getCurrentState(
     ffi.Pointer<ffi.Void> ptr,
@@ -1013,11 +1258,13 @@ class JuceLibGen {
     );
   }
 
-  late final _UnifiedAVPlayer_getCurrentStatePtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<pkg_ffi.Utf8> Function(ffi.Pointer<ffi.Void>)>>(
-          'UnifiedAVPlayer_getCurrentState');
+  late final _UnifiedAVPlayer_getCurrentStatePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<pkg_ffi.Utf8> Function(
+              ffi.Pointer<ffi.Void>)>>('UnifiedAVPlayer_getCurrentState');
   late final _UnifiedAVPlayer_getCurrentState =
-      _UnifiedAVPlayer_getCurrentStatePtr.asFunction<ffi.Pointer<pkg_ffi.Utf8> Function(ffi.Pointer<ffi.Void>)>();
+      _UnifiedAVPlayer_getCurrentStatePtr.asFunction<
+          ffi.Pointer<pkg_ffi.Utf8> Function(ffi.Pointer<ffi.Void>)>();
 
   int UnifiedAVPlayer_hasVideoLoaded(
     ffi.Pointer<ffi.Void> ptr,
@@ -1028,13 +1275,18 @@ class JuceLibGen {
   }
 
   late final _UnifiedAVPlayer_hasVideoLoadedPtr =
-      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Pointer<ffi.Void>)>>('UnifiedAVPlayer_hasVideoLoaded');
+      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Pointer<ffi.Void>)>>(
+          'UnifiedAVPlayer_hasVideoLoaded');
   late final _UnifiedAVPlayer_hasVideoLoaded =
-      _UnifiedAVPlayer_hasVideoLoadedPtr.asFunction<int Function(ffi.Pointer<ffi.Void>)>();
+      _UnifiedAVPlayer_hasVideoLoadedPtr.asFunction<
+          int Function(ffi.Pointer<ffi.Void>)>();
 
   void UnifiedAVPlayer_onProgress(
     ffi.Pointer<ffi.Void> ptr,
-    ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>> callback,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>
+        callback,
   ) {
     return _UnifiedAVPlayer_onProgress(
       ptr,
@@ -1043,17 +1295,28 @@ class JuceLibGen {
   }
 
   late final _UnifiedAVPlayer_onProgressPtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Pointer<ffi.Void>,
-                  ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>)>>(
-      'UnifiedAVPlayer_onProgress');
-  late final _UnifiedAVPlayer_onProgress = _UnifiedAVPlayer_onProgressPtr.asFunction<
-      void Function(ffi.Pointer<ffi.Void>,
-          ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>)>();
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>,
+                          ffi.Float)>>)>>('UnifiedAVPlayer_onProgress');
+  late final _UnifiedAVPlayer_onProgress =
+      _UnifiedAVPlayer_onProgressPtr.asFunction<
+          void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>)>();
 
   void UnifiedAVPlayer_onStateUpdate(
     ffi.Pointer<ffi.Void> ptr,
-    ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>> callback,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(
+                    ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>
+        callback,
   ) {
     return _UnifiedAVPlayer_onStateUpdate(
       ptr,
@@ -1066,15 +1329,26 @@ class JuceLibGen {
               ffi.Void Function(
                   ffi.Pointer<ffi.Void>,
                   ffi.Pointer<
-                      ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
+                      ffi.NativeFunction<
+                          ffi.Void Function(ffi.Pointer<ffi.Void>,
+                              ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
       'UnifiedAVPlayer_onStateUpdate');
-  late final _UnifiedAVPlayer_onStateUpdate = _UnifiedAVPlayer_onStateUpdatePtr.asFunction<
-      void Function(ffi.Pointer<ffi.Void>,
-          ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>)>();
+  late final _UnifiedAVPlayer_onStateUpdate =
+      _UnifiedAVPlayer_onStateUpdatePtr.asFunction<
+          void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>,
+                          ffi.Pointer<pkg_ffi.Utf8>)>>)>();
 
   void UnifiedAVPlayer_onError(
     ffi.Pointer<ffi.Void> ptr,
-    ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>> callback,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(
+                    ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>
+        callback,
   ) {
     return _UnifiedAVPlayer_onError(
       ptr,
@@ -1087,15 +1361,25 @@ class JuceLibGen {
               ffi.Void Function(
                   ffi.Pointer<ffi.Void>,
                   ffi.Pointer<
-                      ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
+                      ffi.NativeFunction<
+                          ffi.Void Function(ffi.Pointer<ffi.Void>,
+                              ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
       'UnifiedAVPlayer_onError');
   late final _UnifiedAVPlayer_onError = _UnifiedAVPlayer_onErrorPtr.asFunction<
-      void Function(ffi.Pointer<ffi.Void>,
-          ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>)>();
+      void Function(
+          ffi.Pointer<ffi.Void>,
+          ffi.Pointer<
+              ffi.NativeFunction<
+                  ffi.Void Function(
+                      ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>)>();
 
   void UnifiedAVPlayer_onDeviceUpdate(
     ffi.Pointer<ffi.Void> ptr,
-    ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>> callback,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(
+                    ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>
+        callback,
   ) {
     return _UnifiedAVPlayer_onDeviceUpdate(
       ptr,
@@ -1108,9 +1392,16 @@ class JuceLibGen {
               ffi.Void Function(
                   ffi.Pointer<ffi.Void>,
                   ffi.Pointer<
-                      ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
+                      ffi.NativeFunction<
+                          ffi.Void Function(ffi.Pointer<ffi.Void>,
+                              ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
       'UnifiedAVPlayer_onDeviceUpdate');
-  late final _UnifiedAVPlayer_onDeviceUpdate = _UnifiedAVPlayer_onDeviceUpdatePtr.asFunction<
-      void Function(ffi.Pointer<ffi.Void>,
-          ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>)>();
+  late final _UnifiedAVPlayer_onDeviceUpdate =
+      _UnifiedAVPlayer_onDeviceUpdatePtr.asFunction<
+          void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>,
+                          ffi.Pointer<pkg_ffi.Utf8>)>>)>();
 }

@@ -24,9 +24,7 @@ GstPlayer::~GstPlayer() { PRINT("~GstPlayer"); }
 void GstPlayer::dispose() {
   juce::MessageManager::getInstanceWithoutCreating()->callAsync([&] {
     PRINT("GstPlayer::dispose");
-    _isPlaying = false;
-    _isPlayingInternal = false;
-    stop();
+    pause();
     teardownPipeline();
     std::thread thread([&] {
       gstTaskQueue.stopQueue();

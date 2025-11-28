@@ -77,7 +77,6 @@ public:
 
   void setAudioData(const char *json);
   void setAudioSettings(const char *json);
-  void resetAudioPlayBuffer();
   void exportToFile(const char *outputFile,
                     std::function<void(const char *)> completion);
 

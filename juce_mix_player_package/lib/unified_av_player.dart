@@ -108,9 +108,6 @@ class UnifiedAVPlayerController {
     _juceLib.UnifiedAVPlayer_setAudioSettings(_ptr, jsonStr.toNativeUtf8());
   }
 
-  void resetAudioPlayBuffer() {
-    _juceLib.UnifiedAVPlayer_resetAudioPlayBuffer(_ptr);
-  }
 
   Future<void> exportAudio(String outputPath) async {
     final completer = Completer<void>();

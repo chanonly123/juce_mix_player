@@ -97,7 +97,6 @@ EXPORT_C_FUNC void UnifiedAVPlayer_togglePlayPause(void *ptr);
 EXPORT_C_FUNC void UnifiedAVPlayer_setAudioData(void *ptr, const char *json);
 EXPORT_C_FUNC void UnifiedAVPlayer_setAudioSettings(void *ptr,
                                                     const char *json);
-EXPORT_C_FUNC void UnifiedAVPlayer_resetAudioPlayBuffer(void *ptr);
 EXPORT_C_FUNC void
 UnifiedAVPlayer_exportAudio(void *ptr, const char *outputPath,
                             void (*completion)(const char *));

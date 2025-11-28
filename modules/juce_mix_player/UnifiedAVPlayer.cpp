@@ -97,11 +97,15 @@ void UnifiedAVPlayer::dispose() {
   stopTimer();
 
   if (audioPlayer) {
+    audioPlayer->userContext = nullptr;
     audioPlayer->dispose();
+    audioPlayer = nullptr;
   }
 
   if (videoPlayer) {
+    videoPlayer->userContext = nullptr;
     videoPlayer->dispose();
+    videoPlayer = nullptr;
   }
 }
 
@@ -220,14 +224,6 @@ void UnifiedAVPlayer::setAudioSettings(const char *json) {
   audioPlayer->setSettings(json);
 }
 
-void UnifiedAVPlayer::resetAudioPlayBuffer() {
-  PRINT("UnifiedAVPlayer::resetAudioPlayBuffer");
-  const juce::ScopedLock scopedLock(lock);
-
-  if (audioPlayer) {
-    audioPlayer->resetPlayBuffer();
-  }
-}
 
 void UnifiedAVPlayer::exportToFile(
     const char *outputFile, std::function<void(const char *)> completion) {

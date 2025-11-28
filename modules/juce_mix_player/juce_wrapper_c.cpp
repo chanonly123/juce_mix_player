@@ -231,10 +231,6 @@ void UnifiedAVPlayer_setAudioSettings(void *ptr, const char *json) {
   static_cast<UnifiedAVPlayer *>(ptr)->setAudioSettings(json);
 }
 
-void UnifiedAVPlayer_resetAudioPlayBuffer(void *ptr) {
-  static_cast<UnifiedAVPlayer *>(ptr)->resetAudioPlayBuffer();
-}
-
 void UnifiedAVPlayer_exportAudio(void *ptr, const char *outputPath,
                                  void (*completion)(const char *)) {
   static_cast<UnifiedAVPlayer *>(ptr)->exportToFile(outputPath, completion);
