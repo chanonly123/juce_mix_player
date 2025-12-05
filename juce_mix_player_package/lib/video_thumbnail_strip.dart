@@ -78,6 +78,8 @@ class VideoThumbnailStrip extends StatefulWidget {
   final int initialEndMs;
   final Gradient? windowGradient;
   final double handleWidth;
+  final int? currentPositionMs;
+  final bool showProgressSeeker;
 
   VideoThumbnailStrip({
     Key? key,
@@ -98,6 +100,8 @@ class VideoThumbnailStrip extends StatefulWidget {
     int? initialEndMs,
     this.windowGradient,
     this.handleWidth = 0,
+    this.currentPositionMs,
+    this.showProgressSeeker = true,
   })  : initialEndMs = initialEndMs ?? videoDuration.inMilliseconds,
         assert(thumbnailCount > 0),
         assert(maxMemoryCache > 0),
@@ -484,11 +488,18 @@ class _VideoThumbnailStripState extends State<VideoThumbnailStrip> {
               painter: GradientBorderPainter(
                 gradient: widget.windowGradient ?? const LinearGradient(colors: [Colors.white, Colors.white]),
                 width: 2,
-                radius: 8, // rounded trim box
+                radius: 8,
               ),
             ),
           ),
         ),
+
+        // Progress indicator (readonly)
+        if (widget.showProgressSeeker &&
+            widget.currentPositionMs != null &&
+            widget.currentPositionMs! >= _trimStartMs &&
+            widget.currentPositionMs! <= _trimEndMs)
+          _buildProgressIndicator(containerWidth, leftPos, trimWidth),
 
         // Left handle
         Positioned(
@@ -532,6 +543,25 @@ class _VideoThumbnailStripState extends State<VideoThumbnailStrip> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildProgressIndicator(double containerWidth, double leftPos, double trimWidth) {
+    final trimDurationMs = _trimEndMs - _trimStartMs;
+    final progressInTrim = widget.currentPositionMs! - _trimStartMs;
+    final progressFraction = progressInTrim / trimDurationMs;
+    final progressOffset = progressFraction * trimWidth;
+
+    return Positioned(
+      left: leftPos + progressOffset - 1,
+      top: 0,
+      bottom: 0,
+      width: 2,
+      child: IgnorePointer(
+        child: Container(
+          color: Colors.white,
+        ),
+      ),
     );
   }
 

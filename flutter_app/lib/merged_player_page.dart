@@ -53,6 +53,8 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
   bool isAudioPanelExpanded = true;
   bool isVideoPanelExpanded = false;
   bool isVideoLoading = false;
+  int trimStartMs = 0;
+  int trimEndMs = 0;
 
   bool hasAudioLoaded = false;
   bool isOverlayVisible = true;
@@ -480,15 +482,18 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                         ),
                         child: VideoThumbnailStrip(
                           filePath: currentVideoPath!,
-                          videoDuration: Duration(seconds: 60), // videoDuration.toInt()
+                          videoDuration: Duration(seconds: 60),
                           maxTrimDurationMs: Duration(seconds: player.getDuration().toInt()).inMilliseconds,
                           initialEndMs: Duration(seconds: player.getDuration().toInt()).inMilliseconds,
                           windowGradient: gradientPurpleBorder,
+                          currentPositionMs: trimStartMs + (progress * player.getDuration() * 1000).toInt(),
                           onTrimChangeEnd: (TrimData trimData) {
                             print('Trim Start: ${trimData.startMs}ms');
                             print('Trim End: ${trimData.endMs}ms');
                             print('Duration: ${trimData.durationMs}ms');
                             print('Formatted: ${trimData.start} to ${trimData.end}');
+                            trimStartMs = trimData.startMs;
+                            trimEndMs = trimData.endMs;
                             player.setVideoTrimRange(trimData.startMs, trimData.endMs);
                           },
                         ),
