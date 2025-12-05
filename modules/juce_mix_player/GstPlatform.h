@@ -1,9 +1,9 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include <map>
 #include <memory>
 #include <string>
-#include <map>
 
 extern "C" {
 #include <gst/gst.h>
