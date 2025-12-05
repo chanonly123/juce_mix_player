@@ -9,6 +9,7 @@ import 'package:juce_mix_player/gst_video_player.dart';
 import 'package:juce_mix_player/juce_mix_player.dart';
 import 'package:juce_mix_player/unified_av_player.dart';
 import 'package:juce_mix_player/unified_video_view.dart';
+import 'package:juce_mix_player/video_thumbnail_strip.dart';
 
 class MergedPlayerPage extends StatefulWidget {
   const MergedPlayerPage({super.key});
@@ -18,6 +19,17 @@ class MergedPlayerPage extends StatefulWidget {
 }
 
 class MergedPlayerPageState extends State<MergedPlayerPage> {
+  static const LinearGradient gradientPurpleBorder = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [
+      Color(0xFFF74BF7),
+      Color(0xFF080C28),
+      Color(0xFF2FE4F9),
+    ],
+    stops: [0.0, 0.515, 1.0],
+  );
+
   late UnifiedAVPlayerController player;
 
   double progress = 0.0;
@@ -63,6 +75,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
   };
 
   bool isDiscarding = false;
+  String? currentVideoPath;
 
   @override
   void initState() {
@@ -155,6 +168,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
       setState(() {
         hasVideoLoaded = true;
         isVideoLoading = false;
+        currentVideoPath = path;
       });
       _showSnack('Sample video loaded', isSuccess: true);
     } catch (e) {
@@ -176,6 +190,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
         setState(() {
           hasVideoLoaded = true;
           isVideoLoading = false;
+          currentVideoPath = video.path;
         });
         _showSnack('Video loaded: ${video.name}', isSuccess: true);
       } catch (e) {
@@ -380,7 +395,6 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                       ),
                     ),
                   ),
-
                   Positioned.fill(
                     child: GestureDetector(
                       behavior: HitTestBehavior.translucent,
@@ -410,42 +424,36 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                                   ],
                                 ),
                               ),
-
                               Positioned(
                                 bottom: 16,
                                 left: 16,
                                 right: 16,
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
+                                child: Row(
                                   children: [
-                                    Row(
-                                      children: [
-                                        Text(
-                                          TimeUtils.formatDuration(progress * player.getDuration()),
-                                          style: const TextStyle(color: Colors.white, fontSize: 12),
-                                        ),
-                                        Expanded(
-                                          child: Slider(
-                                            value: progress,
-                                            onChanged: (value) {
-                                              setState(() => progress = value);
-                                              _resetOverlayTimer();
-                                            },
-                                            onChangeStart: (_) => isSliderEditing = true,
-                                            onChangeEnd: (value) {
-                                              isSliderEditing = false;
-                                              player.seek(value);
-                                              _resetOverlayTimer();
-                                            },
-                                            activeColor: Colors.cyanAccent,
-                                            inactiveColor: Colors.white24,
-                                          ),
-                                        ),
-                                        Text(
-                                          TimeUtils.formatDuration(player.getDuration()),
-                                          style: const TextStyle(color: Colors.white, fontSize: 12),
-                                        ),
-                                      ],
+                                    Text(
+                                      TimeUtils.formatDuration(progress * player.getDuration()),
+                                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                                    ),
+                                    Expanded(
+                                      child: Slider(
+                                        value: progress,
+                                        onChanged: (value) {
+                                          setState(() => progress = value);
+                                          _resetOverlayTimer();
+                                        },
+                                        onChangeStart: (_) => isSliderEditing = true,
+                                        onChangeEnd: (value) {
+                                          isSliderEditing = false;
+                                          player.seek(value);
+                                          _resetOverlayTimer();
+                                        },
+                                        activeColor: Colors.cyanAccent,
+                                        inactiveColor: Colors.white24,
+                                      ),
+                                    ),
+                                    Text(
+                                      TimeUtils.formatDuration(player.getDuration()),
+                                      style: const TextStyle(color: Colors.white, fontSize: 12),
                                     ),
                                   ],
                                 ),
@@ -456,7 +464,32 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                       ),
                     ),
                   ),
-
+                  if (currentVideoPath != null)
+                    Positioned(
+                      bottom: 60,
+                      left: 16,
+                      right: 16,
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: VideoThumbnailStrip(
+                          filePath: currentVideoPath!,
+                          videoDuration: Duration(seconds:94),// Duration(seconds: player.getDuration().toInt()),
+                          maxTrimDurationMs: Duration(seconds: player.getDuration().toInt()).inMilliseconds,
+                          initialEndMs: Duration(seconds: player.getDuration().toInt()).inMilliseconds,
+                          windowGradient: gradientPurpleBorder,
+                          onTrimChangeEnd: (TrimData trimData) {
+                            print('Trim Start: ${trimData.startMs}ms');
+                            print('Trim End: ${trimData.endMs}ms');
+                            print('Duration: ${trimData.durationMs}ms');
+                            print('Formatted: ${trimData.start} to ${trimData.end}');
+                          },
+                        ),
+                      ),
+                    ),
                   Positioned(
                     top: MediaQuery.of(context).padding.top + 16,
                     left: 16,
@@ -486,7 +519,6 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                 ],
               ),
             ),
-
             Container(
               color: const Color(0xFF1E1E1E),
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
@@ -512,6 +544,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                           setState(() {
                             hasVideoLoaded = false;
                             isVideoViewReady = false;
+                            currentVideoPath = null;
                           });
                         },
                         icon: const Icon(Icons.videocam_off_outlined, color: Colors.redAccent),
@@ -546,7 +579,6 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
             ),
           ],
         ),
-
         if (showVolumeBars.containsValue(true))
           Positioned.fill(
             child: GestureDetector(
@@ -720,9 +752,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                           );
                         }).toList(),
                       ),
-
                       const Divider(color: Colors.white24),
-
                       Row(
                         children: const [
                           Icon(Icons.compare_arrows, size: 16, color: Colors.white70),
@@ -852,7 +882,6 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
     );
   }
 
-
   void _discardPage() {
     setState(() {
       isDiscarding = true;
@@ -873,6 +902,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
         isPlaying = false;
         state = JuceMixPlayerState.IDLE;
         lastMixerComposeModel = null;
+        currentVideoPath = null;
       });
     });
   }

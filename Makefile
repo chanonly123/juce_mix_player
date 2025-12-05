@@ -21,3 +21,7 @@ build-ios:
 
 clean-all:
 	cd flutter_app && fvm flutter clean && fvm flutter pub get && cd ios && pod deintegrate && pod install
+
+pub:
+	cd flutter_app && fvm flutter pub get
+	cd flutter_app/ios && pod install
