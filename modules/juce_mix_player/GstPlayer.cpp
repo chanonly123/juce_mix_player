@@ -62,9 +62,10 @@ void GstPlayer::_playInternal() {
     if (_isCompleted) {
       _isCompleted = false;
       _progress = 0.0f;
+      gint64 startNs = static_cast<gint64>(_trimStartMs * 1e6);
       gst_element_seek_simple(
           pipeline, GST_FORMAT_TIME,
-          GstSeekFlags(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT), 0);
+          GstSeekFlags(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT), startNs);
     }
 
     _isPlaying = true;
@@ -137,16 +138,18 @@ void GstPlayer::seek(float normalizedPos) {
       return;
     }
 
-    gint64 targetMs = static_cast<gint64>(_durationMs * seekPos);
-    _lastSeekMs = targetMs;
+    double trimmedDurationMs =
+        (_trimEndMs > 0 ? _trimEndMs : (double)_durationMs) - _trimStartMs;
+    double targetMs = _trimStartMs + (trimmedDurationMs * seekPos);
+    gint64 targetMsInt = static_cast<gint64>(targetMs);
+    _lastSeekMs = targetMsInt;
 
-    gint64 target = targetMs * 1000000;
-    std::cout << "GstPlayer::seek: target ns: " << target << std::endl;
+    gint64 target = targetMsInt * 1000000;
+    std::cout << "GstPlayer::seek: target ns: " << target << " (trimmed from "
+              << _trimStartMs << "ms)" << std::endl;
 
     bool result = gst_element_seek(
-        pipeline,
-        1.0, // playback rate
-        GST_FORMAT_TIME,
+        pipeline, 1.0, GST_FORMAT_TIME,
         (GstSeekFlags)(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE),
         GST_SEEK_TYPE_SET, target, GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE);
 
@@ -451,26 +454,34 @@ void GstPlayer::timerCallback() {
       gint64 posNs = 0;
 
       if (gst_element_query_position(pipeline, GST_FORMAT_TIME, &posNs)) {
-        double posMs = (double)posNs / 1000000.0;
-        _progress = (float)(posMs / (double)_durationMs);
-        _progress = std::clamp(_progress, 0.0f, 1.0f);
-        if (onProgressCallback) {
-          double segMs = (double)posNs / 1000000.0;
-          double absoluteMs = segMs;
-          if (_durationMs > 0 && _lastSeekMs > 0) {
-            double targetMs = (double)_lastSeekMs;
-            // If GStreamer is reporting a small time that is
-            // clearly before the last seek target, treat segMs
-            // as an offset from that target on the full
-            // timeline (segment-relative position).
-            if (segMs + 1.0 < targetMs) {
-              absoluteMs = targetMs + segMs;
+        double posMs = (double)posNs / 1e6;
+        double trimmedDurationMs =
+            (_trimEndMs > 0 ? _trimEndMs : (double)_durationMs) - _trimStartMs;
+
+        if (trimmedDurationMs > 0) {
+          double relativePosMs = posMs - _trimStartMs;
+          _progress = (float)(relativePosMs / trimmedDurationMs);
+          _progress = std::clamp(_progress, 0.0f, 1.0f);
+
+          if (_trimEndMs > 0 && posMs >= _trimEndMs) {
+            _isPlaying = false;
+            _isPlayingInternal = false;
+            _isCompleted = true;
+            _stopProgressTimer();
+            _progress = 1.0f;
+            if (pipeline) {
+              gst_element_set_state(pipeline, GST_STATE_PAUSED);
             }
+            if (onProgressCallback) {
+              onProgressCallback(this, _progress);
+            }
+            notifyState(JuceMixPlayerState::COMPLETED);
+            return;
           }
-          float corrected = (float)(absoluteMs / (double)_durationMs);
-          corrected = std::clamp(corrected, 0.0f, 1.0f);
-          _progress = corrected;
-          onProgressCallback(this, _progress);
+
+          if (onProgressCallback) {
+            onProgressCallback(this, _progress);
+          }
         }
       }
     }
@@ -513,6 +524,9 @@ void GstPlayer::setVideoPath(const char *path) {
 
     _durationMs = _getDurationInternal();
     PRINT("Duration: " + std::to_string(_durationMs) + " ms");
+
+    _trimStartMs = 0.0;
+    _trimEndMs = (double)_durationMs;
 
     _isReady = true;
     notifyState(JuceMixPlayerState::READY);
@@ -860,3 +874,26 @@ void GstPlayer::pollBus() {
     gst_message_unref(msg);
   }
 }
+
+void GstPlayer::setTrimRange(int startMs, int endMs) {
+  PRINT("GstPlayer::setTrimRange: start=" + std::to_string(startMs) +
+        "ms, end=" + std::to_string(endMs) + "ms");
+
+  if (_durationMs <= 0) {
+    PRINT("Warning: Cannot set trim range - no video loaded");
+    return;
+  }
+
+  int validStart = std::max(0, std::min(startMs, (int)_durationMs));
+  int validEnd = std::max(validStart, std::min(endMs, (int)_durationMs));
+
+  _trimStartMs = validStart;
+  _trimEndMs = validEnd;
+
+  PRINT("Trim range set: " + std::to_string(_trimStartMs) + "ms to " +
+        std::to_string(_trimEndMs) + "ms");
+}
+
+int GstPlayer::getTrimStart() { return _trimStartMs; }
+
+int GstPlayer::getTrimEnd() { return _trimEndMs; }

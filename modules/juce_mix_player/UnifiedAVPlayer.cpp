@@ -268,8 +268,8 @@ void UnifiedAVPlayer::setVideoPath(const char *path) {
 
   videoPath = std::string(path);
   videoPlayer->setVideoPath(path);
-//  videoDuration = videoPlayer->getDurationInSecs();
-//  PRINT("Video duration: " << videoDuration << " seconds");
+  //  videoDuration = videoPlayer->getDurationInSecs();
+  //  PRINT("Video duration: " << videoDuration << " seconds");
 }
 
 void UnifiedAVPlayer::setVideoSurfaceHandle(void *handle) {
@@ -313,8 +313,21 @@ void UnifiedAVPlayer::setVideoVisualEffect(int effectId) {
   if (!hasVideo || !videoPlayer) {
     return;
   }
-
   videoPlayer->setVisualEffect(effectId);
+}
+
+void UnifiedAVPlayer::setVideoTrimRange(int startMs, int endMs) {
+  PRINT("UnifiedAVPlayer::setVideoTrimRange: start=" << startMs << "ms, end="
+                                                     << endMs << "ms");
+  const juce::ScopedLock scopedLock(lock);
+  if (!hasVideo || !videoPlayer) {
+    return;
+  }
+
+  pause();
+  _resetAudioToInitialState();
+  
+  videoPlayer->setTrimRange(startMs, endMs);
 }
 
 void UnifiedAVPlayer::exportVideo(

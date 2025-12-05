@@ -63,6 +63,14 @@ typedef _setVisualEffect_dart_t = void Function(Pointer<Void>, int);
 typedef _exportVideo_t = Void Function(Pointer<Void>, Pointer<Utf8>, Pointer<NativeFunction<_StringCallback>>);
 typedef _exportVideo_dart_t = void Function(Pointer<Void>, Pointer<Utf8>, Pointer<NativeFunction<_StringCallback>>);
 
+// Trim range function typedefs (in milliseconds)
+typedef _setTrimRange_t = Void Function(Pointer<Void>, Int32, Int32);
+typedef _setTrimRange_dart_t = void Function(Pointer<Void>, int, int);
+typedef _getTrimStart_t = Int32 Function(Pointer<Void>);
+typedef _getTrimStart_dart_t = int Function(Pointer<Void>);
+typedef _getTrimEnd_t = Int32 Function(Pointer<Void>);
+typedef _getTrimEnd_dart_t = int Function(Pointer<Void>);
+
 class GstPlayerController {
   // Open the same native library as JuceMixPlayer uses
   static DynamicLibrary _openLib() =>
@@ -74,8 +82,9 @@ class GstPlayerController {
 
   // Local state tracking
   bool _isMuted = false;
-  // Normalized position [0..1] from native progress callback
   double _currentPosition = 0.0;
+  int _trimStart = 0;
+  int _trimEnd = 0;
 
   // native function lookups
   late final _init_t _init;
@@ -98,6 +107,11 @@ class GstPlayerController {
   late final _setRotation_dart_t _setRotation;
   late final _setVisualEffect_dart_t _setVisualEffect;
   late final _exportVideo_dart_t _exportVideo;
+
+  // Trim range functions
+  late final _setTrimRange_dart_t _setTrimRange;
+  late final _getTrimStart_dart_t _getTrimStart;
+  late final _getTrimEnd_dart_t _getTrimEnd;
 
   NativeCallable<_FloatCallback>? _progressCallback;
   NativeCallable<_StringUpdateCallback>? _stateCallback;
@@ -129,6 +143,11 @@ class GstPlayerController {
     _setRotation = _lib.lookupFunction<_setRotation_t, _setRotation_dart_t>('GstPlayer_setRotation');
     _setVisualEffect = _lib.lookupFunction<_setVisualEffect_t, _setVisualEffect_dart_t>('GstPlayer_setVisualEffect');
     _exportVideo = _lib.lookupFunction<_exportVideo_t, _exportVideo_dart_t>('GstPlayer_exportVideo');
+
+    // Trim range function lookups
+    _setTrimRange = _lib.lookupFunction<_setTrimRange_t, _setTrimRange_dart_t>('GstPlayer_setTrimRange');
+    _getTrimStart = _lib.lookupFunction<_getTrimStart_t, _getTrimStart_dart_t>('GstPlayer_getTrimStart');
+    _getTrimEnd = _lib.lookupFunction<_getTrimEnd_t, _getTrimEnd_dart_t>('GstPlayer_getTrimEnd');
 
     _ptr = _init();
   }
@@ -222,6 +241,23 @@ class GstPlayerController {
     } finally {
       callback.close();
     }
+  }
+
+  void setTrimRange(int startMs, int endMs) {
+    int durationMs = (getDurationInSecs() * 1000).toInt();
+    if (durationMs > 0) {
+      _trimStart = startMs.clamp(0, durationMs);
+      _trimEnd = endMs.clamp(_trimStart, durationMs);
+      _setTrimRange(_ptr, _trimStart, _trimEnd);
+    }
+  }
+
+  int getTrimStartMs() {
+    return _getTrimStart(_ptr);
+  }
+
+  int getTrimEndMs() {
+    return _getTrimEnd(_ptr);
   }
 
   // Expose native pointer address for PlatformView handoff

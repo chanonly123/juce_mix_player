@@ -150,6 +150,10 @@ class UnifiedAVPlayerController {
     _juceLib.UnifiedAVPlayer_setVideoVisualEffect(_ptr, effectId);
   }
 
+  void setVideoTrimRange(int startMs, int endMs) {
+    _juceLib.UnifiedAVPlayer_setVideoTrimRange(_ptr, startMs, endMs);
+  }
+
   Future<void> exportVideo(String outputPath) async {
     final completer = Completer<void>();
 

@@ -480,7 +480,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                         ),
                         child: VideoThumbnailStrip(
                           filePath: currentVideoPath!,
-                          videoDuration: Duration(seconds: videoDuration.toInt()),
+                          videoDuration: Duration(seconds: 60), // videoDuration.toInt()
                           maxTrimDurationMs: Duration(seconds: player.getDuration().toInt()).inMilliseconds,
                           initialEndMs: Duration(seconds: player.getDuration().toInt()).inMilliseconds,
                           windowGradient: gradientPurpleBorder,
@@ -489,6 +489,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                             print('Trim End: ${trimData.endMs}ms');
                             print('Duration: ${trimData.durationMs}ms');
                             print('Formatted: ${trimData.start} to ${trimData.end}');
+                            player.setVideoTrimRange(trimData.startMs, trimData.endMs);
                           },
                         ),
                       ),

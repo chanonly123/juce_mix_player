@@ -83,6 +83,9 @@ EXPORT_C_FUNC void GstPlayer_setFlip(void *ptr, int method);
 EXPORT_C_FUNC void GstPlayer_setVisualEffect(void *ptr, int effectId);
 EXPORT_C_FUNC void GstPlayer_exportVideo(void *ptr, const char *outputPath,
                                          void (*completion)(const char *));
+EXPORT_C_FUNC void GstPlayer_setTrimRange(void *ptr, int startMs, int endMs);
+EXPORT_C_FUNC int GstPlayer_getTrimStart(void *ptr);
+EXPORT_C_FUNC int GstPlayer_getTrimEnd(void *ptr);
 
 // MARK: UnifiedAVPlayer
 EXPORT_C_FUNC void *UnifiedAVPlayer_new();
@@ -106,6 +109,8 @@ EXPORT_C_FUNC void UnifiedAVPlayer_setVideoRotation(void *ptr, int degrees);
 EXPORT_C_FUNC void UnifiedAVPlayer_setVideoFlip(void *ptr, int method);
 EXPORT_C_FUNC void UnifiedAVPlayer_setVideoVisualEffect(void *ptr,
                                                         int effectId);
+EXPORT_C_FUNC void UnifiedAVPlayer_setVideoTrimRange(void *ptr, int startMs,
+                                                     int endMs);
 EXPORT_C_FUNC void
 UnifiedAVPlayer_exportVideo(void *ptr, const char *outputPath,
                             void (*completion)(const char *));

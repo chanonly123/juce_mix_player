@@ -31,8 +31,12 @@ class VideoPlayerState extends State<VideoPlayerPage> {
   bool _isExporting = false;
   bool _isDragging = false;
 
-  // --- UI State Variables ---
-  bool _isToolsPanelOpen = false; // Controls the visibility of the edit tray
+  // UI State Variables
+  bool _isToolsPanelOpen = false;
+
+  // Trim state
+  int _trimStart = 0;
+  int _trimEnd = 0;
 
   @override
   void initState() {
@@ -45,7 +49,7 @@ class VideoPlayerState extends State<VideoPlayerPage> {
       if (mounted) {
         setState(() {
           if (!_isDragging) {
-             _seekPosition = progress;
+            _seekPosition = progress;
           }
           _currentPosition = progress * _duration;
         });
@@ -63,6 +67,9 @@ class VideoPlayerState extends State<VideoPlayerPage> {
             double dur = player.getDurationInSecs();
             print("READY $dur");
             _duration = dur;
+            _trimStart = 0;
+            _trimEnd = (dur * 1000).toInt();
+            player.setTrimRange(_trimStart, _trimEnd);
           }
 
           if (state == "STOPPED" || state == "ERROR" || state == "IDLE") {
@@ -487,7 +494,61 @@ class VideoPlayerState extends State<VideoPlayerPage> {
 
           const SizedBox(height: 12),
 
-          // 4. Export Button (Full Width)
+          // 4. Trim Range Controls
+          const Row(
+            children: [
+              Icon(Icons.content_cut, size: 20, color: Colors.grey),
+              SizedBox(width: 12),
+              Text('TRIM RANGE', style: TextStyle(fontSize: 11, color: Colors.grey)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Text('Start:', style: TextStyle(fontSize: 11)),
+              Expanded(
+                child: Slider(
+                  value: _trimStart.toDouble(),
+                  min: 0.0,
+                  max: _duration * 1000.0,
+                  onChanged: _hasVideoLoaded
+                      ? (v) {
+                          setState(() {
+                            _trimStart = v.clamp(0.0, _trimEnd).toInt();
+                            player.setTrimRange(_trimStart, _trimEnd);
+                          });
+                        }
+                      : null,
+                ),
+              ),
+              Text(TimeUtils.formatDuration(_trimStart / 1000.0), style: const TextStyle(fontSize: 11)),
+            ],
+          ),
+          Row(
+            children: [
+              const Text('End:', style: TextStyle(fontSize: 11)),
+              Expanded(
+                child: Slider(
+                  value: _trimEnd.toDouble(),
+                  min: 0.0,
+                  max: _duration * 1000.0,
+                  onChanged: _hasVideoLoaded
+                      ? (v) {
+                          setState(() {
+                            _trimEnd = v.clamp(_trimStart, _duration * 1000.0).toInt();
+                            player.setTrimRange(_trimStart, _trimEnd);
+                          });
+                        }
+                      : null,
+                ),
+              ),
+              Text(TimeUtils.formatDuration(_trimEnd / 1000.0), style: const TextStyle(fontSize: 11)),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          // 5. Export Button (Full Width)
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(

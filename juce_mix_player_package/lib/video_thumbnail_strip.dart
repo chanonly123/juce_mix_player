@@ -97,7 +97,7 @@ class VideoThumbnailStrip extends StatefulWidget {
     this.initialStartMs = 0,
     int? initialEndMs,
     this.windowGradient,
-    this.handleWidth = 4.0,
+    this.handleWidth = 0,
   })  : initialEndMs = initialEndMs ?? videoDuration.inMilliseconds,
         assert(thumbnailCount > 0),
         assert(maxMemoryCache > 0),

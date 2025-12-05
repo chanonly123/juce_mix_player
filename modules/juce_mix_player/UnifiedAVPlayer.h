@@ -66,7 +66,7 @@ public:
   void play();
   void pause();
   void stop();
-  void seek(float normalizedPos); // 0.0 to 1.0
+  void seek(float normalizedPos);
   void togglePlayPause();
 
   void setAudioData(const char *json);
@@ -79,6 +79,7 @@ public:
   void setVideoRotation(int degrees);
   void setVideoFlip(int method);
   void setVideoVisualEffect(int effectId);
+  void setVideoTrimRange(int startMs, int endMs);
 
   void exportVideo(const char *outputPath,
                    std::function<void(const char *)> completion);

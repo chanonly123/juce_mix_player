@@ -910,6 +910,53 @@ class JuceLibGen {
               ffi.NativeFunction<
                   ffi.Void Function(ffi.Pointer<pkg_ffi.Utf8>)>>)>();
 
+  void GstPlayer_setTrimRange(
+    ffi.Pointer<ffi.Void> ptr,
+    int startMs,
+    int endMs,
+  ) {
+    return _GstPlayer_setTrimRange(
+      ptr,
+      startMs,
+      endMs,
+    );
+  }
+
+  late final _GstPlayer_setTrimRangePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Int,
+              ffi.Int)>>('GstPlayer_setTrimRange');
+  late final _GstPlayer_setTrimRange = _GstPlayer_setTrimRangePtr.asFunction<
+      void Function(ffi.Pointer<ffi.Void>, int, int)>();
+
+  int GstPlayer_getTrimStart(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _GstPlayer_getTrimStart(
+      ptr,
+    );
+  }
+
+  late final _GstPlayer_getTrimStartPtr =
+      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Pointer<ffi.Void>)>>(
+          'GstPlayer_getTrimStart');
+  late final _GstPlayer_getTrimStart = _GstPlayer_getTrimStartPtr.asFunction<
+      int Function(ffi.Pointer<ffi.Void>)>();
+
+  int GstPlayer_getTrimEnd(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _GstPlayer_getTrimEnd(
+      ptr,
+    );
+  }
+
+  late final _GstPlayer_getTrimEndPtr =
+      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Pointer<ffi.Void>)>>(
+          'GstPlayer_getTrimEnd');
+  late final _GstPlayer_getTrimEnd = _GstPlayer_getTrimEndPtr.asFunction<
+      int Function(ffi.Pointer<ffi.Void>)>();
+
   ffi.Pointer<ffi.Void> UnifiedAVPlayer_new() {
     return _UnifiedAVPlayer_new();
   }
@@ -1164,6 +1211,26 @@ class JuceLibGen {
   late final _UnifiedAVPlayer_setVideoVisualEffect =
       _UnifiedAVPlayer_setVideoVisualEffectPtr.asFunction<
           void Function(ffi.Pointer<ffi.Void>, int)>();
+
+  void UnifiedAVPlayer_setVideoTrimRange(
+    ffi.Pointer<ffi.Void> ptr,
+    int startMs,
+    int endMs,
+  ) {
+    return _UnifiedAVPlayer_setVideoTrimRange(
+      ptr,
+      startMs,
+      endMs,
+    );
+  }
+
+  late final _UnifiedAVPlayer_setVideoTrimRangePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Int,
+              ffi.Int)>>('UnifiedAVPlayer_setVideoTrimRange');
+  late final _UnifiedAVPlayer_setVideoTrimRange =
+      _UnifiedAVPlayer_setVideoTrimRangePtr.asFunction<
+          void Function(ffi.Pointer<ffi.Void>, int, int)>();
 
   void UnifiedAVPlayer_exportVideo(
     ffi.Pointer<ffi.Void> ptr,

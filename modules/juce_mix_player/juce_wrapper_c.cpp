@@ -186,6 +186,18 @@ void GstPlayer_setVisualEffect(void *ptr, int effectId) {
   static_cast<GstPlayer *>(ptr)->setVisualEffect(effectId);
 }
 
+void GstPlayer_setTrimRange(void *ptr, int startMs, int endMs) {
+  static_cast<GstPlayer *>(ptr)->setTrimRange(startMs, endMs);
+}
+
+int GstPlayer_getTrimStart(void *ptr) {
+  return static_cast<GstPlayer *>(ptr)->getTrimStart();
+}
+
+int GstPlayer_getTrimEnd(void *ptr) {
+  return static_cast<GstPlayer *>(ptr)->getTrimEnd();
+}
+
 void GstPlayer_exportVideo(void *ptr, const char *outputPath,
                            void (*completion)(const char *)) {
   static_cast<GstPlayer *>(ptr)->exportVideo(outputPath, completion);
@@ -254,6 +266,10 @@ void UnifiedAVPlayer_setVideoFlip(void *ptr, int method) {
 }
 void UnifiedAVPlayer_setVideoVisualEffect(void *ptr, int effectId) {
   static_cast<UnifiedAVPlayer *>(ptr)->setVideoVisualEffect(effectId);
+}
+
+void UnifiedAVPlayer_setVideoTrimRange(void *ptr, int startMs, int endMs) {
+  static_cast<UnifiedAVPlayer *>(ptr)->setVideoTrimRange(startMs, endMs);
 }
 
 void UnifiedAVPlayer_exportVideo(void *ptr, const char *outputPath,

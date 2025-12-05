@@ -48,6 +48,9 @@ private:
   VisualEffect _currentEffect = VisualEffect::NONE;
   bool _blackOverlayEnabled = false;
 
+  int _trimStartMs = 0.0;
+  int _trimEndMs = 0.0;
+
   double progressUpdateIntervalSec = 0.10;
 
   GstElement *pipeline = nullptr;
@@ -109,8 +112,10 @@ public:
   void setFlip(int method);
   void setVisualEffect(int effectId);
   void setBlackOverlayEnabled(int enabled);
-  void exportVideo(const char *outputPath,
-                   std::function<void(const char *)> completion);
+  void setTrimRange(int startMs, int endMs);
+  int getTrimStart();
+  int getTrimEnd();
+  void exportVideo(const char *outputPath, std::function<void(const char *)> completion);
   void setMuteEmbeddedAudio(int mute);
   void setSurfaceHandle(void *handle);
   void timerCallback() override;
