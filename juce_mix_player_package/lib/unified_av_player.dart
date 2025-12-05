@@ -176,6 +176,10 @@ class UnifiedAVPlayerController {
     return _juceLib.UnifiedAVPlayer_getDuration(_ptr);
   }
 
+  double getVideoDuration() {
+    return _juceLib.UnifiedAVPlayer_getVideoDuration(_ptr);
+  }
+
   double getCurrentTime() {
     return _juceLib.UnifiedAVPlayer_getCurrentTime(_ptr);
   }

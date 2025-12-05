@@ -84,6 +84,7 @@ public:
                    std::function<void(const char *)> completion);
 
   float getDuration();
+  float getVideoDuration();
   float getCurrentTime();
   bool getIsPlaying();
   std::string getCurrentState();

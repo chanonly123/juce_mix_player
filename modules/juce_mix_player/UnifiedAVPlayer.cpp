@@ -268,6 +268,8 @@ void UnifiedAVPlayer::setVideoPath(const char *path) {
 
   videoPath = std::string(path);
   videoPlayer->setVideoPath(path);
+//  videoDuration = videoPlayer->getDurationInSecs();
+//  PRINT("Video duration: " << videoDuration << " seconds");
 }
 
 void UnifiedAVPlayer::setVideoSurfaceHandle(void *handle) {
@@ -336,6 +338,8 @@ float UnifiedAVPlayer::getDuration() {
   }
   return 0.0f;
 }
+
+float UnifiedAVPlayer::getVideoDuration() { return videoDuration; }
 
 float UnifiedAVPlayer::getCurrentTime() {
   if (audioPlayer) {
@@ -416,8 +420,6 @@ void UnifiedAVPlayer::_handleVideoStateChange(const std::string &state) {
     videoDuration = videoPlayer->getDurationInSecs();
     hasVideo = true;
     isVideoAfterEndForPlayback = false;
-    PRINT("Video ready, duration: " << videoDuration);
-
     videoPlayer->setMuteEmbeddedAudio(1);
 
     if (audioDuration > 0) {

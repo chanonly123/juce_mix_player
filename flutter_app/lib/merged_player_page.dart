@@ -66,6 +66,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
 
   double guideVolume = 1.0;
   double metronomeVolume = 1.0;
+  double videoDuration = 0.0;
 
   final Map<String, LayerLink> _layerLinks = {
     'bgm': LayerLink(),
@@ -170,6 +171,8 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
         isVideoLoading = false;
         currentVideoPath = path;
       });
+      videoDuration = player.getVideoDuration();
+      print('Video duration -------------- : $videoDuration');
       _showSnack('Sample video loaded', isSuccess: true);
     } catch (e) {
       setState(() => isVideoLoading = false);
@@ -477,7 +480,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                         ),
                         child: VideoThumbnailStrip(
                           filePath: currentVideoPath!,
-                          videoDuration: Duration(seconds:94),// Duration(seconds: player.getDuration().toInt()),
+                          videoDuration: Duration(seconds: videoDuration.toInt()),
                           maxTrimDurationMs: Duration(seconds: player.getDuration().toInt()).inMilliseconds,
                           initialEndMs: Duration(seconds: player.getDuration().toInt()).inMilliseconds,
                           windowGradient: gradientPurpleBorder,

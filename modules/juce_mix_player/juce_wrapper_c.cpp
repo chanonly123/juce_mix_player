@@ -266,6 +266,10 @@ float UnifiedAVPlayer_getDuration(void *ptr) {
   return static_cast<UnifiedAVPlayer *>(ptr)->getDuration();
 }
 
+float UnifiedAVPlayer_getVideoDuration(void *ptr) {
+  return static_cast<UnifiedAVPlayer *>(ptr)->getVideoDuration();
+}
+
 float UnifiedAVPlayer_getCurrentTime(void *ptr) {
   return static_cast<UnifiedAVPlayer *>(ptr)->getCurrentTime();
 }

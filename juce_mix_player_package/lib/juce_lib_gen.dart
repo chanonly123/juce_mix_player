@@ -1211,6 +1211,21 @@ class JuceLibGen {
   late final _UnifiedAVPlayer_getDuration = _UnifiedAVPlayer_getDurationPtr
       .asFunction<double Function(ffi.Pointer<ffi.Void>)>();
 
+  double UnifiedAVPlayer_getVideoDuration(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _UnifiedAVPlayer_getVideoDuration(
+      ptr,
+    );
+  }
+
+  late final _UnifiedAVPlayer_getVideoDurationPtr =
+      _lookup<ffi.NativeFunction<ffi.Float Function(ffi.Pointer<ffi.Void>)>>(
+          'UnifiedAVPlayer_getVideoDuration');
+  late final _UnifiedAVPlayer_getVideoDuration =
+      _UnifiedAVPlayer_getVideoDurationPtr.asFunction<
+          double Function(ffi.Pointer<ffi.Void>)>();
+
   double UnifiedAVPlayer_getCurrentTime(
     ffi.Pointer<ffi.Void> ptr,
   ) {

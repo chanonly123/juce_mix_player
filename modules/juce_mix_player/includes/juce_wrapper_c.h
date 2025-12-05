@@ -112,6 +112,7 @@ UnifiedAVPlayer_exportVideo(void *ptr, const char *outputPath,
 
 // State queries
 EXPORT_C_FUNC float UnifiedAVPlayer_getDuration(void *ptr);
+EXPORT_C_FUNC float UnifiedAVPlayer_getVideoDuration(void *ptr);
 EXPORT_C_FUNC float UnifiedAVPlayer_getCurrentTime(void *ptr);
 EXPORT_C_FUNC int UnifiedAVPlayer_isPlaying(void *ptr);
 EXPORT_C_FUNC const char *UnifiedAVPlayer_getCurrentState(void *ptr);
