@@ -257,11 +257,11 @@ class _VideoThumbnailStripState extends State<VideoThumbnailStrip> {
   }
 
   void _resetLabelTimer() {
-    _labelTimer?.cancel();
+    // _labelTimer?.cancel();
     setState(() => _showTimeLabels = true);
-    _labelTimer = Timer(const Duration(seconds: 3), () {
-      if (mounted) setState(() => _showTimeLabels = false);
-    });
+    // _labelTimer = Timer(const Duration(seconds: 3), () {
+    //   if (mounted) setState(() => _showTimeLabels = false);
+    // });
   }
 
   void _notifyTrimChanged() {

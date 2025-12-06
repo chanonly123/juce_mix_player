@@ -11,6 +11,17 @@ import 'package:juce_mix_player/unified_av_player.dart';
 import 'package:juce_mix_player/unified_video_view.dart';
 import 'package:juce_mix_player/video_thumbnail_strip.dart';
 
+const LinearGradient gradientPurpleBorder = LinearGradient(
+  begin: Alignment.topCenter,
+  end: Alignment.bottomCenter,
+  colors: [
+    Color(0xFFF74BF7),
+    Color(0xFF080C28),
+    Color(0xFF2FE4F9),
+  ],
+  stops: [0.0, 0.515, 1.0],
+);
+
 class MergedPlayerPage extends StatefulWidget {
   const MergedPlayerPage({super.key});
 
@@ -19,18 +30,10 @@ class MergedPlayerPage extends StatefulWidget {
 }
 
 class MergedPlayerPageState extends State<MergedPlayerPage> {
-  static const LinearGradient gradientPurpleBorder = LinearGradient(
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-    colors: [
-      Color(0xFFF74BF7),
-      Color(0xFF080C28),
-      Color(0xFF2FE4F9),
-    ],
-    stops: [0.0, 0.515, 1.0],
-  );
-
   late UnifiedAVPlayerController player;
+
+  bool isDiscarding = false;
+  String? currentVideoPath;
 
   double progress = 0.0;
   bool isSliderEditing = false;
@@ -44,6 +47,10 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
   bool metronomeEnabled = false;
   MixerComposeModel? lastMixerComposeModel;
 
+  double guideVolume = 1.0;
+  double metronomeVolume = 1.0;
+  double videoDuration = 0.0;
+
   bool isVideoViewReady = false;
   int currentRotation = 0;
   VideoFlipMethod currentFlipMethod = VideoFlipMethod.none;
@@ -55,10 +62,17 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
   bool isVideoLoading = false;
   int trimStartMs = 0;
   int trimEndMs = 0;
+  int trimStartMsInternal = 0;
+  int trimEndMsInternal = 0;
+  int latencyAdjustmentMs = 0;
+
+  static const int maxLatencyMs = 1000;
+  static const int latencyStepMs = 5;
 
   bool hasAudioLoaded = false;
   bool isOverlayVisible = true;
   Timer? _overlayTimer;
+
   Map<String, bool> showVolumeBars = {
     'bgm': false,
     'vocal': false,
@@ -66,19 +80,12 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
     'metronome': false,
   };
 
-  double guideVolume = 1.0;
-  double metronomeVolume = 1.0;
-  double videoDuration = 0.0;
-
   final Map<String, LayerLink> _layerLinks = {
     'bgm': LayerLink(),
     'vocal': LayerLink(),
     'guide': LayerLink(),
     'metronome': LayerLink(),
   };
-
-  bool isDiscarding = false;
-  String? currentVideoPath;
 
   @override
   void initState() {
@@ -172,8 +179,8 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
         hasVideoLoaded = true;
         isVideoLoading = false;
         currentVideoPath = path;
+        videoDuration = player.getVideoDuration();
       });
-      videoDuration = player.getVideoDuration();
       print('Video duration -------------- : $videoDuration');
       _showSnack('Sample video loaded', isSuccess: true);
     } catch (e) {
@@ -266,6 +273,15 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
       }).toList(),
     );
     player.setAudioData(lastMixerComposeModel!);
+  }
+
+  void _updateTrimRange() {
+    trimStartMsInternal = trimStartMs + latencyAdjustmentMs;
+    trimEndMsInternal = trimEndMs + latencyAdjustmentMs;
+    print('trimStartMsInternal: $trimStartMsInternal, trimEndMsInternal: $trimEndMsInternal');
+    print('trimStartMs: $trimStartMs, trimEndMs: $trimEndMs');
+    print('latencyAdjustmentMs: $latencyAdjustmentMs');
+    player.setVideoTrimRange(trimStartMsInternal, trimEndMsInternal);
   }
 
   @override
@@ -409,64 +425,60 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                         duration: const Duration(milliseconds: 300),
                         child: Container(
                           color: Colors.black26,
-                          child: Stack(
-                            children: [
-                              Center(
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    IconButton(
-                                      iconSize: 64,
-                                      icon: Icon(
-                                        isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
-                                        color: Colors.white.withValues(alpha: 0.8),
-                                      ),
-                                      onPressed: () {
-                                        player.togglePlayPause();
-                                        _resetOverlayTimer();
-                                      },
-                                    ),
-                                  ],
+                          child: Center(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                IconButton(
+                                  iconSize: 64,
+                                  icon: Icon(
+                                    isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
+                                    color: Colors.white.withValues(alpha: 0.8),
+                                  ),
+                                  onPressed: () {
+                                    player.togglePlayPause();
+                                    _resetOverlayTimer();
+                                  },
                                 ),
-                              ),
-                              Positioned(
-                                bottom: 16,
-                                left: 16,
-                                right: 16,
-                                child: Row(
-                                  children: [
-                                    Text(
-                                      TimeUtils.formatDuration(progress * player.getDuration()),
-                                      style: const TextStyle(color: Colors.white, fontSize: 12),
-                                    ),
-                                    Expanded(
-                                      child: Slider(
-                                        value: progress,
-                                        onChanged: (value) {
-                                          setState(() => progress = value);
-                                          _resetOverlayTimer();
-                                        },
-                                        onChangeStart: (_) => isSliderEditing = true,
-                                        onChangeEnd: (value) {
-                                          isSliderEditing = false;
-                                          player.seek(value);
-                                          _resetOverlayTimer();
-                                        },
-                                        activeColor: Colors.cyanAccent,
-                                        inactiveColor: Colors.white24,
-                                      ),
-                                    ),
-                                    Text(
-                                      TimeUtils.formatDuration(player.getDuration()),
-                                      style: const TextStyle(color: Colors.white, fontSize: 12),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 16,
+                    left: 16,
+                    right: 16,
+                    child: Row(
+                      children: [
+                        Text(
+                          TimeUtils.formatDuration(progress * player.getDuration()),
+                          style: const TextStyle(color: Colors.white, fontSize: 12),
+                        ),
+                        Expanded(
+                          child: Slider(
+                            value: progress,
+                            onChanged: (value) {
+                              setState(() => progress = value);
+                              _resetOverlayTimer();
+                            },
+                            onChangeStart: (_) => isSliderEditing = true,
+                            onChangeEnd: (value) {
+                              isSliderEditing = false;
+                              player.seek(value);
+                              _resetOverlayTimer();
+                            },
+                            activeColor: Colors.cyanAccent,
+                            inactiveColor: Colors.white24,
+                          ),
+                        ),
+                        Text(
+                          TimeUtils.formatDuration(player.getDuration()),
+                          style: const TextStyle(color: Colors.white, fontSize: 12),
+                        ),
+                      ],
                     ),
                   ),
                   if (currentVideoPath != null)
@@ -492,9 +504,12 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                             print('Trim End: ${trimData.endMs}ms');
                             print('Duration: ${trimData.durationMs}ms');
                             print('Formatted: ${trimData.start} to ${trimData.end}');
-                            trimStartMs = trimData.startMs;
-                            trimEndMs = trimData.endMs;
-                            player.setVideoTrimRange(trimData.startMs, trimData.endMs);
+                            setState(() {
+                              latencyAdjustmentMs = 0;
+                              trimStartMs = trimData.startMs;
+                              trimEndMs = trimData.endMs;
+                            });
+                            _updateTrimRange();
                           },
                         ),
                       ),
@@ -511,6 +526,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                           onPressed: _discardPage,
                           tooltip: 'Discard & Reload',
                         ),
+                        hasVideoLoaded ? _buildLatencyAdjustmentWidget() : const SizedBox.shrink(),
                         IconButton(
                           icon: isExporting
                               ? SizedBox(
@@ -766,8 +782,10 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                         children: const [
                           Icon(Icons.compare_arrows, size: 16, color: Colors.white70),
                           SizedBox(width: 4),
-                          Text('FLIP',
-                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white70)),
+                          Text(
+                            'FLIP',
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white70),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 6),
@@ -1005,6 +1023,56 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
     if (shouldUpdateMix) {
       _updateAudioMix();
     }
+  }
+
+  Widget _buildLatencyAdjustmentWidget() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.3), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          InkWell(
+            onTap: () {
+              setState(() {
+                latencyAdjustmentMs = (latencyAdjustmentMs - latencyStepMs).clamp(-maxLatencyMs, maxLatencyMs);
+              });
+              _updateTrimRange();
+            },
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              child: Icon(Icons.remove, color: Colors.white, size: 20),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            '${latencyAdjustmentMs}ms',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(width: 8),
+          InkWell(
+            onTap: () {
+              setState(() {
+                latencyAdjustmentMs = (latencyAdjustmentMs + latencyStepMs).clamp(-maxLatencyMs, maxLatencyMs);
+              });
+              _updateTrimRange();
+            },
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              child: Icon(Icons.add, color: Colors.white, size: 20),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildVideoView() {
