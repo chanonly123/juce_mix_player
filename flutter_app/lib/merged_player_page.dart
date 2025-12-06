@@ -40,6 +40,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
   bool isPlaying = false;
   JuceMixPlayerState state = JuceMixPlayerState.IDLE;
   bool hasVideoLoaded = false;
+  bool hasVideoReady = false;
 
   double bgmVolume = 0.7;
   double vocalVolume = 1.0;
@@ -51,7 +52,6 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
   double metronomeVolume = 1.0;
   double videoDuration = 0.0;
 
-  bool isVideoViewReady = false;
   int currentRotation = 0;
   VideoFlipMethod currentFlipMethod = VideoFlipMethod.none;
   VisualEffectType currentEffect = VisualEffectType.none;
@@ -59,7 +59,6 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
 
   bool isAudioPanelExpanded = true;
   bool isVideoPanelExpanded = false;
-  bool isVideoLoading = false;
   int trimStartMs = 0;
   int trimEndMs = 0;
   int trimStartMsInternal = 0;
@@ -116,6 +115,27 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
       }
     });
 
+    player.setVideoStateUpdateHandler((videoState) {
+      print('Video state update: $videoState');
+      if (mounted) {
+        if (videoState == 'READY') {
+          setState(() {
+            hasVideoReady = true;
+            videoDuration = player.getVideoDuration();
+          });
+          print('R-Video duration: $videoDuration');
+        }
+        //     _showSnack('Video ready', isSuccess: true);
+        //   } else if (videoState == 'ERROR' || videoState == 'STOPPED') {
+        //     setState(() {
+        //       hasVideoLoaded = false;
+        //     });
+        //   }
+      }
+    });
+
+    // player.setVideoProgressHandler((videoProgress) {});
+
     player.setAudioSettings(MixerSettings(
       progressUpdateInterval: 0.05,
     ));
@@ -169,7 +189,6 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
 
   Future<void> _loadSampleVideo() async {
     setState(() {
-      isVideoLoading = true;
       hasVideoLoaded = false;
     });
     try {
@@ -177,14 +196,9 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
       player.setVideoPath(path);
       setState(() {
         hasVideoLoaded = true;
-        isVideoLoading = false;
-        currentVideoPath = path;
-        videoDuration = player.getVideoDuration();
       });
-      print('Video duration -------------- : $videoDuration');
-      _showSnack('Sample video loaded', isSuccess: true);
+      currentVideoPath = path;
     } catch (e) {
-      setState(() => isVideoLoading = false);
       _showSnack('Error loading video: $e', isError: true);
     }
   }
@@ -192,7 +206,6 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
   Future<void> _loadVideoFromGallery() async {
     final ImagePicker picker = ImagePicker();
     setState(() {
-      isVideoLoading = true;
       hasVideoLoaded = false;
     });
     final XFile? video = await picker.pickVideo(source: ImageSource.gallery);
@@ -201,12 +214,9 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
         player.setVideoPath(video.path);
         setState(() {
           hasVideoLoaded = true;
-          isVideoLoading = false;
-          currentVideoPath = video.path;
         });
-        _showSnack('Video loaded: ${video.name}', isSuccess: true);
+        currentVideoPath = video.path;
       } catch (e) {
-        setState(() => isVideoLoading = false);
         _showSnack('Error loading video: $e', isError: true);
       }
     }
@@ -481,7 +491,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                       ],
                     ),
                   ),
-                  if (currentVideoPath != null)
+                  if (hasVideoReady)
                     Positioned(
                       bottom: 60,
                       left: 16,
@@ -494,9 +504,9 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                         ),
                         child: VideoThumbnailStrip(
                           filePath: currentVideoPath!,
-                          videoDuration: Duration(seconds: 60),
-                          maxTrimDurationMs: Duration(seconds: player.getDuration().toInt()).inMilliseconds,
-                          initialEndMs: Duration(seconds: player.getDuration().toInt()).inMilliseconds,
+                          videoDuration: Duration(milliseconds: (videoDuration * 1000).toInt()),
+                          maxTrimDurationMs: (player.getDuration() * 1000).toInt(),
+                          initialEndMs: (player.getDuration() * 1000).toInt(),
                           windowGradient: gradientPurpleBorder,
                           currentPositionMs: trimStartMs + (progress * player.getDuration() * 1000).toInt(),
                           onTrimChangeEnd: (TrimData trimData) {
@@ -568,7 +578,6 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                         onPressed: () {
                           setState(() {
                             hasVideoLoaded = false;
-                            isVideoViewReady = false;
                             currentVideoPath = null;
                           });
                         },
@@ -923,7 +932,6 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
       setState(() {
         hasAudioLoaded = false;
         hasVideoLoaded = false;
-        isVideoViewReady = false;
         isDiscarding = false;
         progress = 0.0;
         isPlaying = false;
@@ -1079,7 +1087,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
     return UnifiedVideoView(
       controller: player,
       onViewReady: () {
-        setState(() => isVideoViewReady = true);
+        print('UnifiedVideoView: Ready');
       },
     );
   }

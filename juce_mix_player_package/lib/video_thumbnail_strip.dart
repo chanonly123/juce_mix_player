@@ -135,6 +135,8 @@ class _VideoThumbnailStripState extends State<VideoThumbnailStrip> {
     _trimStartMs = widget.initialStartMs;
     _trimEndMs = widget.initialEndMs;
 
+    print("VideoThumbnailStrip: trimStartMs: $_trimStartMs trimEndMs: $_trimEndMs videoDuration: ${_duration}");
+
     widget.controller?._setInternalHooks(
       setTrimRange: _programmaticSetTrimRange,
       dispose: _controllerDispose,

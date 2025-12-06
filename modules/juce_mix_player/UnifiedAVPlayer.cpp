@@ -48,6 +48,15 @@ UnifiedAVPlayer::UnifiedAVPlayer() {
     
     videoPlayer->userContext = this;
     
+    videoPlayer->onProgressCallback = [](void *context, float progress) {
+        GstPlayer *player = static_cast<GstPlayer *>(context);
+        if (player && player->userContext) {
+            UnifiedAVPlayer *self =
+            static_cast<UnifiedAVPlayer *>(player->userContext);
+            self->_handleVideoProgress(progress);
+        }
+    };
+    
     videoPlayer->onStateUpdateCallback = [](void *context, const char *state) {
         GstPlayer *player = static_cast<GstPlayer *>(context);
         if (player && player->userContext) {
@@ -80,6 +89,8 @@ void UnifiedAVPlayer::dispose() {
         
         onProgressCallback = nullptr;
         onStateUpdateCallback = nullptr;
+        onVideoStateUpdateCallback = nullptr;
+        onVideoProgressCallback = nullptr;
         onErrorCallback = nullptr;
         onDeviceUpdateCallback = nullptr;
         
@@ -450,6 +461,18 @@ void UnifiedAVPlayer::_handleVideoStateChange(const std::string &state) {
     
     if (state == "STOPPED" || state == "ERROR") {
         hasVideo = false;
+    }
+    
+    if (onVideoStateUpdateCallback) {
+        onVideoStateUpdateCallback(this, returnCopyCharDelete(state));
+    }
+}
+
+void UnifiedAVPlayer::_handleVideoProgress(float progress) {
+    lastVideoProgress = progress;
+    
+    if (onVideoProgressCallback) {
+        onVideoProgressCallback(this, progress);
     }
 }
 

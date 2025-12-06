@@ -134,3 +134,8 @@ UnifiedAVPlayer_onError(void *ptr, void (*callback)(void *, const char *));
 EXPORT_C_FUNC void
 UnifiedAVPlayer_onDeviceUpdate(void *ptr,
                                void (*callback)(void *, const char *));
+EXPORT_C_FUNC void
+UnifiedAVPlayer_onVideoStateUpdate(void *ptr,
+                                   void (*callback)(void *, const char *));
+EXPORT_C_FUNC void
+UnifiedAVPlayer_onVideoProgress(void *ptr, void (*callback)(void *, float));

@@ -51,6 +51,7 @@ class UnifiedAVPlayer : private juce::Timer {
     void _handleAudioStateChange(JuceMixPlayerState state);
     void _handleVideoStateChange(const std::string &state);
     void _handleAudioProgress(float progress);
+    void _handleVideoProgress(float progress);
     void _updateVideoBlackOverlayForPlayback(bool enable);
     void _ensureVideoSyncOnPlay();
     void _logError(const std::string &message);
@@ -93,6 +94,8 @@ class UnifiedAVPlayer : private juce::Timer {
 
     JuceMixPlayerCallbackFloat onProgressCallback = nullptr;
     JuceMixPlayerCallbackString onStateUpdateCallback = nullptr;
+    JuceMixPlayerCallbackString onVideoStateUpdateCallback = nullptr;
+    JuceMixPlayerCallbackFloat onVideoProgressCallback = nullptr;
     JuceMixPlayerCallbackString onErrorCallback = nullptr;
     JuceMixPlayerCallbackString onDeviceUpdateCallback = nullptr;
 

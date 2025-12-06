@@ -9,10 +9,7 @@ void juce_init() { juce::MessageManager::getInstance(); }
 
 void Java_com_rmsl_juce_Native_juceMessageManagerInit() { juce_init(); }
 
-// public method to enable/disable logging
 void juce_enableLogs(int enable) { enableLogsValue = enable == 1; }
-
-// MARK: JuceMixPlayer
 
 void *JuceMixPlayer_init() { return new JuceMixPlayer(); }
 
@@ -119,13 +116,11 @@ void JuceMixPlayer_export(void *ptr, const char *outputPath,
                                                          completion);
 }
 
-// Utility methods
 int JuceMixPlayer_fileExists(const char *filePath) {
   juce::File file(filePath);
   return file.exists() ? 1 : 0;
 }
 
-// MARK: GstPlayer
 void *GstPlayer_init() { return new GstPlayer(); }
 
 void GstPlayer_deinit(void *ptr) { delete static_cast<GstPlayer *>(ptr); }
@@ -203,7 +198,6 @@ void GstPlayer_exportVideo(void *ptr, const char *outputPath,
   static_cast<GstPlayer *>(ptr)->exportVideo(outputPath, completion);
 }
 
-// MARK: UnifiedAVPlayer
 void *UnifiedAVPlayer_new() { return new UnifiedAVPlayer(); }
 void UnifiedAVPlayer_dispose(void *ptr) {
   if (ptr) {
@@ -211,7 +205,6 @@ void UnifiedAVPlayer_dispose(void *ptr) {
   }
 }
 
-// Unified playback controls
 void UnifiedAVPlayer_play(void *ptr) {
   static_cast<UnifiedAVPlayer *>(ptr)->play();
 }
@@ -232,7 +225,6 @@ void UnifiedAVPlayer_togglePlayPause(void *ptr) {
   static_cast<UnifiedAVPlayer *>(ptr)->togglePlayPause();
 }
 
-// Audio setup (required - primary media)
 void UnifiedAVPlayer_setAudioData(void *ptr, const char *json) {
   static_cast<UnifiedAVPlayer *>(ptr)->setAudioData(json);
 }
@@ -246,7 +238,6 @@ void UnifiedAVPlayer_exportAudio(void *ptr, const char *outputPath,
   static_cast<UnifiedAVPlayer *>(ptr)->exportToFile(outputPath, completion);
 }
 
-// Video setup (optional - secondary media)
 void UnifiedAVPlayer_setVideoPath(void *ptr, const char *path) {
   static_cast<UnifiedAVPlayer *>(ptr)->setVideoPath(path);
 }
@@ -277,7 +268,6 @@ void UnifiedAVPlayer_exportVideo(void *ptr, const char *outputPath,
   static_cast<UnifiedAVPlayer *>(ptr)->exportVideo(outputPath, completion);
 }
 
-// State queries
 float UnifiedAVPlayer_getDuration(void *ptr) {
   return static_cast<UnifiedAVPlayer *>(ptr)->getDuration();
 }
@@ -303,7 +293,6 @@ int UnifiedAVPlayer_hasVideoLoaded(void *ptr) {
   return static_cast<UnifiedAVPlayer *>(ptr)->hasVideoLoaded() ? 1 : 0;
 }
 
-// Callbacks (unified - driven by audio timeline)
 void UnifiedAVPlayer_onProgress(void *ptr, void (*callback)(void *, float)) {
   static_cast<UnifiedAVPlayer *>(ptr)->onProgressCallback = callback;
 }
@@ -321,4 +310,15 @@ void UnifiedAVPlayer_onError(void *ptr,
 void UnifiedAVPlayer_onDeviceUpdate(void *ptr,
                                     void (*callback)(void *, const char *)) {
   static_cast<UnifiedAVPlayer *>(ptr)->onDeviceUpdateCallback = callback;
+}
+
+void UnifiedAVPlayer_onVideoStateUpdate(void *ptr,
+                                        void (*callback)(void *,
+                                                         const char *)) {
+  static_cast<UnifiedAVPlayer *>(ptr)->onVideoStateUpdateCallback = callback;
+}
+
+void UnifiedAVPlayer_onVideoProgress(void *ptr,
+                                     void (*callback)(void *, float)) {
+  static_cast<UnifiedAVPlayer *>(ptr)->onVideoProgressCallback = callback;
 }

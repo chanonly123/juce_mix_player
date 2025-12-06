@@ -1476,4 +1476,65 @@ class JuceLibGen {
                   ffi.NativeFunction<
                       ffi.Void Function(ffi.Pointer<ffi.Void>,
                           ffi.Pointer<pkg_ffi.Utf8>)>>)>();
+
+  void UnifiedAVPlayer_onVideoStateUpdate(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(
+                    ffi.Pointer<ffi.Void>, ffi.Pointer<pkg_ffi.Utf8>)>>
+        callback,
+  ) {
+    return _UnifiedAVPlayer_onVideoStateUpdate(
+      ptr,
+      callback,
+    );
+  }
+
+  late final _UnifiedAVPlayer_onVideoStateUpdatePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(
+                  ffi.Pointer<ffi.Void>,
+                  ffi.Pointer<
+                      ffi.NativeFunction<
+                          ffi.Void Function(ffi.Pointer<ffi.Void>,
+                              ffi.Pointer<pkg_ffi.Utf8>)>>)>>(
+      'UnifiedAVPlayer_onVideoStateUpdate');
+  late final _UnifiedAVPlayer_onVideoStateUpdate =
+      _UnifiedAVPlayer_onVideoStateUpdatePtr.asFunction<
+          void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>,
+                          ffi.Pointer<pkg_ffi.Utf8>)>>)>();
+
+  void UnifiedAVPlayer_onVideoProgress(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>
+        callback,
+  ) {
+    return _UnifiedAVPlayer_onVideoProgress(
+      ptr,
+      callback,
+    );
+  }
+
+  late final _UnifiedAVPlayer_onVideoProgressPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>,
+                          ffi.Float)>>)>>('UnifiedAVPlayer_onVideoProgress');
+  late final _UnifiedAVPlayer_onVideoProgress =
+      _UnifiedAVPlayer_onVideoProgressPtr.asFunction<
+          void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<
+                  ffi.NativeFunction<
+                      ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>>)>();
 }

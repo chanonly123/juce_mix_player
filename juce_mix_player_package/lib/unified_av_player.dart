@@ -32,6 +32,9 @@ class UnifiedAVPlayerController {
   NativeCallable<StringUpdateCallback>? _stateUpdateNativeCallable;
   NativeCallable<StringUpdateCallback>? _errorUpdateNativeCallable;
 
+  NativeCallable<StringUpdateCallback>? _videoStateUpdateNativeCallable;
+  NativeCallable<FloatCallback>? _videoProgressCallbackNativeCallable;
+
   // Device callbacks
   NativeCallable<StringUpdateCallback>? _deviceUpdateNativeCallable;
 
@@ -239,6 +242,24 @@ class UnifiedAVPlayerController {
     _juceLib.UnifiedAVPlayer_onDeviceUpdate(_ptr, _deviceUpdateNativeCallable!.nativeFunction);
   }
 
+  void setVideoStateUpdateHandler(void Function(String state) callback) {
+    NativeStringCallbackDart closure = (ptr, cstring) {
+      callback(cstring.toDartString());
+    };
+    _videoStateUpdateNativeCallable?.close();
+    _videoStateUpdateNativeCallable = NativeCallable<StringUpdateCallback>.listener(closure);
+    _juceLib.UnifiedAVPlayer_onVideoStateUpdate(_ptr, _videoStateUpdateNativeCallable!.nativeFunction);
+  }
+
+  void setVideoProgressHandler(void Function(double progress) callback) {
+    FloatCallbackDart closure = (ptr, progress) {
+      callback(progress);
+    };
+    _videoProgressCallbackNativeCallable?.close();
+    _videoProgressCallbackNativeCallable = NativeCallable<FloatCallback>.listener(closure);
+    _juceLib.UnifiedAVPlayer_onVideoProgress(_ptr, _videoProgressCallbackNativeCallable!.nativeFunction);
+  }
+
   // ========== Cleanup ==========
 
   void dispose() {
@@ -246,6 +267,8 @@ class UnifiedAVPlayerController {
     _progressCallbackNativeCallable?.close();
     _stateUpdateNativeCallable?.close();
     _errorUpdateNativeCallable?.close();
+    _videoStateUpdateNativeCallable?.close();
+    _videoProgressCallbackNativeCallable?.close();
     _deviceUpdateNativeCallable?.close();
     _exportAudioUpdateNativeCallable?.close();
     _exportVideoUpdateNativeCallable?.close();
