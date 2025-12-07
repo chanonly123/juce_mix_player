@@ -198,6 +198,10 @@ void GstPlayer_exportVideo(void *ptr, const char *outputPath,
   static_cast<GstPlayer *>(ptr)->exportVideo(outputPath, completion);
 }
 
+void GstPlayer_setPadding(void *ptr, int durationMs, int enabled) {
+  static_cast<GstPlayer *>(ptr)->setPadding(durationMs, enabled);
+}
+
 void *UnifiedAVPlayer_new() { return new UnifiedAVPlayer(); }
 void UnifiedAVPlayer_dispose(void *ptr) {
   if (ptr) {

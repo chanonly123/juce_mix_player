@@ -326,6 +326,7 @@ class VideoPlayerState extends State<VideoPlayerPage> {
                       _isViewReady = false;
                     });
                     final pathL = await AssetHelper.extractAsset('assets/media/sample_3.mp4');
+                    player.setPadding(2000, true);
                     player.setVideoPath(pathL);
                   },
                 ),

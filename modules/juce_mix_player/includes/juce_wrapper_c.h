@@ -86,6 +86,7 @@ EXPORT_C_FUNC void GstPlayer_exportVideo(void *ptr, const char *outputPath,
 EXPORT_C_FUNC void GstPlayer_setTrimRange(void *ptr, int startMs, int endMs);
 EXPORT_C_FUNC int GstPlayer_getTrimStart(void *ptr);
 EXPORT_C_FUNC int GstPlayer_getTrimEnd(void *ptr);
+EXPORT_C_FUNC void GstPlayer_setPadding(void *ptr, int durationMs, int enabled);
 
 // MARK: UnifiedAVPlayer
 EXPORT_C_FUNC void *UnifiedAVPlayer_new();

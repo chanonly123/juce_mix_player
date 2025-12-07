@@ -63,6 +63,10 @@ typedef _setVisualEffect_dart_t = void Function(Pointer<Void>, int);
 typedef _exportVideo_t = Void Function(Pointer<Void>, Pointer<Utf8>, Pointer<NativeFunction<_StringCallback>>);
 typedef _exportVideo_dart_t = void Function(Pointer<Void>, Pointer<Utf8>, Pointer<NativeFunction<_StringCallback>>);
 
+// Padding function typedefs
+typedef _setPadding_t = Void Function(Pointer<Void>, Int32, Int32);
+typedef _setPadding_dart_t = void Function(Pointer<Void>, int, int);
+
 // Trim range function typedefs (in milliseconds)
 typedef _setTrimRange_t = Void Function(Pointer<Void>, Int32, Int32);
 typedef _setTrimRange_dart_t = void Function(Pointer<Void>, int, int);
@@ -113,6 +117,8 @@ class GstPlayerController {
   late final _getTrimStart_dart_t _getTrimStart;
   late final _getTrimEnd_dart_t _getTrimEnd;
 
+  late final _setPadding_dart_t _setPadding;
+
   NativeCallable<_FloatCallback>? _progressCallback;
   NativeCallable<_StringUpdateCallback>? _stateCallback;
   NativeCallable<_StringUpdateCallback>? _errorCallback;
@@ -148,6 +154,14 @@ class GstPlayerController {
     _setTrimRange = _lib.lookupFunction<_setTrimRange_t, _setTrimRange_dart_t>('GstPlayer_setTrimRange');
     _getTrimStart = _lib.lookupFunction<_getTrimStart_t, _getTrimStart_dart_t>('GstPlayer_getTrimStart');
     _getTrimEnd = _lib.lookupFunction<_getTrimEnd_t, _getTrimEnd_dart_t>('GstPlayer_getTrimEnd');
+
+    try {
+      _setPadding = _lib.lookupFunction<_setPadding_t, _setPadding_dart_t>('GstPlayer_setPadding');
+    } catch (_) {
+      // Fallback or ignore if symbol missing (e.g. library not updated yet)
+      print("Warning: GstPlayer_setPadding symbol not found.");
+      _setPadding = (Pointer<Void> a, int b, int c) {};
+    }
 
     _ptr = _init();
   }
@@ -258,6 +272,10 @@ class GstPlayerController {
 
   int getTrimEndMs() {
     return _getTrimEnd(_ptr);
+  }
+
+  void setPadding(int durationMs, bool enabled) {
+    _setPadding(_ptr, durationMs, enabled ? 1 : 0);
   }
 
   // Expose native pointer address for PlatformView handoff

@@ -957,6 +957,25 @@ class JuceLibGen {
   late final _GstPlayer_getTrimEnd = _GstPlayer_getTrimEndPtr.asFunction<
       int Function(ffi.Pointer<ffi.Void>)>();
 
+  void GstPlayer_setPadding(
+    ffi.Pointer<ffi.Void> ptr,
+    int durationMs,
+    int enabled,
+  ) {
+    return _GstPlayer_setPadding(
+      ptr,
+      durationMs,
+      enabled,
+    );
+  }
+
+  late final _GstPlayer_setPaddingPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Int,
+              ffi.Int)>>('GstPlayer_setPadding');
+  late final _GstPlayer_setPadding = _GstPlayer_setPaddingPtr.asFunction<
+      void Function(ffi.Pointer<ffi.Void>, int, int)>();
+
   ffi.Pointer<ffi.Void> UnifiedAVPlayer_new() {
     return _UnifiedAVPlayer_new();
   }

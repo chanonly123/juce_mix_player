@@ -51,6 +51,15 @@ private:
     int _trimStartMs = 0.0;
     int _trimEndMs = 0.0;
     
+    // Padding configuration
+    int _configPaddingMs = 1000;
+    bool _configPaddingEnabled = false;
+    
+    // Active padding state (locked in during setVideoPath)
+    int _activePaddingMs = 0;
+    bool _isInPadding = false;
+    double _paddingPositionMs = 0.0;
+    
     double progressUpdateIntervalSec = 0.10;
     
     GstElement *pipeline = nullptr;
@@ -111,11 +120,13 @@ public:
     void setRotation(int degrees);
     void setFlip(int method);
     void setVisualEffect(int effectId);
+    void setPadding(int durationMs, int enabled);
     void setBlackOverlayEnabled(int enabled);
     void setTrimRange(int startMs, int endMs);
     int getTrimStart();
     int getTrimEnd();
-    void exportVideo(const char *outputPath, std::function<void(const char *)> completion);
+    void exportVideo(const char *outputPath,
+                     std::function<void(const char *)> completion);
     void setMuteEmbeddedAudio(int mute);
     void setSurfaceHandle(void *handle);
     void timerCallback() override;
