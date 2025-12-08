@@ -1251,6 +1251,26 @@ class JuceLibGen {
       _UnifiedAVPlayer_setVideoTrimRangePtr.asFunction<
           void Function(ffi.Pointer<ffi.Void>, int, int)>();
 
+  void UnifiedAVPlayer_setVideoPadding(
+    ffi.Pointer<ffi.Void> ptr,
+    int durationMs,
+    int enabled,
+  ) {
+    return _UnifiedAVPlayer_setVideoPadding(
+      ptr,
+      durationMs,
+      enabled,
+    );
+  }
+
+  late final _UnifiedAVPlayer_setVideoPaddingPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Int,
+              ffi.Int)>>('UnifiedAVPlayer_setVideoPadding');
+  late final _UnifiedAVPlayer_setVideoPadding =
+      _UnifiedAVPlayer_setVideoPaddingPtr.asFunction<
+          void Function(ffi.Pointer<ffi.Void>, int, int)>();
+
   void UnifiedAVPlayer_exportVideo(
     ffi.Pointer<ffi.Void> ptr,
     ffi.Pointer<pkg_ffi.Utf8> outputPath,

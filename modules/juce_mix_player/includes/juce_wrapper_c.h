@@ -112,6 +112,8 @@ EXPORT_C_FUNC void UnifiedAVPlayer_setVideoVisualEffect(void *ptr,
                                                         int effectId);
 EXPORT_C_FUNC void UnifiedAVPlayer_setVideoTrimRange(void *ptr, int startMs,
                                                      int endMs);
+EXPORT_C_FUNC void UnifiedAVPlayer_setVideoPadding(void *ptr, int durationMs,
+                                                   int enabled);
 EXPORT_C_FUNC void
 UnifiedAVPlayer_exportVideo(void *ptr, const char *outputPath,
                             void (*completion)(const char *));

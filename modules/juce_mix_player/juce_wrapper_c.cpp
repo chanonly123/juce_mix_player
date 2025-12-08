@@ -267,6 +267,10 @@ void UnifiedAVPlayer_setVideoTrimRange(void *ptr, int startMs, int endMs) {
   static_cast<UnifiedAVPlayer *>(ptr)->setVideoTrimRange(startMs, endMs);
 }
 
+void UnifiedAVPlayer_setVideoPadding(void *ptr, int durationMs, int enabled) {
+  static_cast<UnifiedAVPlayer *>(ptr)->setVideoPadding(durationMs, enabled);
+}
+
 void UnifiedAVPlayer_exportVideo(void *ptr, const char *outputPath,
                                  void (*completion)(const char *)) {
   static_cast<UnifiedAVPlayer *>(ptr)->exportVideo(outputPath, completion);

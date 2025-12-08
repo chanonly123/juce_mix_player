@@ -42,6 +42,9 @@ class UnifiedAVPlayerController {
   NativeCallable<StringUpdateCallback2>? _exportAudioUpdateNativeCallable;
   NativeCallable<StringUpdateCallback2>? _exportVideoUpdateNativeCallable;
 
+  // Manual binding
+  // Removed manual _setVideoPadding binding as it is now available in juce_lib_gen.dart
+
   static var libname = 'libjuce_jni.so';
 
   static void juce_init() {
@@ -155,6 +158,10 @@ class UnifiedAVPlayerController {
 
   void setVideoTrimRange(int startMs, int endMs) {
     _juceLib.UnifiedAVPlayer_setVideoTrimRange(_ptr, startMs, endMs);
+  }
+
+  void setVideoPadding(int durationMs, bool enabled) {
+    _juceLib.UnifiedAVPlayer_setVideoPadding(_ptr, durationMs, enabled ? 1 : 0);
   }
 
   Future<void> exportVideo(String outputPath) async {

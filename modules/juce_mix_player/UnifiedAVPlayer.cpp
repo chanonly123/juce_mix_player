@@ -341,6 +341,17 @@ void UnifiedAVPlayer::setVideoTrimRange(int startMs, int endMs) {
     videoPlayer->setTrimRange(startMs, endMs);
 }
 
+void UnifiedAVPlayer::setVideoPadding(int durationMs, int enabled) {
+    PRINT("UnifiedAVPlayer::setVideoPadding: duration="
+          << durationMs << "ms, enabled=" << enabled);
+    const juce::ScopedLock scopedLock(lock);
+    if (!videoPlayer) {
+        return;
+    }
+    
+    videoPlayer->setPadding(durationMs, enabled);
+}
+
 void UnifiedAVPlayer::exportVideo(
                                   const char *outputPath, std::function<void(const char *)> completion) {
     PRINT("UnifiedAVPlayer::exportVideo");
