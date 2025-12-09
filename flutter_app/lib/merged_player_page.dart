@@ -1,15 +1,16 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app/asset_helper.dart';
 import 'package:flutter_app/utils.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:juce_mix_player/gst_video_player.dart';
 import 'package:juce_mix_player/juce_mix_player.dart';
 import 'package:juce_mix_player/unified_av_player.dart';
 import 'package:juce_mix_player/unified_video_view.dart';
 import 'package:juce_mix_player/video_thumbnail_strip.dart';
+import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 const LinearGradient gradientPurpleBorder = LinearGradient(
   begin: Alignment.topCenter,
@@ -50,7 +51,24 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
 
   double guideVolume = 1.0;
   double metronomeVolume = 1.0;
-  double videoDuration = 0.0;
+  int masterDurationMs = 0;
+
+  // User-facing values (original video, no padding)
+  int userVideoDurationMs = 0; // Original video duration WITHOUT padding
+  int userTrimStartMs = 0; // User sees this as trim start (0-based)
+  int userTrimEndMs = 0; // User sees this as trim end
+
+  // Internal values (with padding)
+  int internalVideoDurationMs = 0; // Video duration WITH front padding
+  int internalTrimStartMs = 0; // Actual trim start sent to player
+  int internalTrimEndMs = 0; // Actual trim end sent to player
+
+  // Latency adjustment
+  int latencyAdjustmentMs = 0; // Current latency offset (-maxLatencyMs to +maxLatencyMs)
+
+  // Constants
+  static const int maxLatencyMs = 1000;
+  static const int latencyStepMs = 5;
 
   int currentRotation = 0;
   VideoFlipMethod currentFlipMethod = VideoFlipMethod.none;
@@ -59,14 +77,6 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
 
   bool isAudioPanelExpanded = true;
   bool isVideoPanelExpanded = false;
-  int trimStartMs = 0;
-  int trimEndMs = 0;
-  int trimStartMsInternal = 0;
-  int trimEndMsInternal = 0;
-  int latencyAdjustmentMs = 0;
-
-  static const int maxLatencyMs = 1000;
-  static const int latencyStepMs = 5;
 
   bool hasAudioLoaded = false;
   bool isOverlayVisible = true;
@@ -104,6 +114,9 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
       if (mounted) {
         setState(() {
           state = newState;
+          if (newState == JuceMixPlayerState.READY) {
+            masterDurationMs = (player.getDuration() * 1000).toInt();
+          }
           isPlaying = newState == JuceMixPlayerState.PLAYING;
         });
       }
@@ -121,16 +134,12 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
         if (videoState == 'READY') {
           setState(() {
             hasVideoReady = true;
-            videoDuration = player.getVideoDuration();
+            internalVideoDurationMs = (player.getVideoDuration() * 1000).toInt();
+            userVideoDurationMs = internalVideoDurationMs - maxLatencyMs;
           });
-          print('R-Video duration: $videoDuration');
+          _updateTrimRangeInitial();
+          _debugPrintTrimState('After video ready');
         }
-        //     _showSnack('Video ready', isSuccess: true);
-        //   } else if (videoState == 'ERROR' || videoState == 'STOPPED') {
-        //     setState(() {
-        //       hasVideoLoaded = false;
-        //     });
-        //   }
       }
     });
 
@@ -139,6 +148,9 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
     player.setAudioSettings(MixerSettings(
       progressUpdateInterval: 0.05,
     ));
+
+    // Initialize padding
+    player.setVideoPadding(maxLatencyMs, true);
   }
 
   void _showSnack(String msg, {bool isError = false, bool isSuccess = false}) {
@@ -203,21 +215,62 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
     }
   }
 
+  // Future<void> _loadVideoFromGallery() async {
+  //   final ImagePicker picker = ImagePicker();
+  //   setState(() {
+  //     hasVideoLoaded = false;
+  //   });
+  //   final XFile? video = await picker.pickVideo(source: ImageSource.gallery);
+  //   if (video != null) {
+  //     try {
+  //       player.setVideoPath(video.path);
+  //       setState(() {
+  //         hasVideoLoaded = true;
+  //       });
+  //       currentVideoPath = video.path;
+  //     } catch (e) {
+  //       _showSnack('Error loading video: $e', isError: true);
+  //     }
+  //   }
+  // }
+
   Future<void> _loadVideoFromGallery() async {
-    final ImagePicker picker = ImagePicker();
-    setState(() {
-      hasVideoLoaded = false;
-    });
-    final XFile? video = await picker.pickVideo(source: ImageSource.gallery);
-    if (video != null) {
-      try {
-        player.setVideoPath(video.path);
-        setState(() {
-          hasVideoLoaded = true;
-        });
-        currentVideoPath = video.path;
-      } catch (e) {
-        _showSnack('Error loading video: $e', isError: true);
+    // 1. Pick the asset (This opens a WhatsApp-style gallery)
+    // This is nearly instant because it just reads metadata first.
+    final List<AssetEntity>? result = await AssetPicker.pickAssets(
+      context,
+      pickerConfig: const AssetPickerConfig(
+        requestType: RequestType.video,
+        maxAssets: 1, // Limit to 1 video like your original code
+      ),
+    );
+
+    if (result != null && result.isNotEmpty) {
+      setState(() {
+        hasVideoLoaded = false; // Show loading while we fetch the actual file
+      });
+
+      final AssetEntity videoAsset = result.first;
+
+      // 2. Get the file.
+      // photo_manager attempts to return the original file without copying
+      // if permissions allow, making this much faster than image_picker.
+      final File? videoFile = await videoAsset.file;
+
+      if (videoFile != null) {
+        try {
+          // 3. Initialize Player
+          // Note: For even faster start, some advanced players play directly
+          // from the AssetEntity, but standard VideoPlayer needs a file/path.
+          player.setVideoPath(videoFile.path);
+
+          setState(() {
+            hasVideoLoaded = true;
+            currentVideoPath = videoFile.path;
+          });
+        } catch (e) {
+          _showSnack('Error loading video: $e', isError: true);
+        }
       }
     }
   }
@@ -285,13 +338,46 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
     player.setAudioData(lastMixerComposeModel!);
   }
 
-  void _updateTrimRange() {
-    trimStartMsInternal = trimStartMs + latencyAdjustmentMs;
-    trimEndMsInternal = trimEndMs + latencyAdjustmentMs;
-    print('trimStartMsInternal: $trimStartMsInternal, trimEndMsInternal: $trimEndMsInternal');
-    print('trimStartMs: $trimStartMs, trimEndMs: $trimEndMs');
-    print('latencyAdjustmentMs: $latencyAdjustmentMs');
-    player.setVideoTrimRange(trimStartMsInternal, trimEndMsInternal);
+  void _updateTrimRangeInitial() {
+    final maxEndMs = userVideoDurationMs < masterDurationMs ? userVideoDurationMs : masterDurationMs;
+
+    setState(() {
+      userTrimStartMs = 0;
+      userTrimEndMs = maxEndMs;
+      latencyAdjustmentMs = 0;
+    });
+
+    _updateInternalTrimValues();
+    _debugPrintTrimState('Initial trim range');
+  }
+
+  void _updateInternalTrimValues() {
+    // Base conversion: user coordinates -> internal coordinates
+    int proposedStart = VideoCoordinateUtils.userToInternal(userTrimStartMs, maxLatencyMs, latencyAdjustmentMs);
+    int proposedEnd = VideoCoordinateUtils.userToInternal(userTrimEndMs, maxLatencyMs, latencyAdjustmentMs);
+
+    // Business Rule 1: If at start and latency is negative, shift start into padding
+    // (increases trim duration instead of sliding window)
+    if (userTrimStartMs == 0 && latencyAdjustmentMs < 0) {
+      proposedStart = maxLatencyMs + latencyAdjustmentMs;
+      proposedEnd = userTrimEndMs + maxLatencyMs; // Only add padding, NOT latency
+    }
+
+    // Business Rule 2: If at end and latency is positive, shift start right
+    // (decreases trim duration instead of sliding window)
+    if (userTrimEndMs >= userVideoDurationMs && latencyAdjustmentMs > 0) {
+      proposedEnd = internalVideoDurationMs;
+      proposedStart = userTrimStartMs + maxLatencyMs + latencyAdjustmentMs;
+    }
+
+    // Clamp to valid range
+    internalTrimStartMs = VideoCoordinateUtils.clampMs(proposedStart, 0, internalVideoDurationMs);
+    internalTrimEndMs = VideoCoordinateUtils.clampMs(proposedEnd, internalTrimStartMs, internalVideoDurationMs);
+
+    // Send to player
+    player.setVideoTrimRange(internalTrimStartMs, internalTrimEndMs);
+
+    _debugPrintTrimState('Update internal values');
   }
 
   @override
@@ -406,264 +492,260 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
   }
 
   Widget _buildVideoPlayerScreen() {
-    return Stack(
-      children: [
-        Column(
-          children: [
-            Expanded(
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Container(
-                    color: Colors.black,
-                    child: Center(
-                      child: AspectRatio(
-                        aspectRatio: 9 / 16,
-                        child: Container(
-                          color: Colors.grey[900],
-                          child: hasVideoLoaded ? _buildVideoView() : _buildVideoPlaceholder(),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned.fill(
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.translucent,
-                      onTap: _toggleOverlay,
-                      child: AnimatedOpacity(
-                        opacity: isOverlayVisible ? 1.0 : 0.0,
-                        duration: const Duration(milliseconds: 300),
-                        child: Container(
-                          color: Colors.black26,
-                          child: Center(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                IconButton(
-                                  iconSize: 64,
-                                  icon: Icon(
-                                    isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
-                                    color: Colors.white.withValues(alpha: 0.8),
-                                  ),
-                                  onPressed: () {
-                                    player.togglePlayPause();
-                                    _resetOverlayTimer();
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 16,
-                    left: 16,
-                    right: 16,
-                    child: Row(
-                      children: [
-                        Text(
-                          TimeUtils.formatDuration(progress * player.getDuration()),
-                          style: const TextStyle(color: Colors.white, fontSize: 12),
-                        ),
-                        Expanded(
-                          child: Slider(
-                            value: progress,
-                            onChanged: (value) {
-                              setState(() => progress = value);
-                              _resetOverlayTimer();
-                            },
-                            onChangeStart: (_) => isSliderEditing = true,
-                            onChangeEnd: (value) {
-                              isSliderEditing = false;
-                              player.seek(value);
-                              _resetOverlayTimer();
-                            },
-                            activeColor: Colors.cyanAccent,
-                            inactiveColor: Colors.white24,
-                          ),
-                        ),
-                        Text(
-                          TimeUtils.formatDuration(player.getDuration()),
-                          style: const TextStyle(color: Colors.white, fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (hasVideoReady)
-                    Positioned(
-                      bottom: 60,
-                      left: 16,
-                      right: 16,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.black54,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: VideoThumbnailStrip(
-                          filePath: currentVideoPath!,
-                          videoDuration: Duration(milliseconds: (videoDuration * 1000).toInt()),
-                          maxTrimDurationMs: (player.getDuration() * 1000).toInt(),
-                          initialEndMs: (player.getDuration() * 1000).toInt(),
-                          windowGradient: gradientPurpleBorder,
-                          currentPositionMs: trimStartMs + (progress * player.getDuration() * 1000).toInt(),
-                          onTrimChangeEnd: (TrimData trimData) {
-                            print('Trim Start: ${trimData.startMs}ms');
-                            print('Trim End: ${trimData.endMs}ms');
-                            print('Duration: ${trimData.durationMs}ms');
-                            print('Formatted: ${trimData.start} to ${trimData.end}');
-                            setState(() {
-                              latencyAdjustmentMs = 0;
-                              trimStartMs = trimData.startMs;
-                              trimEndMs = trimData.endMs;
-                            });
-                            _updateTrimRange();
-                          },
-                        ),
-                      ),
-                    ),
-                  Positioned(
-                    top: MediaQuery.of(context).padding.top + 16,
-                    left: 16,
-                    right: 16,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.remove_circle, color: Colors.red),
-                          onPressed: _discardPage,
-                          tooltip: 'Discard & Reload',
-                        ),
-                        hasVideoLoaded ? _buildLatencyAdjustmentWidget() : const SizedBox.shrink(),
-                        IconButton(
-                          icon: isExporting
-                              ? SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                                )
-                              : const Icon(Icons.download, color: Colors.white),
-                          onPressed: isExporting ? null : _exportVideo,
-                          tooltip: 'Export Video',
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              color: const Color(0xFF1E1E1E),
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildTrackControl('BGM', 'bgm', Icons.music_note, bgmVolume),
-                      _buildTrackControl('Vocal', 'vocal', Icons.mic, vocalVolume),
-                      _buildTrackControl('Guide', 'guide', Icons.headphones, guideVolume,
-                          isToggle: true, isEnabled: guideEnabled),
-                      _buildTrackControl('Metronome', 'metronome', Icons.timer, metronomeVolume,
-                          isToggle: true, isEnabled: metronomeEnabled),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      IconButton(
-                        onPressed: () {
-                          setState(() {
-                            hasVideoLoaded = false;
-                            currentVideoPath = null;
-                          });
-                        },
-                        icon: const Icon(Icons.videocam_off_outlined, color: Colors.redAccent),
-                        tooltip: 'Remove Video',
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: hasVideoLoaded ? _showVideoSettings : null,
-                          icon: const Icon(Icons.tune),
-                          label: const Text('Video Settings'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white10,
-                            foregroundColor: Colors.white,
-                            disabledBackgroundColor: Colors.white10.withValues(alpha: 0.5),
-                            disabledForegroundColor: Colors.white30,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        onPressed: _changeVideo,
-                        icon: Icon(hasVideoLoaded ? Icons.video_library : Icons.add_circle_outline,
-                            color: Colors.cyanAccent),
-                        tooltip: hasVideoLoaded ? 'Replace Video' : 'Add Video',
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        if (showVolumeBars.containsValue(true))
-          Positioned.fill(
-            child: GestureDetector(
-              behavior: HitTestBehavior.translucent,
-              onTap: () {
-                setState(() {
-                  showVolumeBars.updateAll((key, value) => false);
-                });
-              },
-              child: Stack(
-                children: showVolumeBars.entries.where((e) => e.value).map((e) {
-                  final id = e.key;
-                  return CompositedTransformFollower(
-                    link: _layerLinks[id]!,
-                    offset: const Offset(-15, -150),
+    return Stack(children: [
+      Column(children: [
+        Expanded(
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Container(
+                color: Colors.black,
+                child: Center(
+                  child: AspectRatio(
+                    aspectRatio: 9 / 16,
                     child: Container(
-                      height: 140,
-                      width: 50,
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF2A2A2A),
-                        borderRadius: BorderRadius.circular(25),
-                        boxShadow: [
-                          BoxShadow(color: Colors.black54, blurRadius: 8, offset: Offset(0, 4)),
-                        ],
-                      ),
-                      child: RotatedBox(
-                        quarterTurns: 3,
-                        child: SliderTheme(
-                          data: SliderTheme.of(context).copyWith(
-                            trackHeight: 4,
-                            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
-                            overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
-                          ),
-                          child: Slider(
-                            value: _getVolumeForId(id),
-                            onChanged: (v) => _updateTrackVolume(id, v, shouldUpdateMix: false),
-                            onChangeEnd: (v) => _updateTrackVolume(id, v),
-                            activeColor: Colors.cyanAccent,
-                            inactiveColor: Colors.grey[800],
-                          ),
+                      color: Colors.grey[900],
+                      child: hasVideoLoaded ? _buildVideoView() : _buildVideoPlaceholder(),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTap: _toggleOverlay,
+                  child: AnimatedOpacity(
+                    opacity: isOverlayVisible ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 300),
+                    child: Container(
+                      color: Colors.black26,
+                      child: Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            IconButton(
+                              iconSize: 64,
+                              icon: Icon(
+                                isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
+                                color: Colors.white.withValues(alpha: 0.8),
+                              ),
+                              onPressed: () {
+                                player.togglePlayPause();
+                                _resetOverlayTimer();
+                              },
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                  );
-                }).toList(),
+                  ),
+                ),
               ),
+              Positioned(
+                bottom: 16,
+                left: 16,
+                right: 16,
+                child: Row(
+                  children: [
+                    Text(
+                      TimeUtils.formatDurationMs(progress * masterDurationMs),
+                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                    ),
+                    Expanded(
+                      child: Slider(
+                        value: progress,
+                        onChanged: (value) {
+                          setState(() => progress = value);
+                          _resetOverlayTimer();
+                        },
+                        onChangeStart: (_) => isSliderEditing = true,
+                        onChangeEnd: (value) {
+                          isSliderEditing = false;
+                          player.seek(value);
+                          _resetOverlayTimer();
+                        },
+                        activeColor: Colors.cyanAccent,
+                        inactiveColor: Colors.white24,
+                      ),
+                    ),
+                    Text(
+                      TimeUtils.formatDurationMs(masterDurationMs.toDouble()),
+                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              if (hasVideoReady)
+                Positioned(
+                  bottom: 60,
+                  left: 16,
+                  right: 16,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: VideoThumbnailStrip(
+                      filePath: currentVideoPath!,
+                      videoDuration: Duration(milliseconds: userVideoDurationMs),
+                      maxTrimDurationMs: userVideoDurationMs,
+                      initialStartMs: userTrimStartMs,
+                      initialEndMs: userTrimEndMs,
+                      windowGradient: gradientPurpleBorder,
+                      currentPositionMs: _calculateCurrentUserPosition(),
+                      onTrimChangeEnd: (TrimData trimData) {
+                        print('Trim change from user: Start ${trimData.startMs}ms, End ${trimData.endMs}ms');
+                        setState(() {
+                          // Reset latency when user manually adjusts trim
+                          latencyAdjustmentMs = 0;
+                          // Update user values (trimData is already in user coordinates)
+                          userTrimStartMs = trimData.startMs;
+                          userTrimEndMs = trimData.endMs;
+                        });
+                        _updateInternalTrimValues();
+                      },
+                    ),
+                  ),
+                ),
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 16,
+                left: 16,
+                right: 16,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.remove_circle, color: Colors.red),
+                      onPressed: _discardPage,
+                      tooltip: 'Discard & Reload',
+                    ),
+                    hasVideoLoaded ? _buildLatencyAdjustmentWidget() : const SizedBox.shrink(),
+                    IconButton(
+                      icon: isExporting
+                          ? SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            )
+                          : const Icon(Icons.download, color: Colors.white),
+                      onPressed: isExporting ? null : _exportVideo,
+                      tooltip: 'Export Video',
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        Container(
+          color: const Color(0xFF1E1E1E),
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildTrackControl('BGM', 'bgm', Icons.music_note, bgmVolume),
+                  _buildTrackControl('Vocal', 'vocal', Icons.mic, vocalVolume),
+                  _buildTrackControl('Guide', 'guide', Icons.headphones, guideVolume,
+                      isToggle: true, isEnabled: guideEnabled),
+                  _buildTrackControl('Metronome', 'metronome', Icons.timer, metronomeVolume,
+                      isToggle: true, isEnabled: metronomeEnabled),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+                        hasVideoLoaded = false;
+                        currentVideoPath = null;
+                      });
+                    },
+                    icon: const Icon(Icons.videocam_off_outlined, color: Colors.redAccent),
+                    tooltip: 'Remove Video',
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: hasVideoLoaded ? _showVideoSettings : null,
+                      icon: const Icon(Icons.tune),
+                      label: const Text('Video Settings'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white10,
+                        foregroundColor: Colors.white,
+                        disabledBackgroundColor: Colors.white10.withValues(alpha: 0.5),
+                        disabledForegroundColor: Colors.white30,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    onPressed: _changeVideo,
+                    icon:
+                        Icon(hasVideoLoaded ? Icons.video_library : Icons.add_circle_outline, color: Colors.cyanAccent),
+                    tooltip: hasVideoLoaded ? 'Replace Video' : 'Add Video',
+                  ),
+                ],
+              ),
+            ],
+          ),
+        )
+      ]),
+      if (showVolumeBars.containsValue(true))
+        Positioned.fill(
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTap: () {
+              setState(() {
+                showVolumeBars.updateAll((key, value) => false);
+              });
+            },
+            child: Stack(
+              children: showVolumeBars.entries.where((e) => e.value).map((e) {
+                final id = e.key;
+                return CompositedTransformFollower(
+                  link: _layerLinks[id]!,
+                  offset: const Offset(-15, -150),
+                  child: Container(
+                    height: 140,
+                    width: 50,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2A2A2A),
+                      borderRadius: BorderRadius.circular(25),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black54, blurRadius: 8, offset: Offset(0, 4)),
+                      ],
+                    ),
+                    child: RotatedBox(
+                      quarterTurns: 3,
+                      child: SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          trackHeight: 4,
+                          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+                          overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
+                        ),
+                        child: Slider(
+                          value: _getVolumeForId(id),
+                          onChanged: (v) => _updateTrackVolume(id, v, shouldUpdateMix: false),
+                          onChangeEnd: (v) => _updateTrackVolume(id, v),
+                          activeColor: Colors.cyanAccent,
+                          inactiveColor: Colors.grey[800],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
           ),
-      ],
-    );
+        ),
+    ]);
   }
 
   void _showVideoSettings() {
@@ -1049,7 +1131,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
               setState(() {
                 latencyAdjustmentMs = (latencyAdjustmentMs - latencyStepMs).clamp(-maxLatencyMs, maxLatencyMs);
               });
-              _updateTrimRange();
+              _updateInternalTrimValues();
             },
             child: Container(
               padding: const EdgeInsets.all(4),
@@ -1071,7 +1153,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
               setState(() {
                 latencyAdjustmentMs = (latencyAdjustmentMs + latencyStepMs).clamp(-maxLatencyMs, maxLatencyMs);
               });
-              _updateTrimRange();
+              _updateInternalTrimValues();
             },
             child: Container(
               padding: const EdgeInsets.all(4),
@@ -1081,6 +1163,30 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
         ],
       ),
     );
+  }
+
+  int _calculateCurrentUserPosition() {
+    // progress is 0.0-1.0 based on master duration
+    // Map to user trim window
+    final trimDurationMs = userTrimEndMs - userTrimStartMs;
+    final currentOffsetMs = progress * trimDurationMs;
+    return userTrimStartMs + currentOffsetMs.toInt();
+  }
+
+  void _debugPrintTrimState(String context) {
+    print('=== TRIM STATE: $context ===');
+    print('USER VALUES:');
+    print('  Video Duration: ${userVideoDurationMs}ms');
+    print('  Trim: [${userTrimStartMs}ms - ${userTrimEndMs}ms]');
+    print('  Trim Duration: ${userTrimEndMs - userTrimStartMs}ms');
+    print('INTERNAL VALUES:');
+    print('  Video Duration: ${internalVideoDurationMs}ms (includes ${maxLatencyMs}ms padding)');
+    print('  Trim: [${internalTrimStartMs}ms - ${internalTrimEndMs}ms]');
+    print('  Trim Duration: ${internalTrimEndMs - internalTrimStartMs}ms');
+    print('LATENCY:');
+    print('  Adjustment: ${latencyAdjustmentMs}ms');
+    print('  Max: ±${maxLatencyMs}ms');
+    print('===============================');
   }
 
   Widget _buildVideoView() {
