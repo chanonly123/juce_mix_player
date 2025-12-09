@@ -1117,7 +1117,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
 
   Widget _buildLatencyAdjustmentWidget() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(20),
@@ -1126,38 +1126,58 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          InkWell(
-            onTap: () {
+          IconButton(
+            icon: const Icon(Icons.refresh, size: 18, color: Colors.white70),
+            onPressed: () {
               setState(() {
-                latencyAdjustmentMs = (latencyAdjustmentMs - latencyStepMs).clamp(-maxLatencyMs, maxLatencyMs);
+                latencyAdjustmentMs = 0;
               });
               _updateInternalTrimValues();
             },
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              child: Icon(Icons.remove, color: Colors.white, size: 20),
+            tooltip: 'Reset Latency',
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            visualDensity: VisualDensity.compact,
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 140, // Fixed width for slider to fit in top bar
+            child: SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                trackHeight: 2,
+                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+                activeTrackColor: Colors.cyanAccent,
+                inactiveTrackColor: Colors.white24,
+                thumbColor: Colors.white,
+                valueIndicatorTextStyle: const TextStyle(
+                  color: Colors.black,
+                ),
+              ),
+              child: Slider(
+                value: latencyAdjustmentMs.toDouble(),
+                min: -maxLatencyMs.toDouble(),
+                max: maxLatencyMs.toDouble(),
+                onChanged: (value) {
+                  setState(() {
+                    latencyAdjustmentMs = value.toInt();
+                  });
+                  _updateInternalTrimValues();
+                },
+              ),
             ),
           ),
           const SizedBox(width: 8),
-          Text(
-            '${latencyAdjustmentMs}ms',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(width: 8),
-          InkWell(
-            onTap: () {
-              setState(() {
-                latencyAdjustmentMs = (latencyAdjustmentMs + latencyStepMs).clamp(-maxLatencyMs, maxLatencyMs);
-              });
-              _updateInternalTrimValues();
-            },
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              child: Icon(Icons.add, color: Colors.white, size: 20),
+          SizedBox(
+            width: 45,
+            child: Text(
+              '${latencyAdjustmentMs}ms',
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
