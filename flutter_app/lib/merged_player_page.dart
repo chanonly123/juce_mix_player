@@ -143,7 +143,9 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
       }
     });
 
-    // player.setVideoProgressHandler((videoProgress) {});
+    // player.setVideoProgressHandler((videoProgress) {
+    //   print('Video progress: $videoProgress');
+    // });
 
     player.setAudioSettings(MixerSettings(
       progressUpdateInterval: 0.05,
@@ -208,8 +210,8 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
       player.setVideoPath(path);
       setState(() {
         hasVideoLoaded = true;
+        currentVideoPath = path;
       });
-      currentVideoPath = path;
     } catch (e) {
       _showSnack('Error loading video: $e', isError: true);
     }
@@ -575,7 +577,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                   ],
                 ),
               ),
-              if (hasVideoReady)
+              if (hasVideoReady && currentVideoPath != null)
                 Positioned(
                   bottom: 60,
                   left: 16,
@@ -587,19 +589,18 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: VideoThumbnailStrip(
-                      filePath: currentVideoPath!,
+                      filePath: currentVideoPath ?? '',
                       videoDuration: Duration(milliseconds: userVideoDurationMs),
                       maxTrimDurationMs: userVideoDurationMs,
                       initialStartMs: userTrimStartMs,
                       initialEndMs: userTrimEndMs,
                       windowGradient: gradientPurpleBorder,
-                      currentPositionMs: _calculateCurrentUserPosition(),
+                      // currentPositionFraction: 0.5,
+                      showProgressSeeker: false,
                       onTrimChangeEnd: (TrimData trimData) {
                         print('Trim change from user: Start ${trimData.startMs}ms, End ${trimData.endMs}ms');
                         setState(() {
-                          // Reset latency when user manually adjusts trim
                           latencyAdjustmentMs = 0;
-                          // Update user values (trimData is already in user coordinates)
                           userTrimStartMs = trimData.startMs;
                           userTrimEndMs = trimData.endMs;
                         });
@@ -662,8 +663,8 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                     onPressed: () {
                       setState(() {
                         hasVideoLoaded = false;
-                        // currentVideoPath = null;
                         hasVideoReady = false;
+                        currentVideoPath = null;
                       });
                     },
                     icon: const Icon(Icons.videocam_off_outlined, color: Colors.redAccent),
@@ -1186,13 +1187,13 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
     );
   }
 
-  int _calculateCurrentUserPosition() {
-    // progress is 0.0-1.0 based on master duration
-    // Map to user trim window
-    final trimDurationMs = userTrimEndMs - userTrimStartMs;
-    final currentOffsetMs = progress * trimDurationMs;
-    return userTrimStartMs + currentOffsetMs.toInt();
-  }
+  // int _calculateCurrentUserPosition() {
+  //   // progress is 0.0-1.0 based on master duration
+  //   // Map to user trim window
+  //   final trimDurationMs = userTrimEndMs - userTrimStartMs;
+  //   final currentOffsetMs = progress * trimDurationMs;
+  //   return userTrimStartMs + currentOffsetMs.toInt();
+  // }
 
   void _debugPrintTrimState(String context) {
     print('=== TRIM STATE: $context ===');

@@ -78,7 +78,9 @@ class VideoThumbnailStrip extends StatefulWidget {
   final int initialEndMs;
   final Gradient? windowGradient;
   final double handleWidth;
-  final int? currentPositionMs;
+
+  /// NEW: progress as fraction (0–1)
+  final double? currentPositionFraction;
   final bool showProgressSeeker;
 
   VideoThumbnailStrip({
@@ -100,7 +102,9 @@ class VideoThumbnailStrip extends StatefulWidget {
     int? initialEndMs,
     this.windowGradient,
     this.handleWidth = 0,
-    this.currentPositionMs,
+
+    /// NEW
+    this.currentPositionFraction,
     this.showProgressSeeker = true,
   })  : initialEndMs = initialEndMs ?? videoDuration.inMilliseconds,
         assert(thumbnailCount > 0),
@@ -124,7 +128,6 @@ class _VideoThumbnailStripState extends State<VideoThumbnailStrip> {
   late int _trimStartMs;
   late int _trimEndMs;
 
-  // Time labels (chips) above the strip
   bool _showTimeLabels = false;
   Timer? _labelTimer;
 
@@ -134,8 +137,6 @@ class _VideoThumbnailStripState extends State<VideoThumbnailStrip> {
     _duration = widget.videoDuration;
     _trimStartMs = widget.initialStartMs;
     _trimEndMs = widget.initialEndMs;
-
-    print("VideoThumbnailStrip: trimStartMs: $_trimStartMs trimEndMs: $_trimEndMs videoDuration: ${_duration}");
 
     widget.controller?._setInternalHooks(
       setTrimRange: _programmaticSetTrimRange,
@@ -261,25 +262,22 @@ class _VideoThumbnailStripState extends State<VideoThumbnailStrip> {
   @override
   void didUpdateWidget(VideoThumbnailStrip oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.initialStartMs != oldWidget.initialStartMs || widget.initialEndMs != oldWidget.initialEndMs) {
-      // Only update if the values are meaningfully different to avoid fighting with drag updates
-      // But since the parent only updates on drag END, this is safe and necessary for latency adjustments
+
+    if (widget.initialStartMs != oldWidget.initialStartMs ||
+        widget.initialEndMs != oldWidget.initialEndMs) {
       setState(() {
         _trimStartMs = widget.initialStartMs;
         _trimEndMs = widget.initialEndMs;
       });
     }
+
     if (widget.videoDuration != oldWidget.videoDuration) {
       setState(() => _duration = widget.videoDuration);
     }
   }
 
   void _resetLabelTimer() {
-    // _labelTimer?.cancel();
     setState(() => _showTimeLabels = true);
-    // _labelTimer = Timer(const Duration(seconds: 3), () {
-    //   if (mounted) setState(() => _showTimeLabels = false);
-    // });
   }
 
   void _notifyTrimChanged() {
@@ -306,7 +304,7 @@ class _VideoThumbnailStripState extends State<VideoThumbnailStrip> {
         final containerWidth = widget.width.isFinite ? widget.width : constraints.maxWidth;
 
         return Stack(
-          clipBehavior: Clip.none, // needed so chips can float above
+          clipBehavior: Clip.none,
           children: [
             Column(
               mainAxisSize: MainAxisSize.min,
@@ -323,7 +321,6 @@ class _VideoThumbnailStripState extends State<VideoThumbnailStrip> {
     );
   }
 
-  // Floating time chips (outside strip, move with handles)
   Widget _buildFloatingChips(double containerWidth) {
     if (_duration == null) return const SizedBox.shrink();
 
@@ -346,16 +343,12 @@ class _VideoThumbnailStripState extends State<VideoThumbnailStrip> {
             Positioned(
               left: leftPos,
               width: 100,
-              child: Center(
-                child: _buildTimeLabel(Duration(milliseconds: _trimStartMs)),
-              ),
+              child: Center(child: _buildTimeLabel(Duration(milliseconds: _trimStartMs))),
             ),
             Positioned(
               left: rightPos,
               width: 100,
-              child: Center(
-                child: _buildTimeLabel(Duration(milliseconds: _trimEndMs)),
-              ),
+              child: Center(child: _buildTimeLabel(Duration(milliseconds: _trimEndMs))),
             ),
           ],
         ),
@@ -372,11 +365,7 @@ class _VideoThumbnailStripState extends State<VideoThumbnailStrip> {
       ),
       child: Text(
         _formatDuration(d),
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
-        ),
+        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w500),
       ),
     );
   }
@@ -390,13 +379,7 @@ class _VideoThumbnailStripState extends State<VideoThumbnailStrip> {
         child: Container(
           color: widget.backgroundColor ?? Colors.black12,
           child: _loading
-              ? const Center(
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                )
+              ? const Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)))
               : Stack(
                   fit: StackFit.expand,
                   children: [
@@ -424,7 +407,7 @@ class _VideoThumbnailStripState extends State<VideoThumbnailStrip> {
 
     final thumbs = List<Widget>.generate(count, (i) {
       final key = 'i_$i';
-      final data = _memoryCache.containsKey(key) ? _memoryCache[key] : null;
+      final data = _memoryCache[key];
 
       final child = data != null
           ? Image.memory(data, fit: widget.fit, width: thumbWidth, height: widget.height)
@@ -432,9 +415,7 @@ class _VideoThumbnailStripState extends State<VideoThumbnailStrip> {
               width: thumbWidth,
               height: widget.height,
               color: Colors.black26,
-              child: const Center(
-                child: Icon(Icons.videocam, size: 16, color: Colors.white38),
-              ),
+              child: const Center(child: Icon(Icons.videocam, size: 16, color: Colors.white38)),
             );
 
       return Padding(
@@ -443,10 +424,7 @@ class _VideoThumbnailStripState extends State<VideoThumbnailStrip> {
       );
     });
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: thumbs,
-    );
+    return Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: thumbs);
   }
 
   Widget _buildTrimOverlay(double containerWidth) {
@@ -465,27 +443,13 @@ class _VideoThumbnailStripState extends State<VideoThumbnailStrip> {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        // Dark overlay on left
         if (leftPos > 0)
-          Positioned(
-            left: 0,
-            top: 0,
-            bottom: 0,
-            width: leftPos,
-            child: Container(color: Colors.black54),
-          ),
+          Positioned(left: 0, top: 0, bottom: 0, width: leftPos, child: Container(color: Colors.black54)),
 
-        // Dark overlay on right
         if (rightPos < containerWidth)
-          Positioned(
-            left: rightPos,
-            top: 0,
-            bottom: 0,
-            right: 0,
-            child: Container(color: Colors.black54),
-          ),
+          Positioned(left: rightPos, top: 0, bottom: 0, right: 0, child: Container(color: Colors.black54)),
 
-        // Trim window box with rounded border and center drag
+        // Trim window box
         Positioned(
           left: leftPos,
           top: 0,
@@ -493,15 +457,9 @@ class _VideoThumbnailStripState extends State<VideoThumbnailStrip> {
           width: trimWidth,
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onHorizontalDragStart: (_) {
-              _resetLabelTimer();
-            },
-            onHorizontalDragUpdate: (details) {
-              _updateTrimWindow(details.delta.dx, containerWidth);
-            },
-            onHorizontalDragEnd: (_) {
-              _notifyTrimChanged();
-            },
+            onHorizontalDragStart: (_) => _resetLabelTimer(),
+            onHorizontalDragUpdate: (details) => _updateTrimWindow(details.delta.dx, containerWidth),
+            onHorizontalDragEnd: (_) => _notifyTrimChanged(),
             child: CustomPaint(
               painter: GradientBorderPainter(
                 gradient: widget.windowGradient ?? const LinearGradient(colors: [Colors.white, Colors.white]),
@@ -512,12 +470,9 @@ class _VideoThumbnailStripState extends State<VideoThumbnailStrip> {
           ),
         ),
 
-        // Progress indicator (readonly)
-        if (widget.showProgressSeeker &&
-            widget.currentPositionMs != null &&
-            widget.currentPositionMs! >= _trimStartMs &&
-            widget.currentPositionMs! <= _trimEndMs)
-          _buildProgressIndicator(containerWidth, leftPos, trimWidth),
+        // NEW progress indicator (fraction-based)
+        if (widget.showProgressSeeker && widget.currentPositionFraction != null)
+          _buildProgressIndicatorFromFraction(containerWidth, leftPos, trimWidth),
 
         // Left handle
         Positioned(
@@ -527,15 +482,9 @@ class _VideoThumbnailStripState extends State<VideoThumbnailStrip> {
           width: hitTestWidth,
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onHorizontalDragStart: (_) {
-              _resetLabelTimer();
-            },
-            onHorizontalDragUpdate: (details) {
-              _updateLeftHandle(details.delta.dx, containerWidth);
-            },
-            onHorizontalDragEnd: (_) {
-              _notifyTrimChanged();
-            },
+            onHorizontalDragStart: (_) => _resetLabelTimer(),
+            onHorizontalDragUpdate: (details) => _updateLeftHandle(details.delta.dx, containerWidth),
+            onHorizontalDragEnd: (_) => _notifyTrimChanged(),
             child: _buildHandle(true),
           ),
         ),
@@ -548,15 +497,9 @@ class _VideoThumbnailStripState extends State<VideoThumbnailStrip> {
           width: hitTestWidth,
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onHorizontalDragStart: (_) {
-              _resetLabelTimer();
-            },
-            onHorizontalDragUpdate: (details) {
-              _updateRightHandle(details.delta.dx, containerWidth);
-            },
-            onHorizontalDragEnd: (_) {
-              _notifyTrimChanged();
-            },
+            onHorizontalDragStart: (_) => _resetLabelTimer(),
+            onHorizontalDragUpdate: (details) => _updateRightHandle(details.delta.dx, containerWidth),
+            onHorizontalDragEnd: (_) => _notifyTrimChanged(),
             child: _buildHandle(false),
           ),
         ),
@@ -564,42 +507,45 @@ class _VideoThumbnailStripState extends State<VideoThumbnailStrip> {
     );
   }
 
-  Widget _buildProgressIndicator(double containerWidth, double leftPos, double trimWidth) {
+  /// NEW FRACTION-BASED SEEKER
+  Widget _buildProgressIndicatorFromFraction(
+      double containerWidth, double leftPos, double trimWidth) {
+    final totalMs = _duration!.inMilliseconds;
+
+    // Convert 0–1 fraction → absolute position
+    final posMs = (widget.currentPositionFraction! * totalMs).round();
+
+    // Hide if outside trim
+    if (posMs < _trimStartMs || posMs > _trimEndMs) {
+      return const SizedBox.shrink();
+    }
+
     final trimDurationMs = _trimEndMs - _trimStartMs;
-    final progressInTrim = widget.currentPositionMs! - _trimStartMs;
+    final progressInTrim = posMs - _trimStartMs;
     final progressFraction = progressInTrim / trimDurationMs;
-    final progressOffset = progressFraction * trimWidth;
+
+    final offset = progressFraction * trimWidth;
 
     return Positioned(
-      left: leftPos + progressOffset - 1,
+      left: leftPos + offset - 1,
       top: 0,
       bottom: 0,
       width: 2,
       child: IgnorePointer(
-        child: Container(
-          color: Colors.white,
-        ),
+        child: Container(color: Colors.white),
       ),
     );
   }
 
-  // Handle with vertical bar + round thumb tip at center
   Widget _buildHandle(bool isLeft) {
     final gradient = widget.windowGradient ?? const LinearGradient(colors: [Colors.white, Colors.white]);
 
     return Container(
-      color: Colors.transparent, // hit test area
+      color: Colors.transparent,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Vertical line
-          Container(
-            width: widget.handleWidth,
-            decoration: BoxDecoration(
-              gradient: gradient,
-            ),
-          ),
-          // Round thumb tip at vertical center
+          Container(width: widget.handleWidth, decoration: BoxDecoration(gradient: gradient)),
           Align(
             alignment: Alignment.center,
             child: Container(
@@ -609,11 +555,7 @@ class _VideoThumbnailStripState extends State<VideoThumbnailStrip> {
                 gradient: gradient,
                 shape: BoxShape.circle,
                 boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 2,
-                    offset: Offset(0, 1),
-                  ),
+                  BoxShadow(color: Colors.black26, blurRadius: 2, offset: Offset(0, 1)),
                 ],
               ),
             ),
@@ -646,7 +588,6 @@ class _VideoThumbnailStripState extends State<VideoThumbnailStrip> {
     if (newStart > maxStart) {
       newStart = maxStart;
     }
-
     if (newStart < 0) newStart = 0;
 
     if (newStart != _trimStartMs) {
@@ -680,10 +621,7 @@ class _VideoThumbnailStripState extends State<VideoThumbnailStrip> {
       }
     }
 
-    if (newEnd < minEnd) {
-      newEnd = minEnd;
-    }
-
+    if (newEnd < minEnd) newEnd = minEnd;
     if (newEnd > totalMs) newEnd = totalMs;
 
     if (newEnd != _trimEndMs) {
@@ -703,6 +641,7 @@ class _VideoThumbnailStripState extends State<VideoThumbnailStrip> {
     final totalMs = _duration!.inMilliseconds;
     final msPerPixel = totalMs / containerWidth;
     final deltaMs = (dx * msPerPixel).round();
+
     final currentDuration = _trimEndMs - _trimStartMs;
 
     int newStart = _trimStartMs + deltaMs;
@@ -710,10 +649,10 @@ class _VideoThumbnailStripState extends State<VideoThumbnailStrip> {
 
     if (newStart < 0) {
       newStart = 0;
-      newEnd = newStart + currentDuration;
+      newEnd = currentDuration;
     } else if (newEnd > totalMs) {
       newEnd = totalMs;
-      newStart = newEnd - currentDuration;
+      newStart = totalMs - currentDuration;
     }
 
     if (newStart != _trimStartMs) {
@@ -741,10 +680,7 @@ class GradientBorderPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
-    final rrect = RRect.fromRectAndRadius(
-      rect.deflate(width / 2),
-      Radius.circular(radius),
-    );
+    final rrect = RRect.fromRectAndRadius(rect.deflate(width / 2), Radius.circular(radius));
 
     final paint = Paint()
       ..shader = gradient.createShader(rect)
@@ -756,6 +692,8 @@ class GradientBorderPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant GradientBorderPainter oldDelegate) {
-    return oldDelegate.gradient != gradient || oldDelegate.width != width || oldDelegate.radius != radius;
+    return oldDelegate.gradient != gradient ||
+        oldDelegate.width != width ||
+        oldDelegate.radius != radius;
   }
 }
