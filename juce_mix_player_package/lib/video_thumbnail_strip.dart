@@ -258,6 +258,22 @@ class _VideoThumbnailStripState extends State<VideoThumbnailStrip> {
     super.dispose();
   }
 
+  @override
+  void didUpdateWidget(VideoThumbnailStrip oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialStartMs != oldWidget.initialStartMs || widget.initialEndMs != oldWidget.initialEndMs) {
+      // Only update if the values are meaningfully different to avoid fighting with drag updates
+      // But since the parent only updates on drag END, this is safe and necessary for latency adjustments
+      setState(() {
+        _trimStartMs = widget.initialStartMs;
+        _trimEndMs = widget.initialEndMs;
+      });
+    }
+    if (widget.videoDuration != oldWidget.videoDuration) {
+      setState(() => _duration = widget.videoDuration);
+    }
+  }
+
   void _resetLabelTimer() {
     // _labelTimer?.cancel();
     setState(() => _showTimeLabels = true);
@@ -636,7 +652,7 @@ class _VideoThumbnailStripState extends State<VideoThumbnailStrip> {
     if (newStart != _trimStartMs) {
       setState(() => _trimStartMs = newStart);
       _resetLabelTimer();
-      if (hitMaxDuration) {
+      if (hitMaxDuration || newStart == 0) {
         HapticFeedback.heavyImpact();
       } else {
         HapticFeedback.selectionClick();
@@ -673,7 +689,7 @@ class _VideoThumbnailStripState extends State<VideoThumbnailStrip> {
     if (newEnd != _trimEndMs) {
       setState(() => _trimEndMs = newEnd);
       _resetLabelTimer();
-      if (hitMaxDuration) {
+      if (hitMaxDuration || newEnd == totalMs) {
         HapticFeedback.heavyImpact();
       } else {
         HapticFeedback.selectionClick();

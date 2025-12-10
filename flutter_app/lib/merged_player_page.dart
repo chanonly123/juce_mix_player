@@ -67,7 +67,7 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
   int latencyAdjustmentMs = 0; // Current latency offset (-maxLatencyMs to +maxLatencyMs)
 
   // Constants
-  static const int maxLatencyMs = 1000;
+  static const int maxLatencyMs = 5000;
   static const int latencyStepMs = 5;
 
   int currentRotation = 0;
@@ -662,7 +662,8 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                     onPressed: () {
                       setState(() {
                         hasVideoLoaded = false;
-                        currentVideoPath = null;
+                        // currentVideoPath = null;
+                        hasVideoReady = false;
                       });
                     },
                     icon: const Icon(Icons.videocam_off_outlined, color: Colors.redAccent),

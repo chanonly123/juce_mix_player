@@ -59,28 +59,62 @@ void GstPlayer::play() {
 
 void GstPlayer::_playInternal() {
     if (!_isPlaying) {
-        if (_isCompleted) {
+        if (_isCompleted || _progress == 0.0f) {
             _isCompleted = false;
-            _progress = 0.0f;
-            gint64 startNs = static_cast<gint64>(_trimStartMs * 1e6);
-            gst_element_seek_simple(
-                                    pipeline, GST_FORMAT_TIME,
-                                    GstSeekFlags(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT),
-                                    startNs);
-            if (_activePaddingMs > 0) {
+            
+            // LOGIC FIX: Determine if we start in padding or video based on
+            // _trimStartMs (Virtual Time) Virtual Time 0.._activePaddingMs is
+            // Padding. Virtual Time _activePaddingMs..End is Video.
+            
+            if (_activePaddingMs > 0 && _trimStartMs < _activePaddingMs) {
+                // Start in Padding Phase
                 _isInPadding = true;
-                _paddingPositionMs = 0;
+                _paddingPositionMs = (double)_trimStartMs;
+                
+                PRINT("Starting playback in PADDING phase from " +
+                      std::to_string(_paddingPositionMs) + "ms");
+                
+                // Pipeline should be ready at 0 (start of video file)
+                gst_element_seek_simple(
+                                        pipeline, GST_FORMAT_TIME,
+                                        GstSeekFlags(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT),
+                                        0);
+                
+                // Ensure pipeline doesn't progress
+                gst_element_set_state(pipeline, GST_STATE_PAUSED);
+                
+            } else {
+                // Start in Video Phase
+                _isInPadding = false;
+                
+                // Calculate position in Video File (Virtual - PaddingOffset)
+                gint64 startVideoMs = (gint64)(_trimStartMs - _activePaddingMs);
+                if (startVideoMs < 0)
+                    startVideoMs = 0;
+                
+                PRINT("Starting playback in VIDEO phase from " +
+                      std::to_string(startVideoMs) + "ms");
+                
+                gint64 startNs = startVideoMs * 1000000;
+                gst_element_seek_simple(
+                                        pipeline, GST_FORMAT_TIME,
+                                        GstSeekFlags(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT),
+                                        startNs);
+                
+                gst_element_set_state(pipeline, GST_STATE_PLAYING);
+            }
+        } else {
+            // Resuming from pause
+            if (!_isInPadding) {
+                gst_element_set_state(pipeline, GST_STATE_PLAYING);
+            } else {
+                PRINT("Resuming playback in PADDING phase");
+                // Ensure state matches (might be needed if paused)
             }
         }
         
         _isPlaying = true;
         _isPlayingInternal = true;
-        
-        if (!_isInPadding) {
-            gst_element_set_state(pipeline, GST_STATE_PLAYING);
-        } else {
-            PRINT("Starting playback in PADDING phase");
-        }
         
         _startProgressTimer();
         notifyState(JuceMixPlayerState::PLAYING);
@@ -144,74 +178,85 @@ void GstPlayer::seek(float normalizedPos) {
         _isCompleted = false;
         bool wasPlaying = _isPlaying;
         
-        if (_durationMs <= 0) {
+        if (_durationMs <= 0 && _activePaddingMs <= 0) {
             PRINT("ERROR: Cannot seek - duration not set or invalid");
             _isSeeking = false;
             return;
         }
-        double trimmedDurationMs =
-        (_trimEndMs > 0 ? _trimEndMs : (double)_durationMs) - _trimStartMs;
         
-        double totalDurationMs = _activePaddingMs + trimmedDurationMs;
-        double targetTotalMs = totalDurationMs * seekPos;
+        // Logic Upgrade: Use Virtual Timeline
+        // _trimStartMs and _trimEndMs are Virtual Points
+        // _activePaddingMs is the boundary
         
-        gint64 target = 0;
+        double trimmedDurationMs = (_trimEndMs - _trimStartMs);
+        if (trimmedDurationMs <= 0)
+            trimmedDurationMs = 1.0; // Avoid divide by zero
         
-        if (targetTotalMs < _activePaddingMs) {
+        double targetVirtualMs = _trimStartMs + (trimmedDurationMs * seekPos);
+        
+        gint64 targetNs = 0;
+        
+        if (_activePaddingMs > 0 && targetVirtualMs < _activePaddingMs) {
             // Seek into padding
-            PRINT("Seeking into padding: " + std::to_string(targetTotalMs) +
+            PRINT("Seeking into padding: " + std::to_string(targetVirtualMs) +
                   "ms");
+            
             _isInPadding = true;
-            _paddingPositionMs = targetTotalMs;
+            _paddingPositionMs = targetVirtualMs;
             
-            // Video should be at start (plus trim start)
-            double videoStartMs = _trimStartMs;
-            target = (gint64)(videoStartMs * 1000000);
-            _lastSeekMs = (gint64)videoStartMs;
+            // Pipeline goes to 0 (Frozen Start)
+            targetNs = 0;
+            _lastSeekMs = 0;
             
-            // Ensure pipeline is paused if we are in padding event if 'playing'
+            // Ensure pipeline is paused if we are in padding
             if (pipeline) {
                 gst_element_set_state(pipeline, GST_STATE_PAUSED);
             }
             
+            // We need to perform the seek on pipeline to frame 0 to be sure
+            gst_element_seek(
+                             pipeline, 1.0, GST_FORMAT_TIME,
+                             (GstSeekFlags)(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE),
+                             GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE);
+            
         } else {
             // Seek into video
             _isInPadding = false;
-            double targetVideoRelMs = targetTotalMs - _activePaddingMs;
-            double targetVideoAbsMs = _trimStartMs + targetVideoRelMs;
-            target = (gint64)(targetVideoAbsMs * 1000000);
-            _lastSeekMs = (gint64)targetVideoAbsMs;
             
-            PRINT("Seeking into video: " + std::to_string(targetVideoAbsMs) +
-                  "ms");
+            double targetVideoMs = targetVirtualMs - _activePaddingMs;
+            if (targetVideoMs < 0)
+                targetVideoMs = 0;
+            
+            targetNs = (gint64)(targetVideoMs * 1000000);
+            _lastSeekMs = (gint64)targetVideoMs;
+            
+            PRINT("Seeking into video: " + std::to_string(targetVideoMs) +
+                  "ms (Virtual: " + std::to_string(targetVirtualMs) + ")");
+            
+            bool result = gst_element_seek(
+                                           pipeline, 1.0, GST_FORMAT_TIME,
+                                           (GstSeekFlags)(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE),
+                                           GST_SEEK_TYPE_SET, targetNs, GST_SEEK_TYPE_NONE,
+                                           GST_CLOCK_TIME_NONE);
+            
+            if (!result) {
+                PRINT("Seek failed");
+                _isSeeking = false;
+                return;
+            }
             
             // If playing, ensure pipeline is playing (might have been in
             // padding before)
-            if (_isPlaying && pipeline) {
+            if (wasPlaying && pipeline) {
                 gst_element_set_state(pipeline, GST_STATE_PLAYING);
             }
-        }
-        
-        std::cout << "GstPlayer::seek: target ns: " << target
-        << " (trimmed duration " << trimmedDurationMs << "ms)"
-        << std::endl;
-        
-        bool result = gst_element_seek(
-                                       pipeline, 1.0, GST_FORMAT_TIME,
-                                       (GstSeekFlags)(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE),
-                                       GST_SEEK_TYPE_SET, target, GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE);
-        
-        if (!result) {
-            PRINT("Seek failed");
-            _isSeeking = false;
-            return;
         }
         
         PRINT("SEEK SUCCESS");
         
         gst_element_get_state(pipeline, nullptr, nullptr, GST_CLOCK_TIME_NONE);
         
-        if (!wasPlaying && pipeline) {
+        if (!wasPlaying && pipeline && !_isInPadding) {
             gst_element_set_state(pipeline, GST_STATE_PAUSED);
             gst_element_get_state(pipeline, nullptr, nullptr,
                                   GST_CLOCK_TIME_NONE);
@@ -532,10 +577,13 @@ void GstPlayer::timerCallback() { // In timerCallback
                 gst_element_set_state(pipeline, GST_STATE_PLAYING);
             }
             
-            // Calculate progress during padding
-            double totalDurationMs = _activePaddingMs + _durationMs;
-            if (totalDurationMs > 0) {
-                _progress = (float)(_paddingPositionMs / totalDurationMs);
+            // Calculate progress during padding using Virtual Timeline
+            double trimmedDurationMs = _trimEndMs - _trimStartMs;
+            if (trimmedDurationMs > 0) {
+                double relativePosMs = _paddingPositionMs - _trimStartMs;
+                _progress = (float)(relativePosMs / trimmedDurationMs);
+                _progress = std::clamp(_progress, 0.0f, 1.0f);
+                
                 if (onProgressCallback)
                     onProgressCallback(this, _progress);
             }
@@ -548,25 +596,19 @@ void GstPlayer::timerCallback() { // In timerCallback
             
             if (gst_element_query_position(pipeline, GST_FORMAT_TIME, &posNs)) {
                 double posMs = (double)posNs / 1e6;
-                double trimmedDurationMs =
-                (_trimEndMs > 0 ? _trimEndMs : (double)_durationMs) -
-                _trimStartMs;
                 
-                double totalDurationMs = _activePaddingMs + trimmedDurationMs;
+                // NEW LOGIC: Calculate Virtual Time
+                double currentVirtualMs = _activePaddingMs + posMs;
+                double trimmedDurationMs = _trimEndMs - _trimStartMs;
                 
                 if (trimmedDurationMs > 0) {
-                    double relativePosMs = posMs - _trimStartMs;
+                    double relativePosMs = currentVirtualMs - _trimStartMs;
                     
-                    if (totalDurationMs > 0) {
-                        _progress = (float)((_activePaddingMs + relativePosMs) /
-                                            totalDurationMs);
-                    } else {
-                        _progress = 0.0f;
-                    }
-                    
+                    _progress = (float)(relativePosMs / trimmedDurationMs);
                     _progress = std::clamp(_progress, 0.0f, 1.0f);
                     
-                    if (_trimEndMs > 0 && posMs >= _trimEndMs) {
+                    // Check Completion based on Virtual Time
+                    if (currentVirtualMs >= _trimEndMs) {
                         _isPlaying = false;
                         _isPlayingInternal = false;
                         _isCompleted = true;
@@ -998,14 +1040,17 @@ void GstPlayer::pollBus() {
 void GstPlayer::setTrimRange(int startMs, int endMs) {
     PRINT("GstPlayer::setTrimRange: start=" + std::to_string(startMs) +
           "ms, end=" + std::to_string(endMs) + "ms");
-
+    
     if (_durationMs <= 0) {
         PRINT("Warning: Cannot set trim range - no video loaded");
         return;
     }
 
-    int validStart = std::max(0, std::min(startMs, (int)_durationMs));
-    int validEnd = std::max(validStart, std::min(endMs, (int)_durationMs));
+    // Use Virtual Total Duration (ConfigPadding + VideoDuration)
+    int totalVirtualDuration = (int)_durationMs + _activePaddingMs;
+
+    int validStart = std::max(0, std::min(startMs, totalVirtualDuration));
+    int validEnd = std::max(validStart, std::min(endMs, totalVirtualDuration));
 
     _trimStartMs = validStart;
     _trimEndMs = validEnd;
