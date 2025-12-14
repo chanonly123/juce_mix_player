@@ -16,6 +16,11 @@
 - Xcode `xcodebuild -version` (for iOS)
 - Cocoapods (`brew install cocoapods`). `pod --version` should work. (for iOS)
 - Commands `flutter` and `dart` (to generate cpp to dart bindings)
+- (Android) set env variable GSTREAMER_ROOT_ANDROID="/Users/<username>/gstreamer-1.0-android-universal-1.26.8"
+    example:
+        /Users/<username>/gstreamer-1.0-android-universal-1.26.8/arm64
+        /Users/<username>/gstreamer-1.0-android-universal-1.26.8/armv7
+- (iOS) Gstreamer Iphone sdk $(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Versions/1.0/Headers
 
 ### Regenerate Projucer generated projects
 - open `juce_lib/juce_lib.jucer` using Projucer and hit (command+P to regenerate)
