@@ -1,0 +1,58 @@
+
+
+# ============================================================================
+# GStreamer Android SDK Configuration
+# ============================================================================
+
+set(GSTREAMER_ROOT_ANDROID "$ENV{GSTREAMER_ROOT_ANDROID}")
+
+# Define the GStreamer Android SDK path
+if(NOT DEFINED GSTREAMER_ROOT_ANDROID)
+    message(FATAL_ERROR "GSTREAMER_ROOT_ANDROID is not defined!")
+endif()
+
+# Map Android ABI to GStreamer arch directory
+if(ANDROID_ABI STREQUAL "armeabi")
+    set(GSTREAMER_ROOT "${GSTREAMER_ROOT_ANDROID}/arm")
+elseif(ANDROID_ABI STREQUAL "armeabi-v7a")
+    set(GSTREAMER_ROOT "${GSTREAMER_ROOT_ANDROID}/armv7")
+elseif(ANDROID_ABI STREQUAL "arm64-v8a")
+    set(GSTREAMER_ROOT "${GSTREAMER_ROOT_ANDROID}/arm64")
+elseif(ANDROID_ABI STREQUAL "x86")
+    set(GSTREAMER_ROOT "${GSTREAMER_ROOT_ANDROID}/x86")
+elseif(ANDROID_ABI STREQUAL "x86_64")
+    set(GSTREAMER_ROOT "${GSTREAMER_ROOT_ANDROID}/x86_64")
+else()
+    message(FATAL_ERROR "Target arch ABI not supported: ${ANDROID_ABI}")
+endif()
+
+# Set paths
+set(GSTREAMER_INCLUDE_DIR "${GSTREAMER_ROOT}/include")
+set(GSTREAMER_LIB_DIR "${GSTREAMER_ROOT}/lib")
+
+# Adds the CMake modules directory to search path
+list(APPEND CMAKE_MODULE_PATH "${GSTREAMER_ROOT}/share/cmake")
+
+# Imports the CMake module
+set(GSTREAMER_NDK_BUILD_PATH  "${GSTREAMER_ROOT}/share/gst-android/ndk-build/")
+include("${GSTREAMER_NDK_BUILD_PATH}/plugins.cmake")
+set(GSTREAMER_PLUGINS         ${GSTREAMER_PLUGINS_CORE} ${GSTREAMER_PLUGINS_SYS})
+find_library(LOG_LIB log REQUIRED)
+find_package(GStreamerMobile COMPONENTS ${GSTREAMER_PLUGINS} fonts REQUIRED)
+
+# Set include directories
+set_target_properties(GStreamer::GStreamer PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES
+        "${GSTREAMER_INCLUDE_DIR};${GSTREAMER_INCLUDE_DIR}/gstreamer-1.0;${GSTREAMER_INCLUDE_DIR}/glib-2.0;${GSTREAMER_INCLUDE_DIR}/glib-2.0/glib;${GSTREAMER_LIB_DIR}/glib-2.0/include"
+)
+
+# Add all GStreamer libraries
+set_target_properties(GStreamer::GStreamer PROPERTIES
+        INTERFACE_LINK_DIRECTORIES "${GSTREAMER_LIB_DIR}"
+        INTERFACE_LINK_LIBRARIES "gstreamer-1.0;gstbase-1.0;gstapp-1.0;glib-2.0;gobject-2.0;gthread-2.0;gmodule-2.0;ffi;pcre2-8;intl;iconv"
+)
+
+# ============================================================================
+# GStreamer Android SDK Configuration
+# ============================================================================
+

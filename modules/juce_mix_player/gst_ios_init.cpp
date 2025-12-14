@@ -1,3 +1,4 @@
+#if JUCE_IOS
 #include "gst_ios_init.h"
 
 #include <gio/gio.h>
@@ -1079,3 +1080,5 @@ gst_ios_init (void)
   if (plugin)
     gst_plugin_feature_set_rank(plugin, GST_RANK_SECONDARY-1);
 }
+
+#endif
