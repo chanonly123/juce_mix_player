@@ -1,4 +1,0 @@
-- Use fvm for flutter_app
-- Don't run any build commands for juce or cpp projects
-- Don't create any testing code unless explicitly asked.
-- Don't create any docs unless explicitly asked.

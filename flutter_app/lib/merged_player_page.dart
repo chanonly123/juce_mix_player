@@ -621,7 +621,9 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
                       onPressed: _discardPage,
                       tooltip: 'Discard & Reload',
                     ),
-                    hasVideoLoaded ? _buildLatencyAdjustmentWidget() : const SizedBox.shrink(),
+                    Flexible(
+                      child: hasVideoLoaded ? _buildLatencyAdjustmentWidget() : const SizedBox.shrink(),
+                    ),
                     IconButton(
                       icon: isExporting
                           ? SizedBox(
@@ -1141,35 +1143,37 @@ class MergedPlayerPageState extends State<MergedPlayerPage> {
             constraints: const BoxConstraints(),
             visualDensity: VisualDensity.compact,
           ),
-          const SizedBox(width: 8),
-          SizedBox(
-            width: 140, // Fixed width for slider to fit in top bar
-            child: SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                trackHeight: 2,
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
-                activeTrackColor: Colors.cyanAccent,
-                inactiveTrackColor: Colors.white24,
-                thumbColor: Colors.white,
-                valueIndicatorTextStyle: const TextStyle(
-                  color: Colors.black,
+          const SizedBox(width: 4),
+          Flexible(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 140, minWidth: 80),
+              child: SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  trackHeight: 2,
+                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+                  activeTrackColor: Colors.cyanAccent,
+                  inactiveTrackColor: Colors.white24,
+                  thumbColor: Colors.white,
+                  valueIndicatorTextStyle: const TextStyle(
+                    color: Colors.black,
+                  ),
                 ),
-              ),
-              child: Slider(
-                value: latencyAdjustmentMs.toDouble(),
-                min: -maxLatencyMs.toDouble(),
-                max: maxLatencyMs.toDouble(),
-                onChanged: (value) {
-                  setState(() {
-                    latencyAdjustmentMs = value.toInt();
-                  });
-                  _updateInternalTrimValues();
-                },
+                child: Slider(
+                  value: latencyAdjustmentMs.toDouble(),
+                  min: -maxLatencyMs.toDouble(),
+                  max: maxLatencyMs.toDouble(),
+                  onChanged: (value) {
+                    setState(() {
+                      latencyAdjustmentMs = value.toInt();
+                    });
+                    _updateInternalTrimValues();
+                  },
+                ),
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 4),
           SizedBox(
             width: 45,
             child: Text(

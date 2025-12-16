@@ -38,14 +38,16 @@ class _UnifiedVideoViewState extends State<UnifiedVideoView> {
         creationParamsCodec: const StandardMessageCodec(),
         onPlatformViewCreated: _onPlatformViewCreated,
       );
-    } else if (defaultTargetPlatform == TargetPlatform.android) {
-      return AndroidView(
-        viewType: viewType,
-        creationParams: creationParams,
-        creationParamsCodec: const StandardMessageCodec(),
-        onPlatformViewCreated: _onPlatformViewCreated,
-      );
-    }
+    } 
+    
+    // else if (defaultTargetPlatform == TargetPlatform.android) {
+    //   return AndroidView(
+    //     viewType: viewType,
+    //     creationParams: creationParams,
+    //     creationParamsCodec: const StandardMessageCodec(),
+    //     onPlatformViewCreated: _onPlatformViewCreated,
+    //   );
+    // }
 
     return const Center(
       child: Text('Video playback not supported on this platform'),
