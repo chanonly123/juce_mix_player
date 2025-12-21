@@ -77,6 +77,36 @@ or
 ```
 - Check `/flutter_app`
 
+### Troubleshooting
+
+#### Android Release Build: "Target arch ABI not supported: armeabi-v7a"
+
+If you encounter this CMake error when building for release:
+```
+CMake Error at CMakeLists.txt: Target arch ABI not supported: armeabi-v7a
+```
+
+**Cause:** The GStreamer Android SDK only includes libraries for `arm64` architecture. The debug build flavor is configured to only build for `arm64-v8a`, but the release flavor attempts to build for all ABIs by default.
+
+**Fix:** Add `abiFilters` to the release flavor in `juce_lib/Builds/Android/lib/build.gradle`:
+
+```gradle
+release_ {
+    ndk {
+        abiFilters "arm64-v8a"
+    }
+    externalNativeBuild {
+        cmake {
+            targets "juce_jni"
+            cFlags    "-O3"
+            cppFlags  "-O3"
+            arguments "-DJUCE_BUILD_CONFIGURATION=RELEASE"
+        }
+    }
+    dimension "default"
+}
+```
+
 ### License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
