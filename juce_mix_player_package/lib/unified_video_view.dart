@@ -3,10 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:juce_mix_player/unified_av_player.dart';
 
-/// A widget that displays video output from UnifiedAVPlayer using a native platform view.
-///
-/// This widget creates a native iOS/Android view that GStreamer can render video to.
-/// It automatically connects the view to the UnifiedAVPlayer's internal video player.
 class UnifiedVideoView extends StatefulWidget {
   final UnifiedAVPlayerController controller;
   final VoidCallback? onViewReady;
@@ -26,7 +22,6 @@ class _UnifiedVideoViewState extends State<UnifiedVideoView> {
   Widget build(BuildContext context) {
     const String viewType = 'unified-video-view';
 
-    // Pass the UnifiedAVPlayer pointer to the native view
     final Map<String, dynamic> creationParams = {
       'playerPtr': widget.controller.getPtr().address,
     };
@@ -38,16 +33,14 @@ class _UnifiedVideoViewState extends State<UnifiedVideoView> {
         creationParamsCodec: const StandardMessageCodec(),
         onPlatformViewCreated: _onPlatformViewCreated,
       );
-    } 
-    
-    // else if (defaultTargetPlatform == TargetPlatform.android) {
-    //   return AndroidView(
-    //     viewType: viewType,
-    //     creationParams: creationParams,
-    //     creationParamsCodec: const StandardMessageCodec(),
-    //     onPlatformViewCreated: _onPlatformViewCreated,
-    //   );
-    // }
+    } else if (defaultTargetPlatform == TargetPlatform.android) {
+      return AndroidView(
+        viewType: viewType,
+        creationParams: creationParams,
+        creationParamsCodec: const StandardMessageCodec(),
+        onPlatformViewCreated: _onPlatformViewCreated,
+      );
+    }
 
     return const Center(
       child: Text('Video playback not supported on this platform'),

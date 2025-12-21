@@ -20,7 +20,6 @@ class GstVideoView extends StatelessWidget {
       'playerPtr': controller.nativeHandle,
     };
 
-    // Platform-specific view creation
     if (Platform.isIOS) {
       return UiKitView(
         viewType: viewType,
@@ -36,7 +35,6 @@ class GstVideoView extends StatelessWidget {
         onPlatformViewCreated: _onPlatformViewCreated,
       );
     } else {
-      // Fallback for unsupported platforms
       return Container(
         color: Colors.black,
         child: const Center(
@@ -50,7 +48,6 @@ class GstVideoView extends StatelessWidget {
   }
 
   void _onPlatformViewCreated(int id) {
-    // Give the native view a moment to fully initialize
     Future.delayed(const Duration(milliseconds: 100), () {
       onViewReady?.call();
     });
