@@ -35,3 +35,11 @@ awk -v insert_file="$INSERT_FILE" '
 ' "$CMAKE_FILE" > "$TMP_FILE"
 
 mv "$TMP_FILE" "$CMAKE_FILE"
+
+# Patch build.gradle to use c++_shared instead of c++_static (required for GStreamer)
+GRADLE_FILE="$scriptDir/Builds/Android/lib/build.gradle"
+if [ -f "$GRADLE_FILE" ]; then
+    sed -i.bak 's/c++_static/c++_shared/g' "$GRADLE_FILE"
+    rm -f "$GRADLE_FILE.bak"
+    echo "Patched build.gradle: c++_static -> c++_shared for GStreamer compatibility"
+fi

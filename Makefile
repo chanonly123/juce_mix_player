@@ -19,9 +19,16 @@ build-an:
 build-ios:
 	sh build_ios_juce_lib.sh
 
-clean-all:
-	cd flutter_app && fvm flutter clean && fvm flutter pub get && cd ios && pod deintegrate && pod install
-
 pub:
 	cd flutter_app && fvm flutter pub get
 	cd flutter_app/ios && pod install
+
+clean-pub:
+	cd flutter_app && fvm flutter clean && fvm flutter pub get
+	cd flutter_app/ios && pod deintegrate && rm -rf Pods Podfile.lock && pod install
+
+cleanup:
+	cd flutter_app && fvm flutter clean && cd ios && pod deintegrate && rm -rf Pods Podfile.lock
+
+clean-juce:
+	cd juce_lib && rm -rf Builds JuceLibraryCode

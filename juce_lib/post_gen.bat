@@ -25,3 +25,10 @@ if not exist "%input_file%" (
 
 move /y "%temp_file%" "%input_file%" > nul
 echo Processing complete.
+
+:: Patch build.gradle to use c++_shared instead of c++_static (required for GStreamer)
+set "gradle_file=%scriptDir%Builds\Android\lib\build.gradle"
+if exist "%gradle_file%" (
+    powershell -Command "(Get-Content '%gradle_file%') -replace 'c\+\+_static', 'c++_shared' | Set-Content '%gradle_file%'"
+    echo Patched build.gradle: c++_static -^> c++_shared for GStreamer compatibility
+)
