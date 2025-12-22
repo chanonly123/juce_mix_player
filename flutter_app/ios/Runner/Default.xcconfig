@@ -1,5 +1,28 @@
-FRAMEWORK_SEARCH_PATHS = $(inherited) $(HOME)/Library/Developer/GStreamer/iPhone.sdk
+FRAMEWORK_SEARCH_PATHS = $(inherited) \
+    $(HOME)/Library/Developer/GStreamer/iPhone.sdk
 
-HEADER_SEARCH_PATHS = $(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers
+HEADER_SEARCH_PATHS = $(inherited) \
+    $(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers
 
-OTHER_LDFLAGS = $(inherited) -lresolv -lc++ -liconv -lsqlite3 -framework path_provider_foundation -framework permission_handler_apple -framework CoreFoundation -framework Foundation -framework AVFoundation -framework CoreMedia -framework CoreVideo -framework CoreAudio -framework AudioToolbox -framework OpenGLES -framework AssetsLibrary -framework QuartzCore -framework Metal -framework IOSurface -framework VideoToolbox -framework GStreamer -ObjC
+OTHER_LDFLAGS = $(inherited) \
+	-lresolv \
+	-lc++ \
+	-liconv \
+	-lsqlite3 \
+	-framework path_provider_foundation \
+	-framework permission_handler_apple \
+	-framework CoreFoundation \
+	-framework Foundation \
+	-framework AVFoundation \
+	-framework CoreMedia \
+	-framework CoreVideo \
+	-framework CoreAudio \
+	-framework AudioToolbox \
+	-framework OpenGLES \
+	-framework AssetsLibrary \
+	-framework QuartzCore \
+	-framework Metal \
+	-framework IOSurface \
+	-framework VideoToolbox \
+	-framework GStreamer \
+	-ObjC
