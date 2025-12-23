@@ -398,23 +398,6 @@ bool UnifiedAVPlayer::hasVideoLoaded() { return hasVideo; }
 
 void UnifiedAVPlayer::_handleAudioProgress(float progress) {
     lastAudioProgress = progress;
-    bool shouldBlack = false;
-    
-    if (hasVideo && videoDuration > 0.0f && audioDuration > 0.0f &&
-        videoDuration < audioDuration) {
-        const float marginSeconds = 0.15f;
-        
-        float audioTime = progress * audioDuration;
-        float thresholdTime = videoDuration - marginSeconds;
-        if (thresholdTime < 0.0f)
-            thresholdTime = 0.0f;
-        shouldBlack = (audioTime >= thresholdTime);
-    }
-    
-    if (shouldBlack != isVideoAfterEndForPlayback) {
-        isVideoAfterEndForPlayback = shouldBlack;
-        _updateVideoBlackOverlayForPlayback(shouldBlack);
-    }
     
     if (onProgressCallback) {
         onProgressCallback(this, progress);
@@ -454,17 +437,17 @@ void UnifiedAVPlayer::_handleVideoStateChange(const std::string &state) {
     if (state == "READY" && videoPlayer) {
         videoDuration = videoPlayer->getDurationInSecs();
         hasVideo = true;
-        isVideoAfterEndForPlayback = false;
         videoPlayer->setMuteEmbeddedAudio(1);
         
         if (audioDuration > 0) {
             if (videoDuration > audioDuration) {
                 PRINT("WARNING: Video duration ("
-                      << videoDuration << "s) > audio duration (" << audioDuration
-                      << "s). Video will be trimmed.");
+                      << videoDuration << "s) > audio duration ("
+                      << audioDuration << "s). Video will be trimmed.");
             } else if (videoDuration < audioDuration) {
                 PRINT("WARNING: Video duration ("
-                      << videoDuration << "s) < audio duration (" << audioDuration
+                      << videoDuration << "s) < audio duration ("
+                      << audioDuration
                       << "s). Video will show black padding after end.");
             }
         }
@@ -485,15 +468,6 @@ void UnifiedAVPlayer::_handleVideoProgress(float progress) {
     if (onVideoProgressCallback) {
         onVideoProgressCallback(this, progress);
     }
-}
-
-void UnifiedAVPlayer::_updateVideoBlackOverlayForPlayback(bool enable) {
-    PRINT("UnifiedAVPlayer::_updateVideoBlackOverlayForPlayback");
-    if (!hasVideo || !videoPlayer) {
-        return;
-    }
-    
-    videoPlayer->setBlackOverlayEnabled(enable ? 1 : 0);
 }
 
 void UnifiedAVPlayer::_resetAudioToInitialState() {

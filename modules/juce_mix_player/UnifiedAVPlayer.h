@@ -37,7 +37,6 @@ private:
   std::string videoPath;
   float audioDuration = 0.0f;
   float videoDuration = 0.0f;
-  bool isVideoAfterEndForPlayback = false;
 
   const float SYNC_THRESHOLD_MS = 80.0f;
   const float SYNC_CHECK_INTERVAL_MS = 150.0f;
@@ -52,7 +51,6 @@ private:
   void _handleVideoStateChange(const std::string &state);
   void _handleAudioProgress(float progress);
   void _handleVideoProgress(float progress);
-  void _updateVideoBlackOverlayForPlayback(bool enable);
   void _ensureVideoSyncOnPlay();
   void _logError(const std::string &message);
   void _resetAudioToInitialState();
